@@ -7,6 +7,7 @@ use Fleetbase\SchoolTransportEngine\Models\Bus;
 use Fleetbase\SchoolTransportEngine\Models\Driver;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
 use Fleetbase\SchoolTransportEngine\Models\Trip;
+use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -86,7 +87,87 @@ class BusController extends FleetbaseController
                         'capacity' => $bus->capacity,
                         'current_occupancy' => $bus->current_occupancy,
                         'available_seats' => $bus->available_seats,
-                        'status' => $bus->status,
+    /**
+     * Get route playback data with safety compliance settings
+     */
+    public function routePlayback(Request $request, $id): JsonResponse
+    {
+        $bus = Bus::where('public_id', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        // Get safety compliance settings
+        $safetySettings = Setting::lookupCompany('school-transport.safety-compliance', [
+            'speed_limit_enforcement' => true,
+            'route_deviation_alerts' => true,
+            'stop_sign_arm_enforcement' => true,
+        ]);
+
+        // Get routing settings
+        $routingSettings = Setting::lookupCompany('school-transport.routing', [
+            'school_zone_speed_limit' => 25,
+            'bus_stop_dwell_time' => 2,
+        ]);
+
+        // Get school hours settings for trip filtering
+        $schoolHours = Setting::lookupCompany('school-transport.school-hours', [
+            'school_start_time' => '08:00',
+            'school_end_time' => '15:00',
+        ]);
+
+        $dateRange = $this->getDateRangeFromRequest($request);
+        $filters = [
+            'student_uuid' => $request->input('student_uuid'),
+            'trip_uuid' => $request->input('trip_uuid'),
+        ];
+
+        $routeData = $bus->getRoutePlayback($dateRange, $filters);
+        
+        // Apply safety settings to route data
+        if ($safetySettings['speed_limit_enforcement']) {
+            $routeData = $this->enforceSpeedLimits($routeData, $routingSettings['school_zone_speed_limit']);
+        }
+
+        if ($safetySettings['route_deviation_alerts']) {
+            $routeData = $this->checkRouteDeviations($routeData);
+        }
+
+        $metrics = $bus->calculateRouteMetrics($routeData);
+
+        return response()->json([
+            'route_data' => $routeData,
+            'metrics' => $metrics,
+            'settings' => [
+                'safety' => $safetySettings,
+                'routing' => $routingSettings,
+                'school_hours' => $schoolHours,
+            ],
+        ]);
+    }
+
+    /**
+     * Enforce speed limits on route data based on settings
+     */
+    private function enforceSpeedLimits($routeData, $speedLimit)
+    {
+        return array_map(function ($point) use ($speedLimit) {
+            if (isset($point['speed']) && $point['speed'] > $speedLimit) {
+                $point['speed_violation'] = true;
+                $point['speed_limit'] = $speedLimit;
+            }
+            return $point;
+        }, $routeData);
+    }
+
+    /**
+     * Check for route deviations based on settings
+     */
+    private function checkRouteDeviations($routeData)
+    {
+        // Implementation would check against assigned route
+        // This is a placeholder for route deviation detection
+        return $routeData;
+    }
                         'status_display' => $bus->status_display,
                         'driver' => $bus->driver,
                         'route' => $bus->route,

@@ -10,6 +10,7 @@ use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
 use Fleetbase\SchoolTransportEngine\Models\Attendance;
 use Fleetbase\SchoolTransportEngine\Events\TripStatusChanged;
 use Fleetbase\SchoolTransportEngine\Events\StudentCheckInOut;
+use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -44,10 +45,133 @@ class TripController extends FleetbaseController
                     $query->byStatus($request->input('status'));
                 }
 
-                // Filter by type
-                if ($request->filled('type')) {
-                    $query->byType($request->input('type'));
-                }
+    /**
+     * Schedule a trip with school hours validation
+     */
+    public function scheduleTrip(Request $request): JsonResponse
+    {
+        // Get school hours settings
+        $schoolHours = Setting::lookupCompany('school-transport.school-hours', [
+            'school_start_time' => '08:00',
+            'school_end_time' => '15:00',
+            'early_pickup_allowed' => true,
+            'late_pickup_allowed' => true,
+            'max_early_pickup_minutes' => 30,
+            'max_late_pickup_minutes' => 60,
+        ]);
+
+        // Get routing settings
+        $routingSettings = Setting::lookupCompany('school-transport.routing', [
+            'route_optimization_enabled' => true,
+            'traffic_avoidance' => true,
+            'minimize_walk_distance' => true,
+            'consider_grade_levels' => true,
+        ]);
+
+        // Validate trip timing against school hours
+        $requestedTime = $request->input('scheduled_time');
+        $tripType = $request->input('type'); // 'pickup' or 'dropoff'
+
+        $validationResult = $this->validateTripTiming($requestedTime, $tripType, $schoolHours);
+        if (!$validationResult['valid']) {
+            return response()->json([
+                'error' => 'Invalid trip timing',
+                'message' => $validationResult['message'],
+                'school_hours' => $schoolHours,
+            ], 400);
+        }
+
+        // Create trip with settings-aware routing
+        $tripData = $request->all();
+        if ($routingSettings['route_optimization_enabled']) {
+            $tripData['optimized_route'] = $this->optimizeRoute($tripData, $routingSettings);
+        }
+
+        $trip = Trip::create($tripData);
+
+        return response()->json([
+            'trip' => $trip,
+            'applied_settings' => [
+                'school_hours' => $schoolHours,
+                'routing_optimization' => $routingSettings['route_optimization_enabled'],
+                'timing_validation' => $validationResult,
+            ],
+        ]);
+    }
+
+    /**
+     * Validate trip timing against school hours settings
+     */
+    private function validateTripTiming($requestedTime, $tripType, $schoolHours)
+    {
+        $requestedDateTime = \Carbon\Carbon::parse($requestedTime);
+        $schoolStart = \Carbon\Carbon::parse($schoolHours['school_start_time']);
+        $schoolEnd = \Carbon\Carbon::parse($schoolHours['school_end_time']);
+
+        if ($tripType === 'pickup') {
+            $maxEarly = $schoolStart->copy()->subMinutes($schoolHours['max_early_pickup_minutes']);
+            
+            if ($requestedDateTime->lt($maxEarly)) {
+                return [
+                    'valid' => false,
+                    'message' => 'Pickup time is too early. Maximum early pickup is ' . $schoolHours['max_early_pickup_minutes'] . ' minutes before school starts.',
+                ];
+            }
+            
+            if ($requestedDateTime->gt($schoolStart)) {
+                return [
+                    'valid' => false,
+                    'message' => 'Pickup time is after school starts.',
+                ];
+            }
+        }
+
+        if ($tripType === 'dropoff') {
+            $maxLate = $schoolEnd->copy()->addMinutes($schoolHours['max_late_pickup_minutes']);
+            
+            if ($requestedDateTime->lt($schoolEnd)) {
+                return [
+                    'valid' => false,
+                    'message' => 'Dropoff time is before school ends.',
+                ];
+            }
+            
+            if ($requestedDateTime->gt($maxLate)) {
+                return [
+                    'valid' => false,
+                    'message' => 'Dropoff time is too late. Maximum late dropoff is ' . $schoolHours['max_late_pickup_minutes'] . ' minutes after school ends.',
+                ];
+            }
+        }
+
+        return ['valid' => true, 'message' => 'Trip timing is valid'];
+    }
+
+    /**
+     * Optimize route based on settings
+     */
+    private function optimizeRoute($tripData, $routingSettings)
+    {
+        // Placeholder for route optimization logic
+        $optimizations = [];
+        
+        if ($routingSettings['minimize_walk_distance']) {
+            $optimizations[] = 'minimize_walk_distance';
+        }
+        
+        if ($routingSettings['consider_grade_levels']) {
+            $optimizations[] = 'grade_level_separation';
+        }
+        
+        if ($routingSettings['traffic_avoidance']) {
+            $optimizations[] = 'traffic_avoidance';
+        }
+
+        return [
+            'optimizations_applied' => $optimizations,
+            'original_route' => $tripData['route'] ?? null,
+        ];
+    }
 
                 // Filter by bus
                 if ($request->filled('bus')) {

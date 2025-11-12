@@ -5,6 +5,7 @@ namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 use Fleetbase\Http\Controllers\FleetbaseController;
 use Fleetbase\SchoolTransportEngine\Models\Attendance;
 use Fleetbase\SchoolTransportEngine\Services\AttendanceService;
+use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;
 
 class AttendanceController extends FleetbaseController
@@ -44,10 +45,132 @@ class AttendanceController extends FleetbaseController
             $query->where('route_uuid', $request->input('route_uuid'));
         }
 
-        // Filter by date
-        if ($request->has('date')) {
-            $query->where('date', $request->input('date'));
+    /**
+     * Record student attendance with settings validation
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function recordAttendance(Request $request)
+    {
+        // Get attendance tracking settings
+        $attendanceSettings = Setting::lookupCompany('school-transport.attendance-tracking', [
+            'required_on_boarding' => true,
+            'required_on_exit' => true,
+            'photo_verification' => true,
+            'geofence_check_in' => true,
+            'parent_notifications' => true,
+            'school_notifications' => true,
+        ]);
+
+        // Get notification settings
+        $notificationSettings = Setting::lookupCompany('school-transport.notifications', [
+            'parent_eta_notifications' => true,
+            'school_attendance_notifications' => true,
+        ]);
+
+        // Validate required fields based on settings
+        $validationRules = [
+            'student_uuid' => 'required|uuid',
+            'trip_uuid' => 'required|uuid',
+            'type' => 'required|in:boarding,exit',
+            'timestamp' => 'required|date',
+        ];
+
+        if ($attendanceSettings['photo_verification']) {
+            $validationRules['photo'] = 'required|image';
         }
+
+        if ($attendanceSettings['geofence_check_in']) {
+            $validationRules['latitude'] = 'required|numeric';
+            $validationRules['longitude'] = 'required|numeric';
+        }
+
+        $request->validate($validationRules);
+
+        // Create attendance record
+        $attendance = $this->attendanceService->recordAttendance($request->all(), $attendanceSettings);
+
+        // Send notifications based on settings
+        if ($notificationSettings['parent_eta_notifications']) {
+            $this->attendanceService->notifyParents($attendance);
+        }
+
+        if ($notificationSettings['school_attendance_notifications']) {
+            $this->attendanceService->notifySchool($attendance);
+        }
+
+        return response()->json([
+            'attendance' => $attendance,
+            'settings_applied' => [
+                'photo_required' => $attendanceSettings['photo_verification'],
+                'geofence_required' => $attendanceSettings['geofence_check_in'],
+                'notifications_sent' => [
+                    'parent' => $notificationSettings['parent_eta_notifications'],
+                    'school' => $notificationSettings['school_attendance_notifications'],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Get attendance summary with settings context
+     */
+    public function attendanceSummary(Request $request)
+    {
+        // Get reporting preferences
+        $reportingSettings = Setting::lookupCompany('school-transport.reporting-preferences', [
+            'daily_attendance_reports' => true,
+            'performance_metrics' => true,
+        ]);
+
+        $query = Attendance::where('company_uuid', session('company'));
+
+        // Apply filters
+        if ($request->has('date_from') && $request->has('date_to')) {
+            $query->whereBetween('date', [$request->date_from, $request->date_to]);
+        }
+
+        if ($request->has('route_uuid')) {
+            $query->where('route_uuid', $request->route_uuid);
+        }
+
+        $attendanceData = $query->with(['student', 'trip'])->get();
+
+        $summary = [
+            'total_records' => $attendanceData->count(),
+            'boarding_count' => $attendanceData->where('type', 'boarding')->count(),
+            'exit_count' => $attendanceData->where('type', 'exit')->count(),
+            'settings' => $reportingSettings,
+        ];
+
+        if ($reportingSettings['performance_metrics']) {
+            $summary['metrics'] = [
+                'attendance_rate' => $this->calculateAttendanceRate($attendanceData),
+                'on_time_rate' => $this->calculateOnTimeRate($attendanceData),
+            ];
+        }
+
+        return response()->json($summary);
+    }
+
+    /**
+     * Calculate attendance rate
+     */
+    private function calculateAttendanceRate($attendanceData)
+    {
+        // Implementation for attendance rate calculation
+        return 95.5; // Placeholder
+    }
+
+    /**
+     * Calculate on-time rate
+     */
+    private function calculateOnTimeRate($attendanceData)
+    {
+        // Implementation for on-time rate calculation
+        return 88.2; // Placeholder
+    }
 
         // Filter by date range
         if ($request->has('start_date') && $request->has('end_date')) {

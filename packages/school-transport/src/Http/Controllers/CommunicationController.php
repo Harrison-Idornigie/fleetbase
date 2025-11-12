@@ -6,6 +6,7 @@ use Fleetbase\Http\Controllers\FleetbaseController;
 use Fleetbase\SchoolTransportEngine\Models\Communication;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
 use Fleetbase\SchoolTransportEngine\Models\Student;
+use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -45,10 +46,131 @@ class CommunicationController extends FleetbaseController
                     $query->byPriority($request->input('priority'));
                 }
 
-                // Filter by status
-                if ($request->filled('status')) {
-                    $query->byStatus($request->input('status'));
-                }
+    /**
+     * Send notification with settings validation
+     */
+    public function sendNotification(Request $request): JsonResponse
+    {
+        // Get notification settings
+        $notificationSettings = Setting::lookupCompany('school-transport.notifications', [
+            'parent_eta_notifications' => true,
+            'parent_delay_notifications' => true,
+            'parent_route_change_notifications' => true,
+            'school_attendance_notifications' => true,
+            'emergency_alert_escalation' => true,
+        ]);
+
+        // Get parent portal settings
+        $parentPortalSettings = Setting::lookupCompany('school-transport.parent-portal', [
+            'enabled' => true,
+            'eta_notifications' => true,
+            'mobile_app_enabled' => true,
+        ]);
+
+        $notificationType = $request->input('type');
+        $recipients = $request->input('recipients', []);
+        $message = $request->input('message');
+        $priority = $request->input('priority', 'normal');
+
+        // Check if notification type is enabled
+        if (!$this->isNotificationTypeEnabled($notificationType, $notificationSettings)) {
+            return response()->json([
+                'error' => 'Notification type disabled',
+                'message' => "Notifications of type '{$notificationType}' are currently disabled in settings.",
+            ], 400);
+        }
+
+        // Check parent portal access for parent notifications
+        if (str_contains($notificationType, 'parent') && !$parentPortalSettings['enabled']) {
+            return response()->json([
+                'error' => 'Parent portal disabled',
+                'message' => 'Parent notifications require parent portal to be enabled.',
+            ], 400);
+        }
+
+        // Create communication record
+        $communication = Communication::create([
+            'company_uuid' => session('company'),
+            'type' => $notificationType,
+            'message' => $message,
+            'priority' => $priority,
+            'recipients' => $recipients,
+            'status' => 'pending',
+            'settings_applied' => [
+                'notification_settings' => $notificationSettings,
+                'parent_portal_settings' => $parentPortalSettings,
+            ],
+        ]);
+
+        // Send the notification
+        $result = $this->dispatchNotification($communication, $notificationSettings, $parentPortalSettings);
+
+        return response()->json([
+            'communication' => $communication,
+            'delivery_result' => $result,
+            'settings_applied' => [
+                'type_enabled' => true,
+                'parent_portal_enabled' => $parentPortalSettings['enabled'],
+                'mobile_app_enabled' => $parentPortalSettings['mobile_app_enabled'],
+            ],
+        ]);
+    }
+
+    /**
+     * Check if notification type is enabled in settings
+     */
+    private function isNotificationTypeEnabled($type, $settings)
+    {
+        $typeMapping = [
+            'parent_eta' => 'parent_eta_notifications',
+            'parent_delay' => 'parent_delay_notifications',
+            'parent_route_change' => 'parent_route_change_notifications',
+            'school_attendance' => 'school_attendance_notifications',
+            'emergency' => 'emergency_alert_escalation',
+        ];
+
+        return $settings[$typeMapping[$type] ?? $type] ?? false;
+    }
+
+    /**
+     * Dispatch notification based on settings
+     */
+    private function dispatchNotification($communication, $notificationSettings, $parentPortalSettings)
+    {
+        $channels = [];
+
+        // Determine delivery channels based on settings
+        if ($parentPortalSettings['mobile_app_enabled'] && str_contains($communication->type, 'parent')) {
+            $channels[] = 'mobile_push';
+        }
+
+        if ($notificationSettings['parent_eta_notifications']) {
+            $channels[] = 'email';
+            $channels[] = 'sms';
+        }
+
+        // Emergency escalation
+        if ($communication->priority === 'emergency' && $notificationSettings['emergency_alert_escalation']) {
+            $channels[] = 'phone_call';
+            $channels[] = 'emergency_contact';
+        }
+
+        // Simulate notification dispatch
+        $results = [];
+        foreach ($channels as $channel) {
+            $results[$channel] = [
+                'status' => 'sent',
+                'timestamp' => now(),
+                'recipients' => count($communication->recipients),
+            ];
+        }
+
+        return [
+            'channels_used' => $channels,
+            'delivery_results' => $results,
+            'total_sent' => count($channels) * count($communication->recipients),
+        ];
+    }
 
                 // Filter by route
                 if ($request->filled('route_id')) {

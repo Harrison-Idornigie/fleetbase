@@ -11,6 +11,7 @@ use Fleetbase\SchoolTransportEngine\Http\Controllers\TripController;
 use Fleetbase\SchoolTransportEngine\Http\Controllers\TrackingController;
 use Fleetbase\SchoolTransportEngine\Http\Controllers\AlertController;
 use Fleetbase\SchoolTransportEngine\Http\Controllers\CommunicationController;
+use Fleetbase\SchoolTransportEngine\Http\Controllers\AttendanceController;
 use Fleetbase\SchoolTransportEngine\Http\Controllers\ParentGuardianController;
 use Fleetbase\SchoolTransportEngine\Http\Controllers\StopController;
 
@@ -102,6 +103,7 @@ Route::prefix('school-transport')->middleware(['api', 'auth:sanctum'])->group(fu
     Route::prefix('trips')->group(function () {
         Route::get('/', [TripController::class, 'index']);
         Route::post('/', [TripController::class, 'store']);
+        Route::post('/schedule', [TripController::class, 'scheduleTrip']);
         Route::get('/{trip}', [TripController::class, 'show']);
         Route::patch('/{trip}', [TripController::class, 'update']);
         Route::delete('/{trip}', [TripController::class, 'destroy']);
@@ -177,10 +179,21 @@ Route::prefix('school-transport')->middleware(['api', 'auth:sanctum'])->group(fu
     Route::prefix('communications')->group(function () {
         Route::get('/', [CommunicationController::class, 'index']);
         Route::post('/', [CommunicationController::class, 'store']);
+        Route::post('/send-notification', [CommunicationController::class, 'sendNotification']);
         Route::get('/{communication}', [CommunicationController::class, 'show']);
         Route::patch('/{communication}/status', [CommunicationController::class, 'updateStatus']);
-        Route::post('/notifications/send', [CommunicationController::class, 'sendNotification']);
         Route::get('/notifications/templates', [CommunicationController::class, 'templates']);
+    });
+
+    // Attendance management routes
+    Route::prefix('attendance')->group(function () {
+        Route::get('/', [AttendanceController::class, 'index']);
+        Route::post('/', [AttendanceController::class, 'store']);
+        Route::post('/record', [AttendanceController::class, 'recordAttendance']);
+        Route::get('/summary', [AttendanceController::class, 'attendanceSummary']);
+        Route::get('/{attendance}', [AttendanceController::class, 'show']);
+        Route::patch('/{attendance}', [AttendanceController::class, 'update']);
+        Route::delete('/{attendance}', [AttendanceController::class, 'destroy']);
     });
 
     // Dashboard and analytics
