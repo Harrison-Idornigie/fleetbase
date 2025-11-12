@@ -1,0 +1,656 @@
+<div class="student-form-container">
+  {{#if @isLoading}}
+    <div class="loading-overlay">
+      <FaIcon @icon="spinner" @spin={{true}} />
+      <p>{{t "school-transport.components.student-form.loading"}}</p>
+    </div>
+  {{/if}}
+
+  <form {{on "submit" this.handleSubmit}} class="student-form">
+    {{!-- Basic Information Section --}}
+    <div class="form-section">
+      <h3 class="section-title">
+        <FaIcon @icon="user" />
+        {{t "school-transport.components.student-form.basic-info"}}
+      </h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="first-name" class="required">
+            {{t "school-transport.components.student-form.first-name"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.firstName}}
+            id="first-name"
+            class="form-control {{if @errors.firstName 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.first-name-placeholder"}}
+            {{on "input" (fn @onFieldChange "firstName")}}
+            required
+          />
+          {{#if @errors.firstName}}
+            <div class="invalid-feedback">{{@errors.firstName}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="last-name" class="required">
+            {{t "school-transport.components.student-form.last-name"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.lastName}}
+            id="last-name"
+            class="form-control {{if @errors.lastName 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.last-name-placeholder"}}
+            {{on "input" (fn @onFieldChange "lastName")}}
+            required
+          />
+          {{#if @errors.lastName}}
+            <div class="invalid-feedback">{{@errors.lastName}}</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date-of-birth" class="required">
+            {{t "school-transport.components.student-form.date-of-birth"}}
+          </label>
+          <Input
+            @type="date"
+            @value={{@data.dateOfBirth}}
+            id="date-of-birth"
+            class="form-control {{if @errors.dateOfBirth 'is-invalid'}}"
+            {{on "input" (fn @onFieldChange "dateOfBirth")}}
+            required
+          />
+          {{#if @errors.dateOfBirth}}
+            <div class="invalid-feedback">{{@errors.dateOfBirth}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="student-id">
+            {{t "school-transport.components.student-form.student-id"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.studentId}}
+            id="student-id"
+            class="form-control {{if @errors.studentId 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.student-id-placeholder"}}
+            {{on "input" (fn @onFieldChange "studentId")}}
+          />
+          {{#if @errors.studentId}}
+            <div class="invalid-feedback">{{@errors.studentId}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="grade" class="required">
+            {{t "school-transport.components.student-form.grade"}}
+          </label>
+          <PowerSelect
+            @options={{this.gradeOptions}}
+            @selected={{@data.grade}}
+            @onChange={{fn @onFieldChange "grade"}}
+            @searchEnabled={{false}}
+            @placeholder={{t "school-transport.components.student-form.select-grade"}}
+            class="form-control {{if @errors.grade 'is-invalid'}}"
+            as |grade|
+          >
+            {{grade.label}}
+          </PowerSelect>
+          {{#if @errors.grade}}
+            <div class="invalid-feedback">{{@errors.grade}}</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="school">
+            {{t "school-transport.components.student-form.school"}}
+          </label>
+          <PowerSelect
+            @options={{@schools}}
+            @selected={{@data.school}}
+            @onChange={{fn @onFieldChange "school"}}
+            @searchField="name"
+            @placeholder={{t "school-transport.components.student-form.select-school"}}
+            class="form-control"
+            as |school|
+          >
+            {{school.name}}
+          </PowerSelect>
+        </div>
+
+        <div class="form-group">
+          <label for="status">
+            {{t "school-transport.components.student-form.status"}}
+          </label>
+          <PowerSelect
+            @options={{this.statusOptions}}
+            @selected={{@data.status}}
+            @onChange={{fn @onFieldChange "status"}}
+            @searchEnabled={{false}}
+            @placeholder={{t "school-transport.components.student-form.select-status"}}
+            class="form-control"
+            as |status|
+          >
+            {{status.label}}
+          </PowerSelect>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Address Information Section --}}
+    <div class="form-section">
+      <h3 class="section-title">
+        <FaIcon @icon="home" />
+        {{t "school-transport.components.student-form.address-info"}}
+      </h3>
+
+      <div class="form-group">
+        <label for="address" class="required">
+          {{t "school-transport.components.student-form.home-address"}}
+        </label>
+        <Input
+          @type="text"
+          @value={{@data.address}}
+          id="address"
+          class="form-control {{if @errors.address 'is-invalid'}}"
+          placeholder={{t "school-transport.components.student-form.address-placeholder"}}
+          {{on "input" (fn @onFieldChange "address")}}
+          required
+        />
+        {{#if @errors.address}}
+          <div class="invalid-feedback">{{@errors.address}}</div>
+        {{/if}}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city" class="required">
+            {{t "school-transport.components.student-form.city"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.city}}
+            id="city"
+            class="form-control {{if @errors.city 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.city-placeholder"}}
+            {{on "input" (fn @onFieldChange "city")}}
+            required
+          />
+          {{#if @errors.city}}
+            <div class="invalid-feedback">{{@errors.city}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="state" class="required">
+            {{t "school-transport.components.student-form.state"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.state}}
+            id="state"
+            class="form-control {{if @errors.state 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.state-placeholder"}}
+            {{on "input" (fn @onFieldChange "state")}}
+            required
+          />
+          {{#if @errors.state}}
+            <div class="invalid-feedback">{{@errors.state}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="postal-code" class="required">
+            {{t "school-transport.components.student-form.postal-code"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.postalCode}}
+            id="postal-code"
+            class="form-control {{if @errors.postalCode 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.postal-code-placeholder"}}
+            {{on "input" (fn @onFieldChange "postalCode")}}
+            required
+          />
+          {{#if @errors.postalCode}}
+            <div class="invalid-feedback">{{@errors.postalCode}}</div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Parent/Guardian Information Section --}}
+    <div class="form-section">
+      <h3 class="section-title">
+        <FaIcon @icon="users" />
+        {{t "school-transport.components.student-form.parent-info"}}
+      </h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="parent-name" class="required">
+            {{t "school-transport.components.student-form.parent-name"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.parentName}}
+            id="parent-name"
+            class="form-control {{if @errors.parentName 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.parent-name-placeholder"}}
+            {{on "input" (fn @onFieldChange "parentName")}}
+            required
+          />
+          {{#if @errors.parentName}}
+            <div class="invalid-feedback">{{@errors.parentName}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="parent-email" class="required">
+            {{t "school-transport.components.student-form.parent-email"}}
+          </label>
+          <Input
+            @type="email"
+            @value={{@data.parentEmail}}
+            id="parent-email"
+            class="form-control {{if @errors.parentEmail 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.parent-email-placeholder"}}
+            {{on "input" (fn @onFieldChange "parentEmail")}}
+            required
+          />
+          {{#if @errors.parentEmail}}
+            <div class="invalid-feedback">{{@errors.parentEmail}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="parent-phone" class="required">
+            {{t "school-transport.components.student-form.parent-phone"}}
+          </label>
+          <Input
+            @type="tel"
+            @value={{@data.parentPhone}}
+            id="parent-phone"
+            class="form-control {{if @errors.parentPhone 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.parent-phone-placeholder"}}
+            {{on "input" (fn @onFieldChange "parentPhone")}}
+            required
+          />
+          {{#if @errors.parentPhone}}
+            <div class="invalid-feedback">{{@errors.parentPhone}}</div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Special Needs Section --}}
+    <div class="form-section">
+      <h3 class="section-title">
+        <FaIcon @icon="wheelchair" />
+        {{t "school-transport.components.student-form.special-needs"}}
+      </h3>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <Input
+            @type="checkbox"
+            @checked={{@data.hasSpecialNeeds}}
+            {{on "change" (fn @onFieldChange "hasSpecialNeeds")}}
+          />
+          {{t "school-transport.components.student-form.has-special-needs"}}
+        </label>
+      </div>
+
+      {{#if @data.hasSpecialNeeds}}
+        <div class="form-group">
+          <label for="special-needs-description">
+            {{t "school-transport.components.student-form.special-needs-description"}}
+          </label>
+          <Textarea
+            @value={{@data.specialNeedsDescription}}
+            id="special-needs-description"
+            class="form-control"
+            rows="3"
+            placeholder={{t "school-transport.components.student-form.special-needs-placeholder"}}
+            {{on "input" (fn @onFieldChange "specialNeedsDescription")}}
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <Input
+              @type="checkbox"
+              @checked={{@data.requiresWheelchairAccess}}
+              {{on "change" (fn @onFieldChange "requiresWheelchairAccess")}}
+            />
+            {{t "school-transport.components.student-form.requires-wheelchair"}}
+          </label>
+        </div>
+      {{/if}}
+    </div>
+
+    {{!-- Medical Information Section --}}
+    <div class="form-section">
+      <h3 class="section-title">
+        <FaIcon @icon="medkit" />
+        {{t "school-transport.components.student-form.medical-info"}}
+      </h3>
+
+      <div class="form-group">
+        <label for="medical-conditions">
+          {{t "school-transport.components.student-form.medical-conditions"}}
+        </label>
+        <Textarea
+          @value={{@data.medicalConditions}}
+          id="medical-conditions"
+          class="form-control"
+          rows="3"
+          placeholder={{t "school-transport.components.student-form.medical-conditions-placeholder"}}
+          {{on "input" (fn @onFieldChange "medicalConditions")}}
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="medications">
+          {{t "school-transport.components.student-form.medications"}}
+        </label>
+        <Textarea
+          @value={{@data.medications}}
+          id="medications"
+          class="form-control"
+          rows="3"
+          placeholder={{t "school-transport.components.student-form.medications-placeholder"}}
+          {{on "input" (fn @onFieldChange "medications")}}
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="allergies">
+          {{t "school-transport.components.student-form.allergies"}}
+        </label>
+        <Textarea
+          @value={{@data.allergies}}
+          id="allergies"
+          class="form-control"
+          rows="2"
+          placeholder={{t "school-transport.components.student-form.allergies-placeholder"}}
+          {{on "input" (fn @onFieldChange "allergies")}}
+        />
+      </div>
+    </div>
+
+    {{!-- Emergency Contacts Section --}}
+    <div class="form-section">
+      <h3 class="section-title">
+        <FaIcon @icon="phone" />
+        {{t "school-transport.components.student-form.emergency-contacts"}}
+      </h3>
+
+      <div class="form-group">
+        <label for="emergency-contact-name" class="required">
+          {{t "school-transport.components.student-form.emergency-contact-name"}}
+        </label>
+        <Input
+          @type="text"
+          @value={{@data.emergencyContactName}}
+          id="emergency-contact-name"
+          class="form-control {{if @errors.emergencyContactName 'is-invalid'}}"
+          placeholder={{t "school-transport.components.student-form.emergency-contact-name-placeholder"}}
+          {{on "input" (fn @onFieldChange "emergencyContactName")}}
+          required
+        />
+        {{#if @errors.emergencyContactName}}
+          <div class="invalid-feedback">{{@errors.emergencyContactName}}</div>
+        {{/if}}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="emergency-contact-phone" class="required">
+            {{t "school-transport.components.student-form.emergency-contact-phone"}}
+          </label>
+          <Input
+            @type="tel"
+            @value={{@data.emergencyContactPhone}}
+            id="emergency-contact-phone"
+            class="form-control {{if @errors.emergencyContactPhone 'is-invalid'}}"
+            placeholder={{t "school-transport.components.student-form.emergency-contact-phone-placeholder"}}
+            {{on "input" (fn @onFieldChange "emergencyContactPhone")}}
+            required
+          />
+          {{#if @errors.emergencyContactPhone}}
+            <div class="invalid-feedback">{{@errors.emergencyContactPhone}}</div>
+          {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="emergency-contact-relationship">
+            {{t "school-transport.components.student-form.emergency-contact-relationship"}}
+          </label>
+          <Input
+            @type="text"
+            @value={{@data.emergencyContactRelationship}}
+            id="emergency-contact-relationship"
+            class="form-control"
+            placeholder={{t "school-transport.components.student-form.emergency-contact-relationship-placeholder"}}
+            {{on "input" (fn @onFieldChange "emergencyContactRelationship")}}
+          />
+        </div>
+      </div>
+    </div>
+
+    {{!-- Photo Upload Section --}}
+    {{#if @showPhotoUpload}}
+      <div class="form-section">
+        <h3 class="section-title">
+          <FaIcon @icon="camera" />
+          {{t "school-transport.components.student-form.photo"}}
+        </h3>
+
+        <div class="photo-upload-container">
+          {{#if @data.photoUrl}}
+            <img src={{@data.photoUrl}} alt={{@data.firstName}} class="student-photo-preview" />
+            <Button
+              @text={{t "school-transport.components.student-form.change-photo"}}
+              @icon="edit"
+              @type="button"
+              @onClick={{@onPhotoChange}}
+              @size="sm"
+            />
+          {{else}}
+            <div class="photo-placeholder">
+              <FaIcon @icon="user-circle" @size="3x" />
+            </div>
+            <Button
+              @text={{t "school-transport.components.student-form.upload-photo"}}
+              @icon="upload"
+              @type="button"
+              @onClick={{@onPhotoUpload}}
+              @size="sm"
+            />
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{!-- Form Actions --}}
+    <div class="form-actions">
+      <Button
+        @text={{t "common.cancel"}}
+        @type="button"
+        @onClick={{@onCancel}}
+        @appearance="secondary"
+        @isLoading={{@isLoading}}
+      />
+      
+      {{#if @onSaveDraft}}
+        <Button
+          @text={{t "common.save-draft"}}
+          @type="button"
+          @onClick={{@onSaveDraft}}
+          @appearance="default"
+          @isLoading={{@isLoading}}
+        />
+      {{/if}}
+
+      <Button
+        @text={{if @isEdit (t "common.update") (t "common.create")}}
+        @type="submit"
+        @appearance="primary"
+        @isLoading={{@isLoading}}
+      />
+    </div>
+  </form>
+</div>
+
+<style>
+  .student-form-container {
+    position: relative;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .student-form {
+    max-width: 1200px;
+  }
+
+  .form-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-group label.required::after {
+    content: " *";
+    color: #e53e3e;
+  }
+
+  .form-control {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .form-control:focus {
+    border-color: #4299e1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  }
+
+  .form-control.is-invalid {
+    border-color: #e53e3e;
+  }
+
+  .invalid-feedback {
+    color: #e53e3e;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal !important;
+    cursor: pointer;
+  }
+
+  .photo-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .student-photo-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+  }
+
+  .photo-placeholder {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f7fafc;
+    border: 2px dashed #cbd5e0;
+    border-radius: 50%;
+    color: #a0aec0;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e2e8f0;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+  }
+</style>

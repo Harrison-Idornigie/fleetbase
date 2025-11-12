@@ -1,0 +1,358 @@
+{{!-- Communication View Template --}}
+<div class="school-transport-communication-view">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                {{#if (eq this.communication.type "alert")}}
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <FaIcon @icon="exclamation-triangle" class="text-red-600 text-xl" />
+                </div>
+                {{else if (eq this.communication.type "reminder")}}
+                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <FaIcon @icon="clock" class="text-yellow-600 text-xl" />
+                </div>
+                {{else if (eq this.communication.type "update")}}
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FaIcon @icon="sync" class="text-blue-600 text-xl" />
+                </div>
+                {{else}}
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <FaIcon @icon="bell" class="text-green-600 text-xl" />
+                </div>
+                {{/if}}
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{this.communication.subject}}</h1>
+                    <p class="text-gray-600">{{this.communication.recipient_count}} recipient{{if (gt
+                        this.communication.recipient_count 1) "s"}}</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                {{#if (eq this.communication.status "draft")}}
+                <LinkTo @route="school-transport.communications.edit" @model={{this.communication.id}}
+                    class="btn btn-outline">
+                    <FaIcon @icon="edit" class="mr-2" />
+                    Edit
+                </LinkTo>
+                {{/if}}
+                <LinkTo @route="school-transport.communications.index" class="btn btn-outline">
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Back to Communications
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{!-- Main Content --}}
+        <div class="lg:col-span-2 space-y-6">
+            {{!-- Message Content --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Message Content</h2>
+                </div>
+                <div class="p-6">
+                    <div class="prose max-w-none">
+                        <p class="text-gray-900 whitespace-pre-line">{{this.communication.content}}</p>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Recipients --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">Recipients</h2>
+                    <button class="btn btn-sm btn-outline" {{on "click" this.exportRecipients}}>
+                        <FaIcon @icon="download" class="mr-1" />
+                        Export List
+                    </button>
+                </div>
+                <div class="p-6">
+                    {{#if this.recipients}}
+                    <div class="space-y-3">
+                        {{#each this.recipients as |recipient|}}
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                {{#if recipient.photo_url}}
+                                <img src={{recipient.photo_url}} alt={{recipient.full_name}}
+                                    class="w-8 h-8 rounded-full object-cover" />
+                                {{else}}
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <FaIcon @icon="user" class="text-gray-500 text-sm" />
+                                </div>
+                                {{/if}}
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">{{recipient.full_name}}</h4>
+                                    <p class="text-sm text-gray-600">Student: {{recipient.student_name}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                {{#if recipient.delivered_at}}
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <FaIcon @icon="check" class="mr-1" />
+                                    Delivered
+                                </span>
+                                {{else if recipient.failed_at}}
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <FaIcon @icon="times" class="mr-1" />
+                                    Failed
+                                </span>
+                                {{else}}
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <FaIcon @icon="clock" class="mr-1" />
+                                    Pending
+                                </span>
+                                {{/if}}
+                                {{#if recipient.read_at}}
+                                <span class="text-xs text-gray-500">
+                                    Read {{moment-format recipient.read_at "MMM DD, h:mm A"}}
+                                </span>
+                                {{/if}}
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <p class="text-gray-500 text-center py-8">No recipients found.</p>
+                    {{/if}}
+                </div>
+            </div>
+
+            {{!-- Delivery History --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Delivery History</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {{#if this.communication.sent_at}}
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <FaIcon @icon="paper-plane" class="text-green-600 text-sm" />
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">Message Sent</p>
+                                <p class="text-sm text-gray-600">{{moment-format this.communication.sent_at "MMMM DD,
+                                    YYYY 'at' h:mm A"}}</p>
+                            </div>
+                        </div>
+                        {{/if}}
+
+                        {{#each this.deliveryEvents as |event|}}
+                        <div class="flex items-center space-x-4">
+                            {{#if (eq event.type "delivered")}}
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <FaIcon @icon="check-circle" class="text-blue-600 text-sm" />
+                            </div>
+                            {{else if (eq event.type "read")}}
+                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <FaIcon @icon="eye" class="text-green-600 text-sm" />
+                            </div>
+                            {{else if (eq event.type "failed")}}
+                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                <FaIcon @icon="times-circle" class="text-red-600 text-sm" />
+                            </div>
+                            {{/if}}
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">{{event.description}}</p>
+                                <p class="text-sm text-gray-600">{{moment-format event.timestamp "MMMM DD, YYYY 'at'
+                                    h:mm A"}}</p>
+                                {{#if event.recipient}}
+                                <p class="text-xs text-gray-500">Recipient: {{event.recipient.full_name}}</p>
+                                {{/if}}
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{!-- Sidebar --}}
+        <div class="space-y-6">
+            {{!-- Message Status --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Message Status</h2>
+                </div>
+                <div class="p-6">
+                    <div class="text-center mb-6">
+                        {{#if (eq this.communication.status "sent")}}
+                        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                            <FaIcon @icon="check-circle" class="text-green-600 text-2xl" />
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Sent</h3>
+                        <p class="text-sm text-gray-600">Message has been delivered to recipients.</p>
+                        {{else if (eq this.communication.status "scheduled")}}
+                        <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                            <FaIcon @icon="clock" class="text-blue-600 text-2xl" />
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Scheduled</h3>
+                        <p class="text-sm text-gray-600">Message will be sent on {{moment-format
+                            this.communication.scheduled_at "MMM DD, YYYY 'at' h:mm A"}}</p>
+                        {{else if (eq this.communication.status "draft")}}
+                        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                            <FaIcon @icon="edit" class="text-gray-600 text-2xl" />
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Draft</h3>
+                        <p class="text-sm text-gray-600">Message is saved as draft and not yet sent.</p>
+                        {{else}}
+                        <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                            <FaIcon @icon="times-circle" class="text-red-600 text-2xl" />
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Failed</h3>
+                        <p class="text-sm text-gray-600">Message delivery failed. Check delivery details.</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="space-y-3">
+                        {{#if (eq this.communication.status "draft")}}
+                        <button class="w-full btn btn-primary" {{on "click" this.sendNow}}>
+                            <FaIcon @icon="paper-plane" class="mr-2" />
+                            Send Now
+                        </button>
+                        {{/if}}
+                        {{#if (eq this.communication.status "scheduled")}}
+                        <button class="w-full btn btn-outline" {{on "click" this.cancelSchedule}}>
+                            <FaIcon @icon="times" class="mr-2" />
+                            Cancel Schedule
+                        </button>
+                        {{/if}}
+                        {{#if (eq this.communication.status "sent")}}
+                        <button class="w-full btn btn-outline" {{on "click" this.resendMessage}}>
+                            <FaIcon @icon="redo" class="mr-2" />
+                            Resend Message
+                        </button>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Delivery Statistics --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Delivery Statistics</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Total Recipients:</span>
+                            <span class="text-sm font-medium">{{this.communication.recipient_count}}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Delivered:</span>
+                            <span
+                                class="text-sm font-medium text-green-600">{{this.communication.delivered_count}}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Read:</span>
+                            <span class="text-sm font-medium text-blue-600">{{this.communication.read_count}}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Failed:</span>
+                            <span class="text-sm font-medium text-red-600">{{this.communication.failed_count}}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Pending:</span>
+                            <span
+                                class="text-sm font-medium text-yellow-600">{{this.communication.pending_count}}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Delivery Rate:</span>
+                            <span class="text-sm font-medium">
+                                {{#if this.communication.recipient_count}}
+                                {{percentage this.communication.delivered_count this.communication.recipient_count}}%
+                                {{else}}
+                                N/A
+                                {{/if}}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Read Rate:</span>
+                            <span class="text-sm font-medium">
+                                {{#if this.communication.delivered_count}}
+                                {{percentage this.communication.read_count this.communication.delivered_count}}%
+                                {{else}}
+                                N/A
+                                {{/if}}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Message Details --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Message Details</h2>
+                </div>
+                <div class="p-6">
+                    <dl class="space-y-3">
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Type:</dt>
+                            <dd class="text-sm font-medium capitalize">{{this.communication.type}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Priority:</dt>
+                            <dd class="text-sm font-medium capitalize">{{this.communication.priority}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Created:</dt>
+                            <dd class="text-sm font-medium">{{moment-format this.communication.created_at "MMM DD,
+                                YYYY"}}</dd>
+                        </div>
+                        {{#if this.communication.sent_at}}
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Sent:</dt>
+                            <dd class="text-sm font-medium">{{moment-format this.communication.sent_at "MMM DD, YYYY"}}
+                            </dd>
+                        </div>
+                        {{/if}}
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Channels:</dt>
+                            <dd class="text-sm font-medium">
+                                {{#if this.communication.send_via_email}}
+                                Email
+                                {{/if}}
+                                {{#if (and this.communication.send_via_email this.communication.send_via_sms)}}
+                                &
+                                {{/if}}
+                                {{#if this.communication.send_via_sms}}
+                                SMS
+                                {{/if}}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            {{!-- Quick Actions --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
+                </div>
+                <div class="p-4 space-y-3">
+                    <button class="btn btn-outline w-full text-left" {{on "click" this.duplicateMessage}}>
+                        <FaIcon @icon="copy" class="mr-2" />
+                        Duplicate Message
+                    </button>
+                    <button class="btn btn-outline w-full text-left" {{on "click" this.createTemplate}}>
+                        <FaIcon @icon="file-alt" class="mr-2" />
+                        Save as Template
+                    </button>
+                    <button class="btn btn-outline w-full text-left" {{on "click" this.exportReport}}>
+                        <FaIcon @icon="file-export" class="mr-2" />
+                        Export Report
+                    </button>
+                    <button class="btn btn-outline w-full text-left" {{on "click" this.archiveMessage}}>
+                        <FaIcon @icon="archive" class="mr-2" />
+                        Archive Message
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

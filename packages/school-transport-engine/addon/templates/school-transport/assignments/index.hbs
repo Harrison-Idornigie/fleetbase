@@ -1,0 +1,288 @@
+{{!-- Assignments Index Template --}}
+<div class="school-transport-assignments-index">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Student Assignments</h1>
+                <p class="text-gray-600 mt-1">Manage student-to-route assignments</p>
+            </div>
+            <div class="flex space-x-3">
+                <LinkTo @route="school-transport.assignments.bulk-assign" class="btn btn-primary">
+                    <FaIcon @icon="users" class="mr-2" />
+                    Bulk Assign
+                </LinkTo>
+                <LinkTo @route="school-transport.assignments.new" class="btn btn-outline">
+                    <FaIcon @icon="plus" class="mr-2" />
+                    New Assignment
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Filters and Search --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="form-group">
+                <label class="form-label">Search Students</label>
+                <Input @type="text" @value={{this.searchQuery}} @placeholder="Student name or ID..." class="form-input"
+                    {{on "input" this.updateSearch}} />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Route</label>
+                <select class="form-select" {{on "change" this.updateRouteFilter}}>
+                    <option value="">All Routes</option>
+                    {{#each this.routes as |route|}}
+                    <option value={{route.id}} selected={{eq this.routeFilter route.id}}>
+                        {{route.name}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">School</label>
+                <select class="form-select" {{on "change" this.updateSchoolFilter}}>
+                    <option value="">All Schools</option>
+                    {{#each this.schools as |school|}}
+                    <option value={{school.id}} selected={{eq this.schoolFilter school.id}}>
+                        {{school.name}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-select" {{on "change" this.updateStatusFilter}}>
+                    <option value="">All Status</option>
+                    <option value="active" selected={{eq this.statusFilter "active" }}>Active</option>
+                    <option value="inactive" selected={{eq this.statusFilter "inactive" }}>Inactive</option>
+                    <option value="standby" selected={{eq this.statusFilter "standby" }}>Standby</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Grade</label>
+                <select class="form-select" {{on "change" this.updateGradeFilter}}>
+                    <option value="">All Grades</option>
+                    {{#each this.gradeOptions as |grade|}}
+                    <option value={{grade.value}} selected={{eq this.gradeFilter grade.value}}>
+                        {{grade.label}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-sm text-gray-600">
+                Showing {{this.displayedAssignments.length}} of {{this.totalAssignments}} assignments
+            </div>
+            <button class="btn btn-outline text-sm" {{on "click" this.clearFilters}}>
+                <FaIcon @icon="times" class="mr-1" />
+                Clear Filters
+            </button>
+        </div>
+    </div>
+
+    {{!-- Assignments Table --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" checked={{this.allSelected}} {{on "change" this.toggleAllSelection}}
+                                class="form-checkbox" />
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Route
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Bus & Driver
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pickup/Dropoff
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {{#each this.displayedAssignments as |assignment|}}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" checked={{includes this.selectedAssignments assignment.id}}
+                                {{on "change" (fn this.toggleAssignmentSelection assignment.id)}}
+                                class="form-checkbox" />
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {{#if assignment.student.photo_url}}
+                                <img class="h-10 w-10 rounded-full object-cover" src={{assignment.student.photo_url}}
+                                    alt={{assignment.student.full_name}} />
+                                {{else}}
+                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <FaIcon @icon="user" class="text-gray-500 text-sm" />
+                                </div>
+                                {{/if}}
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{assignment.student.full_name}}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        ID: {{assignment.student.student_id}} • Grade {{assignment.student.grade}}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{assignment.route.name}}</div>
+                            <div class="text-sm text-gray-500">{{assignment.route.description}}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if assignment.bus}}
+                            <div class="text-sm text-gray-900">{{assignment.bus.name}}</div>
+                            <div class="text-sm text-gray-500">{{assignment.driver.name}}</div>
+                            {{else}}
+                            <span class="text-gray-400">Not assigned</span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {{#if assignment.pickup_time}}
+                                Pickup: {{assignment.pickup_time}}
+                                {{else}}
+                                <span class="text-gray-400">Not set</span>
+                                {{/if}}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{#if assignment.dropoff_time}}
+                                Dropoff: {{assignment.dropoff_time}}
+                                {{else}}
+                                <span class="text-gray-400">Not set</span>
+                                {{/if}}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if assignment.is_active}}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
+                            {{else if assignment.is_standby}}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Standby
+                            </span>
+                            {{else}}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Inactive
+                            </span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <LinkTo @route="school-transport.assignments.edit" @model={{assignment.id}}
+                                    class="text-blue-600 hover:text-blue-900">
+                                    <FaIcon @icon="edit" />
+                                </LinkTo>
+                                <button class="text-gray-600 hover:text-gray-900" {{on "click" (fn this.viewAssignment
+                                    assignment)}}>
+                                    <FaIcon @icon="eye" />
+                                </button>
+                                <button class="text-red-600 hover:text-red-900" {{on "click" (fn this.deleteAssignment
+                                    assignment)}}>
+                                    <FaIcon @icon="trash" />
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        {{!-- Empty State --}}
+        {{#if (eq this.displayedAssignments.length 0)}}
+        <div class="text-center py-12">
+            <FaIcon @icon="users" class="text-6xl text-gray-300 mb-4" />
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
+            <p class="text-gray-600 mb-6">
+                {{#if this.hasFilters}}
+                No assignments match your current filters. Try adjusting your search criteria.
+                {{else}}
+                Get started by assigning students to routes.
+                {{/if}}
+            </p>
+            {{#unless this.hasFilters}}
+            <LinkTo @route="school-transport.assignments.new" class="btn btn-primary">
+                <FaIcon @icon="plus" class="mr-2" />
+                Create First Assignment
+            </LinkTo>
+            {{/unless}}
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Pagination --}}
+    {{#if (gt this.totalPages 1)}}
+    <div class="flex items-center justify-between mt-8">
+        <div class="text-sm text-gray-600">
+            Page {{this.currentPage}} of {{this.totalPages}}
+        </div>
+        <div class="flex space-x-2">
+            <button class="btn btn-outline" disabled={{eq this.currentPage 1}} {{on "click" this.previousPage}}>
+                <FaIcon @icon="chevron-left" class="mr-1" />
+                Previous
+            </button>
+            <button class="btn btn-outline" disabled={{eq this.currentPage this.totalPages}} {{on "click"
+                this.nextPage}}>
+                Next
+                <FaIcon @icon="chevron-right" class="ml-1" />
+            </button>
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- Bulk Actions --}}
+    {{#if this.selectedAssignments.length}}
+    <div
+        class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 flex items-center space-x-4">
+        <span class="text-sm text-gray-600">
+            {{this.selectedAssignments.length}} assignment{{if (gt this.selectedAssignments.length 1) "s"}} selected
+        </span>
+        <div class="flex space-x-2">
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkActivate}}>
+                <FaIcon @icon="play" class="mr-1" />
+                Activate
+            </button>
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkDeactivate}}>
+                <FaIcon @icon="pause" class="mr-1" />
+                Deactivate
+            </button>
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkMoveToStandby}}>
+                <FaIcon @icon="clock" class="mr-1" />
+                Move to Standby
+            </button>
+            <button class="btn btn-sm btn-danger" {{on "click" this.bulkDelete}}>
+                <FaIcon @icon="trash" class="mr-1" />
+                Delete
+            </button>
+        </div>
+        <button class="btn btn-sm btn-outline" {{on "click" this.clearSelection}}>
+            <FaIcon @icon="times" />
+        </button>
+    </div>
+    {{/if}}
+</div>

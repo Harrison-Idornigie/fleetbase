@@ -1,0 +1,62 @@
+{
+    "name": "fleetbase/school-transport-engine",
+    "description": "School transportation management extension for Fleetbase",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "fleetbase",
+        "school",
+        "transportation",
+        "bus",
+        "routing",
+        "student"
+    ],
+    "authors": [
+        {
+            "name": "Fleetbase",
+            "email": "hello@fleetbase.io"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0",
+        "fleetbase/core-api": "*",
+        "fleetbase/fleetops": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fleetbase\\SchoolTransportEngine\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Fleetbase\\SchoolTransportEngine\\Providers\\SchoolTransportServiceProvider"
+            ]
+        },
+        "fleetbase": {
+            "extension_type": "engine",
+            "category": "transportation",
+            "version": "1.0.0",
+            "name": "School Transport Engine",
+            "description": "Complete school bus fleet management system for educational institutions",
+            "icon": "school-bus",
+            "permissions": [
+                "school-transport.view",
+                "school-transport.manage",
+                "school-transport.students.view",
+                "school-transport.students.create", 
+                "school-transport.students.update",
+                "school-transport.students.delete",
+                "school-transport.routes.view",
+                "school-transport.routes.create",
+                "school-transport.routes.update", 
+                "school-transport.routes.delete",
+                "school-transport.assignments.view",
+                "school-transport.assignments.manage"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

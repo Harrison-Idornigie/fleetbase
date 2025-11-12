@@ -1,0 +1,266 @@
+{{!-- New Assignment Template --}}
+<div class="school-transport-assignment-new">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Create New Assignment</h1>
+                <p class="text-gray-600 mt-1">Assign students to transportation routes</p>
+            </div>
+            <LinkTo @route="school-transport.assignments.index" class="btn btn-outline">
+                <FaIcon @icon="arrow-left" class="mr-2" />
+                Back to Assignments
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Assignment Form --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <form {{on "submit" this.saveAssignment}}>
+            <div class="p-6">
+                {{!-- Route Selection --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Route Selection</h2>
+                    <p class="text-sm text-gray-600">Choose the route for this assignment</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label required">Select Route</label>
+                        <select class="form-select {{if this.errors.route_id 'border-red-500'}}" {{on "change"
+                            this.updateRoute}} required>
+                            <option value="">Choose a route...</option>
+                            {{#each this.availableRoutes as |route|}}
+                            <option value={{route.id}} selected={{eq this.assignment.route_id route.id}}>
+                                {{route.name}} - {{route.description}} ({{route.student_count}}/{{route.max_capacity}}
+                                students)
+                            </option>
+                            {{/each}}
+                        </select>
+                        {{#if this.errors.route_id}}
+                        <p class="form-error">{{this.errors.route_id}}</p>
+                        {{/if}}
+                    </div>
+                </div>
+
+                {{#if this.selectedRoute}}
+                {{!-- Route Details --}}
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <FaIcon @icon="route" class="text-blue-600 text-xl" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium text-blue-900">{{this.selectedRoute.name}}</h3>
+                            <p class="text-sm text-blue-700">{{this.selectedRoute.description}}</p>
+                            <div class="mt-2 flex items-center space-x-4 text-xs text-blue-600">
+                                <span>Type: {{capitalize this.selectedRoute.route_type}}</span>
+                                <span>Capacity:
+                                    {{this.selectedRoute.student_count}}/{{this.selectedRoute.max_capacity}}</span>
+                                {{#if this.selectedRoute.bus}}
+                                <span>Bus: {{this.selectedRoute.bus.name}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/if}}
+
+                {{!-- Student Selection --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Student Selection</h2>
+                    <p class="text-sm text-gray-600">Choose students to assign to this route</p>
+                </div>
+
+                {{!-- Student Search and Filter --}}
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Search Students</label>
+                            <Input @type="text" @value={{this.studentSearchQuery}} @placeholder="Name or student ID..."
+                                class="form-input" {{on "input" this.updateStudentSearch}} />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">School</label>
+                            <select class="form-select" {{on "change" this.updateStudentSchoolFilter}}>
+                                <option value="">All Schools</option>
+                                {{#each this.schools as |school|}}
+                                <option value={{school.id}} selected={{eq this.studentSchoolFilter school.id}}>
+                                    {{school.name}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Grade</label>
+                            <select class="form-select" {{on "change" this.updateStudentGradeFilter}}>
+                                <option value="">All Grades</option>
+                                {{#each this.gradeOptions as |grade|}}
+                                <option value={{grade.value}} selected={{eq this.studentGradeFilter grade.value}}>
+                                    {{grade.label}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Available Students --}}
+                <div class="mb-8">
+                    <h3 class="text-md font-medium text-gray-900 mb-4">Available Students</h3>
+                    {{#if this.availableStudents}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                        {{#each this.availableStudents as |student|}}
+                        <div
+                            class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" checked={{includes this.selectedStudentIds student.id}}
+                                    {{on "change" (fn this.toggleStudentSelection student.id)}} class="form-checkbox" />
+                                {{#if student.photo_url}}
+                                <img src={{student.photo_url}} alt={{student.full_name}}
+                                    class="w-10 h-10 rounded-full object-cover" />
+                                {{else}}
+                                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <FaIcon @icon="user" class="text-gray-500" />
+                                </div>
+                                {{/if}}
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900">{{student.full_name}}</h4>
+                                    <p class="text-sm text-gray-600">Grade {{student.grade}} • ID:
+                                        {{student.student_id}}</p>
+                                    <p class="text-xs text-gray-500">{{student.school}}</p>
+                                </div>
+                            </div>
+                            {{#if student.special_needs}}
+                            <div class="mt-2">
+                                <div class="flex flex-wrap gap-1">
+                                    {{#each student.special_needs as |need|}}
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        {{need}}
+                                    </span>
+                                    {{/each}}
+                                </div>
+                            </div>
+                            {{/if}}
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <FaIcon @icon="users" class="text-4xl text-gray-300 mb-4" />
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No available students</h3>
+                        <p class="text-gray-600">
+                            {{#if this.studentSearchQuery}}
+                            No students match your search criteria.
+                            {{else}}
+                            All students are already assigned to routes or don't meet the filter criteria.
+                            {{/if}}
+                        </p>
+                    </div>
+                    {{/if}}
+                </div>
+
+                {{!-- Assignment Details --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Assignment Details</h2>
+                    <p class="text-sm text-gray-600">Configure pickup/dropoff times and assignment settings</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label">Pickup Time</label>
+                        <Input @type="time" @value={{this.assignment.pickup_time}} class="form-input" />
+                        <p class="form-help">Leave blank to use route default time</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Dropoff Time</label>
+                        <Input @type="time" @value={{this.assignment.dropoff_time}} class="form-input" />
+                        <p class="form-help">Leave blank to use route default time</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Pickup Location</label>
+                        <Textarea @value={{this.assignment.pickup_location}} @rows={{2}}
+                            @placeholder="Specific pickup location (leave blank to use student's default)"
+                            class="form-textarea" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Dropoff Location</label>
+                        <Textarea @value={{this.assignment.dropoff_location}} @rows={{2}}
+                            @placeholder="Specific dropoff location (leave blank to use student's default)"
+                            class="form-textarea" />
+                    </div>
+                </div>
+
+                {{!-- Assignment Settings --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Assignment Settings</h2>
+                </div>
+
+                <div class="space-y-4 mb-8">
+                    <div class="form-group">
+                        <label class="flex items-center">
+                            <input type="checkbox" checked={{this.assignment.is_active}} {{on "change"
+                                this.toggleActive}} class="form-checkbox" />
+                            <span class="ml-2">Activate assignment immediately</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="flex items-center">
+                            <input type="checkbox" checked={{this.assignment.is_standby}} {{on "change"
+                                this.toggleStandby}} class="form-checkbox" />
+                            <span class="ml-2">Place on standby list (if route is at capacity)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Special Notes</label>
+                        <Textarea @value={{this.assignment.notes}} @rows={{3}}
+                            @placeholder="Any special instructions or notes for this assignment"
+                            class="form-textarea" />
+                    </div>
+                </div>
+
+                {{!-- Selected Students Summary --}}
+                {{#if this.selectedStudents.length}}
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <FaIcon @icon="check-circle" class="text-green-600" />
+                        <h3 class="text-sm font-medium text-green-900">
+                            {{this.selectedStudents.length}} student{{if (gt this.selectedStudents.length 1) "s"}}
+                            selected
+                        </h3>
+                    </div>
+                    <div class="text-sm text-green-700">
+                        {{#each this.selectedStudents as |student index|}}
+                        {{#if (gt index 0)}}, {{/if}}
+                        {{student.full_name}} (Grade {{student.grade}})
+                        {{/each}}
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+
+            {{!-- Form Actions --}}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <LinkTo @route="school-transport.assignments.index" class="btn btn-outline">
+                    Cancel
+                </LinkTo>
+                <button type="submit" class="btn btn-primary" disabled={{or this.isSaving (eq
+                    this.selectedStudentIds.length 0)}}>
+                    {{#if this.isSaving}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Creating Assignments...
+                    {{else}}
+                    <FaIcon @icon="save" class="mr-2" />
+                    Create Assignment{{if (gt this.selectedStudentIds.length 1) "s"}}
+                    {{/if}}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

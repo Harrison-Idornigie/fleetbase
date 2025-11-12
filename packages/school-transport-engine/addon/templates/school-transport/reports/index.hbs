@@ -1,0 +1,339 @@
+{{!-- Reports Index Template --}}
+<div class="school-transport-reports">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                    <FaIcon @icon="chart-bar" class="text-purple-600 text-xl" />
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+                    <p class="text-gray-600">Comprehensive insights into school transportation operations</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button class="btn btn-outline" {{on "click" this.exportAllReports}}>
+                    <FaIcon @icon="download" class="mr-2" />
+                    Export All
+                </button>
+                <button class="btn btn-primary" {{on "click" this.scheduleReport}}>
+                    <FaIcon @icon="calendar-plus" class="mr-2" />
+                    Schedule Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Quick Stats --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FaIcon @icon="users" class="text-blue-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Students</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.stats.totalStudents}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <FaIcon @icon="route" class="text-green-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Active Routes</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.stats.activeRoutes}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <FaIcon @icon="bus" class="text-yellow-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Vehicles in Service</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.stats.vehiclesInService}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <FaIcon @icon="exclamation-triangle" class="text-red-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Incidents Today</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.stats.incidentsToday}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Report Categories --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {{!-- Student Reports --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Student Reports</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <LinkTo @route="school-transport.reports.attendance" class="block">
+                    <div
+                        class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <FaIcon @icon="calendar-check" class="text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">Attendance Report</h3>
+                                <p class="text-sm text-gray-600">Student pickup/drop-off attendance and patterns</p>
+                            </div>
+                        </div>
+                        <FaIcon @icon="chevron-right" class="text-gray-400" />
+                    </div>
+                </LinkTo>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    {{on "click" this.generateStudentRoster}}>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <FaIcon @icon="list" class="text-green-600" />
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">Student Roster</h3>
+                            <p class="text-sm text-gray-600">Complete list of enrolled students with details</p>
+                        </div>
+                    </div>
+                    <FaIcon @icon="chevron-right" class="text-gray-400" />
+                </div>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    {{on "click" this.generateStudentDemographics}}>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                            <FaIcon @icon="chart-pie" class="text-purple-600" />
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">Student Demographics</h3>
+                            <p class="text-sm text-gray-600">Age, grade, and location distribution</p>
+                        </div>
+                    </div>
+                    <FaIcon @icon="chevron-right" class="text-gray-400" />
+                </div>
+            </div>
+        </div>
+
+        {{!-- Route & Vehicle Reports --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Route & Vehicle Reports</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <LinkTo @route="school-transport.reports.route-efficiency" class="block">
+                    <div
+                        class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                <FaIcon @icon="tachometer-alt" class="text-orange-600" />
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">Route Efficiency</h3>
+                                <p class="text-sm text-gray-600">Route performance, delays, and optimization metrics</p>
+                            </div>
+                        </div>
+                        <FaIcon @icon="chevron-right" class="text-gray-400" />
+                    </div>
+                </LinkTo>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    {{on "click" this.generateVehicleUtilization}}>
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                        {{on "click" this.generateVehicleUtilization}}>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                <FaIcon @icon="bus" class="text-yellow-600" />
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">Vehicle Utilization</h3>
+                                <p class="text-sm text-gray-600">Vehicle usage, mileage, and maintenance reports</p>
+                            </div>
+                        </div>
+                        <FaIcon @icon="chevron-right" class="text-gray-400" />
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    {{on "click" this.generateDriverPerformance}}>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <FaIcon @icon="user-tie" class="text-indigo-600" />
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">Driver Performance</h3>
+                            <p class="text-sm text-gray-600">Driver metrics, safety records, and feedback</p>
+                        </div>
+                    </div>
+                    <FaIcon @icon="chevron-right" class="text-gray-400" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Safety & Compliance --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Safety & Compliance</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <LinkTo @route="school-transport.reports.safety-compliance" class="block">
+                    <div
+                        class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                <FaIcon @icon="shield-alt" class="text-red-600" />
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">Safety Compliance</h3>
+                                <p class="text-sm text-gray-600">Safety incidents, compliance status</p>
+                            </div>
+                        </div>
+                        <FaIcon @icon="chevron-right" class="text-gray-400" />
+                    </div>
+                </LinkTo>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    {{on "click" this.generateEmergencyResponse}}>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <FaIcon @icon="ambulance" class="text-red-600" />
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">Emergency Response</h3>
+                            <p class="text-sm text-gray-600">Emergency incidents and response times</p>
+                        </div>
+                    </div>
+                    <FaIcon @icon="chevron-right" class="text-gray-400" />
+                </div>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    {{on "click" this.generateInspectionReports}}>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <FaIcon @icon="clipboard-check" class="text-blue-600" />
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">Inspection Reports</h3>
+                            <p class="text-sm text-gray-600">Vehicle and facility inspection results</p>
+                        </div>
+                    </div>
+                    <FaIcon @icon="chevron-right" class="text-gray-400" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Custom Reports --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Custom Reports</h2>
+            <LinkTo @route="school-transport.reports.custom" class="btn btn-primary btn-sm">
+                <FaIcon @icon="plus" class="mr-2" />
+                Create Custom Report
+            </LinkTo>
+        </div>
+        <div class="p-6">
+            {{#if this.customReports}}
+            <div class="space-y-4">
+                {{#each this.customReports as |report|}}
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <FaIcon @icon="file-chart" class="text-gray-600" />
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">{{report.name}}</h3>
+                            <p class="text-sm text-gray-600">{{report.description}}</p>
+                            <p class="text-xs text-gray-500">Last run: {{moment-format report.last_run "MMM DD, YYYY
+                                'at' h:mm A"}}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {{#if report.is_scheduled}}
+                        <span
+                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Scheduled
+                        </span>
+                        {{else}}
+                        <span
+                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Manual
+                        </span>
+                        {{/if}}
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400 hover:text-gray-600" {{on "click" (fn this.runReport report)}}
+                                title="Run Report">
+                                <FaIcon @icon="play" />
+                            </button>
+                            <button class="text-gray-400 hover:text-gray-600" {{on "click" (fn this.editReport report)}}
+                                title="Edit Report">
+                                <FaIcon @icon="edit" />
+                            </button>
+                            <button class="text-gray-400 hover:text-red-600" {{on "click" (fn this.deleteReport
+                                report)}} title="Delete Report">
+                                <FaIcon @icon="trash" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            <div class="text-center py-8">
+                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <FaIcon @icon="file-chart" class="text-gray-400 text-2xl" />
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No custom reports yet</h3>
+                <p class="text-gray-600 mb-4">Create custom reports to analyze specific aspects of your transportation
+                    operations.</p>
+                <LinkTo @route="school-transport.reports.custom" class="btn btn-primary">
+                    <FaIcon @icon="plus" class="mr-2" />
+                    Create Your First Report
+                </LinkTo>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+
+    {{!-- Recent Reports --}}
+    {{#if this.recentReports}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Recent Reports</h2>
+        </div>
+        <div class="p-6">
+            <div class="space-y-3">
+                {{#each this.recentReports as |report|}}
+                <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <FaIcon @icon="file-pdf" class="text-blue-600 text-sm" />
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900">{{report.name}}</h4>
+                            <p class="text-xs text-gray-600">Generated {{moment-format report.generated_at "MMM DD, YYYY
+                                'at' h:mm A"}}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs text-gray-500">{{report.file_size}}</span>
+                        <button class="text-blue-600 hover:text-blue-800" {{on "click" (fn this.downloadReport report)}}
+                            title="Download Report">
+                            <FaIcon @icon="download" />
+                        </button>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+    {{/if}}
+</div>

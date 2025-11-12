@@ -1,0 +1,181 @@
+{{!-- Students Index Template --}}
+<div class="school-transport-students">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Students</h1>
+                <p class="text-gray-600 mt-1">Manage student profiles and transportation assignments</p>
+            </div>
+            <div class="flex space-x-3">
+                <button type="button" class="btn btn-outline" {{on "click" this.refreshStudents}}>
+                    <FaIcon @icon="sync" class="mr-2" />
+                    Refresh
+                </button>
+                <LinkTo @route="school-transport.students.new" class="btn btn-primary">
+                    <FaIcon @icon="plus" class="mr-2" />
+                    Add Student
+                </LinkTo>
+            </div>
+        </div>
+
+        {{!-- Filters and Search --}}
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Search</label>
+                    <Input @type="text" @value={{this.searchQuery}} @placeholder="Search by name, ID, or school..."
+                        class="form-input" {{on "input" this.updateSearch}} />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">School</label>
+                    <select class="form-select" {{on "change" this.updateSchoolFilter}}>
+                        <option value="">All Schools</option>
+                        {{#each this.schools as |school|}}
+                        <option value={{school.id}} selected={{eq this.selectedSchool school.id}}>
+                            {{school.name}}
+                        </option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Grade</label>
+                    <select class="form-select" {{on "change" this.updateGradeFilter}}>
+                        <option value="">All Grades</option>
+                        {{#each this.gradeOptions as |grade|}}
+                        <option value={{grade.value}} selected={{eq this.selectedGrade grade.value}}>
+                            {{grade.label}}
+                        </option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" {{on "change" this.updateStatusFilter}}>
+                        <option value="">All Status</option>
+                        <option value="active" selected={{eq this.selectedStatus "active" }}>Active</option>
+                        <option value="inactive" selected={{eq this.selectedStatus "inactive" }}>Inactive</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Students Grid --}}
+    <div class="students-grid">
+        {{#if this.isLoading}}
+        <div class="loading-state">
+            <FaIcon @icon="spinner" @spin={{true}} class="text-4xl text-gray-400" />
+            <p class="text-gray-500 mt-2">Loading students...</p>
+        </div>
+        {{else if this.students}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {{#each this.students as |student|}}
+            <div class="student-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                {{on "click" (fn this.viewStudent student.id)}}>
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center">
+                        {{#if student.photo_url}}
+                        <img src={{student.photo_url}} alt={{student.full_name}} class="w-12 h-12 rounded-full mr-3" />
+                        {{else}}
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            <FaIcon @icon="user" class="text-blue-600" />
+                        </div>
+                        {{/if}}
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{student.full_name}}</h3>
+                            <p class="text-sm text-gray-600">{{student.student_id}}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {{#if student.has_special_needs}}
+                        <span class="badge badge-warning">Special Needs</span>
+                        {{/if}}
+                        <span class="status-badge status-{{student.is_active}}">
+                            {{if student.is_active "Active" "Inactive"}}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">School:</span>
+                        <span class="font-medium">{{student.school}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Grade:</span>
+                        <span class="font-medium">{{student.grade}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Age:</span>
+                        <span class="font-medium">{{if student.age student.age "N/A"}}</span>
+                    </div>
+                    {{#if student.active_assignments}}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Active Routes:</span>
+                        <span class="font-medium">{{student.active_assignments}}</span>
+                    </div>
+                    {{/if}}
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">
+                            Parent: {{student.parent_name}}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="button" class="btn btn-sm btn-outline" {{on "click" (fn this.editStudent
+                                student.id)}}>
+                                <FaIcon @icon="edit" />
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" {{on "click" (fn this.deleteStudent
+                                student)}}>
+                                <FaIcon @icon="trash" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+
+        {{!-- Pagination --}}
+        {{#if this.meta}}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                {{#if this.meta.prev_page_url}}
+                <button type="button" class="btn btn-outline btn-sm" {{on "click" (fn this.goToPage
+                    this.meta.current_page - 1)}}>
+                    <FaIcon @icon="chevron-left" />
+                    Previous
+                </button>
+                {{/if}}
+
+                <span class="text-sm text-gray-700">
+                    Page {{this.meta.current_page}} of {{this.meta.last_page}}
+                    ({{this.meta.total}} students)
+                </span>
+
+                {{#if this.meta.next_page_url}}
+                <button type="button" class="btn btn-outline btn-sm" {{on "click" (fn this.goToPage
+                    this.meta.current_page + 1)}}>
+                    Next
+                    <FaIcon @icon="chevron-right" />
+                </button>
+                {{/if}}
+            </nav>
+        </div>
+        {{/if}}
+        {{else}}
+        <div class="empty-state">
+            <FaIcon @icon="users" class="text-gray-400 text-6xl mb-4" />
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No students found</h3>
+            <p class="text-gray-500 mb-4">Get started by adding your first student.</p>
+            <LinkTo @route="school-transport.students.new" class="btn btn-primary">
+                <FaIcon @icon="plus" class="mr-2" />
+                Add First Student
+            </LinkTo>
+        </div>
+        {{/if}}
+    </div>
+</div>

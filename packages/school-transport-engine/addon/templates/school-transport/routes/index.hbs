@@ -1,0 +1,229 @@
+{{!-- Routes Index Template --}}
+<div class="school-transport-routes-index">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">School Routes</h1>
+                <p class="text-gray-600 mt-1">Manage transportation routes and schedules</p>
+            </div>
+            <LinkTo @route="school-transport.routes.new" class="btn btn-primary">
+                <FaIcon @icon="plus" class="mr-2" />
+                Add New Route
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Filters and Search --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="form-group">
+                <label class="form-label">Search Routes</label>
+                <Input @type="text" @value={{this.searchQuery}} @placeholder="Search by route name or description..."
+                    class="form-input" {{on "input" this.updateSearch}} />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">School</label>
+                <select class="form-select" {{on "change" this.updateSchoolFilter}}>
+                    <option value="">All Schools</option>
+                    {{#each this.schools as |school|}}
+                    <option value={{school.id}} selected={{eq this.schoolFilter school.id}}>
+                        {{school.name}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-select" {{on "change" this.updateStatusFilter}}>
+                    <option value="">All Status</option>
+                    <option value="active" selected={{eq this.statusFilter "active" }}>Active</option>
+                    <option value="inactive" selected={{eq this.statusFilter "inactive" }}>Inactive</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Route Type</label>
+                <select class="form-select" {{on "change" this.updateTypeFilter}}>
+                    <option value="">All Types</option>
+                    <option value="morning" selected={{eq this.typeFilter "morning" }}>Morning Pickup</option>
+                    <option value="afternoon" selected={{eq this.typeFilter "afternoon" }}>Afternoon Dropoff</option>
+                    <option value="both" selected={{eq this.typeFilter "both" }}>Round Trip</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-sm text-gray-600">
+                Showing {{this.displayedRoutes.length}} of {{this.totalRoutes}} routes
+            </div>
+            <button class="btn btn-outline text-sm" {{on "click" this.clearFilters}}>
+                <FaIcon @icon="times" class="mr-1" />
+                Clear Filters
+            </button>
+        </div>
+    </div>
+
+    {{!-- Routes Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{#each this.displayedRoutes as |route|}}
+        <div
+            class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            {{!-- Route Header --}}
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <FaIcon @icon="route" class="text-blue-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">{{route.name}}</h3>
+                            <p class="text-sm text-gray-600">{{route.description}}</p>
+                        </div>
+                    </div>
+                    {{#if route.is_active}}
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Active
+                    </span>
+                    {{else}}
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Inactive
+                    </span>
+                    {{/if}}
+                </div>
+            </div>
+
+            {{!-- Route Details --}}
+            <div class="p-4">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Type:</span>
+                        <span class="font-medium capitalize">{{route.route_type}}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Students:</span>
+                        <span class="font-medium">{{route.student_count}} assigned</span>
+                    </div>
+
+                    {{#if route.bus}}
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Bus:</span>
+                        <span class="font-medium">{{route.bus.name}}</span>
+                    </div>
+                    {{/if}}
+
+                    {{#if route.driver}}
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Driver:</span>
+                        <span class="font-medium">{{route.driver.name}}</span>
+                    </div>
+                    {{/if}}
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Distance:</span>
+                        <span class="font-medium">{{route.distance}} miles</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Duration:</span>
+                        <span class="font-medium">{{route.duration}} min</span>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Route Actions --}}
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                <div class="flex space-x-2">
+                    <LinkTo @route="school-transport.routes.view" @model={{route.id}}
+                        class="btn btn-sm btn-outline flex-1">
+                        <FaIcon @icon="eye" class="mr-1" />
+                        View
+                    </LinkTo>
+                    <LinkTo @route="school-transport.routes.edit" @model={{route.id}}
+                        class="btn btn-sm btn-outline flex-1">
+                        <FaIcon @icon="edit" class="mr-1" />
+                        Edit
+                    </LinkTo>
+                    <button class="btn btn-sm btn-outline flex-1" {{on "click" (fn this.duplicateRoute route)}}>
+                        <FaIcon @icon="copy" class="mr-1" />
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    {{!-- Empty State --}}
+    {{#if (eq this.displayedRoutes.length 0)}}
+    <div class="text-center py-12">
+        <FaIcon @icon="route" class="text-6xl text-gray-300 mb-4" />
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No routes found</h3>
+        <p class="text-gray-600 mb-6">
+            {{#if this.hasFilters}}
+            No routes match your current filters. Try adjusting your search criteria.
+            {{else}}
+            Get started by creating your first school transportation route.
+            {{/if}}
+        </p>
+        {{#unless this.hasFilters}}
+        <LinkTo @route="school-transport.routes.new" class="btn btn-primary">
+            <FaIcon @icon="plus" class="mr-2" />
+            Create First Route
+        </LinkTo>
+        {{/unless}}
+    </div>
+    {{/if}}
+
+    {{!-- Pagination --}}
+    {{#if (gt this.totalPages 1)}}
+    <div class="flex items-center justify-between mt-8">
+        <div class="text-sm text-gray-600">
+            Page {{this.currentPage}} of {{this.totalPages}}
+        </div>
+        <div class="flex space-x-2">
+            <button class="btn btn-outline" disabled={{eq this.currentPage 1}} {{on "click" this.previousPage}}>
+                <FaIcon @icon="chevron-left" class="mr-1" />
+                Previous
+            </button>
+            <button class="btn btn-outline" disabled={{eq this.currentPage this.totalPages}} {{on "click"
+                this.nextPage}}>
+                Next
+                <FaIcon @icon="chevron-right" class="ml-1" />
+            </button>
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- Bulk Actions --}}
+    {{#if this.selectedRoutes.length}}
+    <div
+        class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 flex items-center space-x-4">
+        <span class="text-sm text-gray-600">
+            {{this.selectedRoutes.length}} route{{if (gt this.selectedRoutes.length 1) "s"}} selected
+        </span>
+        <div class="flex space-x-2">
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkActivate}}>
+                <FaIcon @icon="play" class="mr-1" />
+                Activate
+            </button>
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkDeactivate}}>
+                <FaIcon @icon="pause" class="mr-1" />
+                Deactivate
+            </button>
+            <button class="btn btn-sm btn-danger" {{on "click" this.bulkDelete}}>
+                <FaIcon @icon="trash" class="mr-1" />
+                Delete
+            </button>
+        </div>
+        <button class="btn btn-sm btn-outline" {{on "click" this.clearSelection}}>
+            <FaIcon @icon="times" />
+        </button>
+    </div>
+    {{/if}}
+</div>

@@ -1,0 +1,294 @@
+{{!-- Communications Index Template --}}
+<div class="school-transport-communications-index">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Communications</h1>
+                <p class="text-gray-600 mt-1">Manage parent notifications and messaging</p>
+            </div>
+            <div class="flex space-x-3">
+                <LinkTo @route="school-transport.communications.templates" class="btn btn-outline">
+                    <FaIcon @icon="file-alt" class="mr-2" />
+                    Message Templates
+                </LinkTo>
+                <LinkTo @route="school-transport.communications.new" class="btn btn-primary">
+                    <FaIcon @icon="plus" class="mr-2" />
+                    Send Message
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Filters and Search --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="form-group">
+                <label class="form-label">Search Messages</label>
+                <Input @type="text" @value={{this.searchQuery}} @placeholder="Subject, content, or recipient..."
+                    class="form-input" {{on "input" this.updateSearch}} />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Message Type</label>
+                <select class="form-select" {{on "change" this.updateTypeFilter}}>
+                    <option value="">All Types</option>
+                    <option value="notification" selected={{eq this.typeFilter "notification" }}>Notification</option>
+                    <option value="alert" selected={{eq this.typeFilter "alert" }}>Alert</option>
+                    <option value="reminder" selected={{eq this.typeFilter "reminder" }}>Reminder</option>
+                    <option value="update" selected={{eq this.typeFilter "update" }}>Route Update</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-select" {{on "change" this.updateStatusFilter}}>
+                    <option value="">All Status</option>
+                    <option value="sent" selected={{eq this.statusFilter "sent" }}>Sent</option>
+                    <option value="scheduled" selected={{eq this.statusFilter "scheduled" }}>Scheduled</option>
+                    <option value="draft" selected={{eq this.statusFilter "draft" }}>Draft</option>
+                    <option value="failed" selected={{eq this.statusFilter "failed" }}>Failed</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date Range</label>
+                <select class="form-select" {{on "change" this.updateDateFilter}}>
+                    <option value="">All Time</option>
+                    <option value="today" selected={{eq this.dateFilter "today" }}>Today</option>
+                    <option value="week" selected={{eq this.dateFilter "week" }}>This Week</option>
+                    <option value="month" selected={{eq this.dateFilter "month" }}>This Month</option>
+                    <option value="custom" selected={{eq this.dateFilter "custom" }}>Custom Range</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-select" {{on "change" this.updatePriorityFilter}}>
+                    <option value="">All Priorities</option>
+                    <option value="low" selected={{eq this.priorityFilter "low" }}>Low</option>
+                    <option value="normal" selected={{eq this.priorityFilter "normal" }}>Normal</option>
+                    <option value="high" selected={{eq this.priorityFilter "high" }}>High</option>
+                    <option value="urgent" selected={{eq this.priorityFilter "urgent" }}>Urgent</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-sm text-gray-600">
+                Showing {{this.displayedCommunications.length}} of {{this.totalCommunications}} messages
+            </div>
+            <button class="btn btn-outline text-sm" {{on "click" this.clearFilters}}>
+                <FaIcon @icon="times" class="mr-1" />
+                Clear Filters
+            </button>
+        </div>
+    </div>
+
+    {{!-- Communications List --}}
+    <div class="space-y-4">
+        {{#each this.displayedCommunications as |communication|}}
+        <div
+            class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            {{!-- Communication Header --}}
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {{#if (eq communication.type "alert")}}
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <FaIcon @icon="exclamation-triangle" class="text-red-600" />
+                        </div>
+                        {{else if (eq communication.type "reminder")}}
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <FaIcon @icon="clock" class="text-yellow-600" />
+                        </div>
+                        {{else if (eq communication.type "update")}}
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <FaIcon @icon="sync" class="text-blue-600" />
+                        </div>
+                        {{else}}
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <FaIcon @icon="bell" class="text-green-600" />
+                        </div>
+                        {{/if}}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">{{communication.subject}}</h3>
+                            <p class="text-sm text-gray-600">{{communication.recipient_count}} recipient{{if (gt
+                                communication.recipient_count 1) "s"}}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {{#if (eq communication.status "sent")}}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <FaIcon @icon="check" class="mr-1" />
+                            Sent
+                        </span>
+                        {{else if (eq communication.status "scheduled")}}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <FaIcon @icon="clock" class="mr-1" />
+                            Scheduled
+                        </span>
+                        {{else if (eq communication.status "draft")}}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <FaIcon @icon="edit" class="mr-1" />
+                            Draft
+                        </span>
+                        {{else}}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <FaIcon @icon="times" class="mr-1" />
+                            Failed
+                        </span>
+                        {{/if}}
+
+                        {{#if (eq communication.priority "urgent")}}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Urgent
+                        </span>
+                        {{else if (eq communication.priority "high")}}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            High
+                        </span>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Communication Content --}}
+            <div class="p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-900 mb-3">{{communication.content}}</p>
+                        <div class="text-xs text-gray-500">
+                            {{#if (eq communication.status "scheduled")}}
+                            Scheduled for: {{moment-format communication.scheduled_at "MMM DD, YYYY 'at' h:mm A"}}
+                            {{else}}
+                            Sent: {{moment-format communication.sent_at "MMM DD, YYYY 'at' h:mm A"}}
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Delivery Status</h4>
+                        <div class="space-y-1 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Delivered:</span>
+                                <span class="font-medium">{{communication.delivered_count}}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Read:</span>
+                                <span class="font-medium">{{communication.read_count}}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Failed:</span>
+                                <span class="font-medium text-red-600">{{communication.failed_count}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Communication Actions --}}
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                <div class="flex space-x-2">
+                    <LinkTo @route="school-transport.communications.view" @model={{communication.id}}
+                        class="btn btn-sm btn-outline flex-1">
+                        <FaIcon @icon="eye" class="mr-1" />
+                        View Details
+                    </LinkTo>
+                    {{#if (eq communication.status "draft")}}
+                    <LinkTo @route="school-transport.communications.edit" @model={{communication.id}}
+                        class="btn btn-sm btn-outline flex-1">
+                        <FaIcon @icon="edit" class="mr-1" />
+                        Edit
+                    </LinkTo>
+                    {{/if}}
+                    <button class="btn btn-sm btn-outline flex-1" {{on "click" (fn this.duplicateMessage
+                        communication)}}>
+                        <FaIcon @icon="copy" class="mr-1" />
+                        Duplicate
+                    </button>
+                    {{#if (eq communication.status "sent")}}
+                    <button class="btn btn-sm btn-outline flex-1" {{on "click" (fn this.resendMessage communication)}}>
+                        <FaIcon @icon="redo" class="mr-1" />
+                        Resend
+                    </button>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    {{!-- Empty State --}}
+    {{#if (eq this.displayedCommunications.length 0)}}
+    <div class="text-center py-12">
+        <FaIcon @icon="envelope" class="text-6xl text-gray-300 mb-4" />
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No messages found</h3>
+        <p class="text-gray-600 mb-6">
+            {{#if this.hasFilters}}
+            No messages match your current filters. Try adjusting your search criteria.
+            {{else}}
+            Get started by sending your first parent notification.
+            {{/if}}
+        </p>
+        {{#unless this.hasFilters}}
+        <LinkTo @route="school-transport.communications.new" class="btn btn-primary">
+            <FaIcon @icon="plus" class="mr-2" />
+            Send First Message
+        </LinkTo>
+        {{/unless}}
+    </div>
+    {{/if}}
+
+    {{!-- Pagination --}}
+    {{#if (gt this.totalPages 1)}}
+    <div class="flex items-center justify-between mt-8">
+        <div class="text-sm text-gray-600">
+            Page {{this.currentPage}} of {{this.totalPages}}
+        </div>
+        <div class="flex space-x-2">
+            <button class="btn btn-outline" disabled={{eq this.currentPage 1}} {{on "click" this.previousPage}}>
+                <FaIcon @icon="chevron-left" class="mr-1" />
+                Previous
+            </button>
+            <button class="btn btn-outline" disabled={{eq this.currentPage this.totalPages}} {{on "click"
+                this.nextPage}}>
+                Next
+                <FaIcon @icon="chevron-right" class="ml-1" />
+            </button>
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- Bulk Actions --}}
+    {{#if this.selectedCommunications.length}}
+    <div
+        class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 flex items-center space-x-4">
+        <span class="text-sm text-gray-600">
+            {{this.selectedCommunications.length}} message{{if (gt this.selectedCommunications.length 1) "s"}} selected
+        </span>
+        <div class="flex space-x-2">
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkResend}}>
+                <FaIcon @icon="redo" class="mr-1" />
+                Resend
+            </button>
+            <button class="btn btn-sm btn-outline" {{on "click" this.bulkArchive}}>
+                <FaIcon @icon="archive" class="mr-1" />
+                Archive
+            </button>
+            <button class="btn btn-sm btn-danger" {{on "click" this.bulkDelete}}>
+                <FaIcon @icon="trash" class="mr-1" />
+                Delete
+            </button>
+        </div>
+        <button class="btn btn-sm btn-outline" {{on "click" this.clearSelection}}>
+            <FaIcon @icon="times" />
+        </button>
+    </div>
+    {{/if}}
+</div>

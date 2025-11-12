@@ -1,0 +1,355 @@
+{{!-- Bulk Assign Template --}}
+<div class="school-transport-assignment-bulk">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Bulk Student Assignment</h1>
+                <p class="text-gray-600 mt-1">Assign multiple students to routes efficiently</p>
+            </div>
+            <LinkTo @route="school-transport.assignments.index" class="btn btn-outline">
+                <FaIcon @icon="arrow-left" class="mr-2" />
+                Back to Assignments
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Bulk Assignment Form --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <form {{on "submit" this.saveBulkAssignments}}>
+            <div class="p-6">
+                {{!-- Step Indicator --}}
+                <div class="mb-8">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
+                                    1
+                                </div>
+                                <span class="ml-2 text-sm font-medium text-gray-900">Select Students</span>
+                            </div>
+                            <FaIcon @icon="chevron-right" class="text-gray-400" />
+                            <div class="flex items-center">
+                                <div
+                                    class="w-8 h-8 rounded-full {{if this.selectedStudents.length 'bg-blue-500' 'bg-gray-300'}} text-white flex items-center justify-center text-sm font-medium">
+                                    2
+                                </div>
+                                <span
+                                    class="ml-2 text-sm font-medium {{if this.selectedStudents.length 'text-gray-900' 'text-gray-400'}}">Configure
+                                    Assignment</span>
+                            </div>
+                            <FaIcon @icon="chevron-right" class="text-gray-400" />
+                            <div class="flex items-center">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center text-sm font-medium">
+                                    3
+                                </div>
+                                <span class="ml-2 text-sm font-medium text-gray-400">Review & Confirm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Student Selection --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Step 1: Select Students</h2>
+                    <p class="text-sm text-gray-600">Choose students to assign to routes</p>
+                </div>
+
+                {{!-- Student Filters --}}
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Search Students</label>
+                            <Input @type="text" @value={{this.studentSearchQuery}} @placeholder="Name or student ID..."
+                                class="form-input" {{on "input" this.updateStudentSearch}} />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">School</label>
+                            <select class="form-select" {{on "change" this.updateStudentSchoolFilter}}>
+                                <option value="">All Schools</option>
+                                {{#each this.schools as |school|}}
+                                <option value={{school.id}} selected={{eq this.studentSchoolFilter school.id}}>
+                                    {{school.name}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Grade</label>
+                            <select class="form-select" {{on "change" this.updateStudentGradeFilter}}>
+                                <option value="">All Grades</option>
+                                {{#each this.gradeOptions as |grade|}}
+                                <option value={{grade.value}} selected={{eq this.studentGradeFilter grade.value}}>
+                                    {{grade.label}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Current Status</label>
+                            <select class="form-select" {{on "change" this.updateStudentStatusFilter}}>
+                                <option value="">All Students</option>
+                                <option value="unassigned" selected={{eq this.studentStatusFilter "unassigned" }}>
+                                    Unassigned Only</option>
+                                <option value="assigned" selected={{eq this.studentStatusFilter "assigned" }}>Currently
+                                    Assigned</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Student Selection Grid --}}
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-md font-medium text-gray-900">Available Students</h3>
+                        <div class="flex items-center space-x-4">
+                            <button class="btn btn-sm btn-outline" {{on "click" this.selectAllVisible}}>
+                                Select All Visible
+                            </button>
+                            <button class="btn btn-sm btn-outline" {{on "click" this.clearSelection}}>
+                                Clear Selection
+                            </button>
+                            <span class="text-sm text-gray-600">
+                                {{this.selectedStudents.length}} selected
+                            </span>
+                        </div>
+                    </div>
+
+                    {{#if this.availableStudents}}
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                        {{#each this.availableStudents as |student|}}
+                        <div
+                            class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                            <div class="flex items-start space-x-3">
+                                <input type="checkbox" checked={{includes this.selectedStudentIds student.id}}
+                                    {{on "change" (fn this.toggleStudentSelection student.id)}}
+                                    class="form-checkbox mt-1" />
+                                {{#if student.photo_url}}
+                                <img src={{student.photo_url}} alt={{student.full_name}}
+                                    class="w-12 h-12 rounded-full object-cover" />
+                                {{else}}
+                                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <FaIcon @icon="user" class="text-gray-500" />
+                                </div>
+                                {{/if}}
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900">{{student.full_name}}</h4>
+                                    <p class="text-sm text-gray-600">Grade {{student.grade}} • ID:
+                                        {{student.student_id}}</p>
+                                    <p class="text-xs text-gray-500">{{student.school}}</p>
+                                    {{#if student.current_assignment}}
+                                    <p class="text-xs text-orange-600 mt-1">
+                                        Currently assigned to: {{student.current_assignment.route.name}}
+                                    </p>
+                                    {{/if}}
+                                    {{#if student.special_needs}}
+                                    <div class="mt-2">
+                                        <div class="flex flex-wrap gap-1">
+                                            {{#each student.special_needs as |need|}}
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                {{need}}
+                                            </span>
+                                            {{/each}}
+                                        </div>
+                                    </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <FaIcon @icon="users" class="text-4xl text-gray-300 mb-4" />
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No students found</h3>
+                        <p class="text-gray-600">
+                            {{#if this.studentSearchQuery}}
+                            No students match your search criteria.
+                            {{else}}
+                            No students available for assignment with current filters.
+                            {{/if}}
+                        </p>
+                    </div>
+                    {{/if}}
+                </div>
+
+                {{#if this.selectedStudents.length}}
+                {{!-- Assignment Configuration --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Step 2: Configure Assignments</h2>
+                    <p class="text-sm text-gray-600">Set assignment details for selected students</p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <FaIcon @icon="info-circle" class="text-blue-600" />
+                        <h3 class="text-sm font-medium text-blue-900">
+                            {{this.selectedStudents.length}} student{{if (gt this.selectedStudents.length 1) "s"}}
+                            selected for assignment
+                        </h3>
+                    </div>
+                    <p class="text-sm text-blue-700">
+                        Configure the assignment settings below. You can assign all selected students to the same route
+                        or use smart assignment.
+                    </p>
+                </div>
+
+                {{!-- Assignment Method --}}
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-900 mb-4">Assignment Method</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border border-gray-200 rounded-lg p-4 cursor-pointer {{if (eq this.assignmentMethod "
+                            single") "border-blue-500 bg-blue-50" }}" {{on "click" (fn this.setAssignmentMethod "single"
+                            )}}>
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" checked={{eq this.assignmentMethod "single" }} class="form-radio"
+                                    readonly />
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">Single Route Assignment</h4>
+                                    <p class="text-sm text-gray-600">Assign all selected students to one route</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 cursor-pointer {{if (eq this.assignmentMethod "
+                            smart") "border-blue-500 bg-blue-50" }}" {{on "click" (fn this.setAssignmentMethod "smart"
+                            )}}>
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" checked={{eq this.assignmentMethod "smart" }} class="form-radio"
+                                    readonly />
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">Smart Assignment</h4>
+                                    <p class="text-sm text-gray-600">Automatically assign based on location and capacity
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{#if (eq this.assignmentMethod "single")}}
+                {{!-- Single Route Selection --}}
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-900 mb-4">Select Route</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group md:col-span-2">
+                            <label class="form-label required">Route</label>
+                            <select class="form-select {{if this.errors.route_id 'border-red-500'}}" {{on "change"
+                                this.updateBulkRoute}} required>
+                                <option value="">Choose a route...</option>
+                                {{#each this.availableRoutes as |route|}}
+                                <option value={{route.id}} selected={{eq this.bulkRouteId route.id}}>
+                                    {{route.name}} - {{route.description}}
+                                    ({{route.student_count}}/{{route.max_capacity}} students)
+                                </option>
+                                {{/each}}
+                            </select>
+                            {{#if this.errors.route_id}}
+                            <p class="form-error">{{this.errors.route_id}}</p>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{/if}}
+
+                {{!-- Assignment Settings --}}
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-900 mb-4">Assignment Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Pickup Time</label>
+                            <Input @type="time" @value={{this.bulkPickupTime}} class="form-input" />
+                            <p class="form-help">Leave blank to use route default</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Dropoff Time</label>
+                            <Input @type="time" @value={{this.bulkDropoffTime}} class="form-input" />
+                            <p class="form-help">Leave blank to use route default</p>
+                        </div>
+
+                        <div class="form-group md:col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" checked={{this.bulkActivateImmediately}} {{on "change"
+                                    this.toggleBulkActivate}} class="form-checkbox" />
+                                <span class="ml-2">Activate assignments immediately</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group md:col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" checked={{this.bulkAllowStandby}} {{on "change"
+                                    this.toggleBulkStandby}} class="form-checkbox" />
+                                <span class="ml-2">Allow standby assignments if routes are at capacity</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Assignment Preview --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Step 3: Review Assignments</h2>
+                    <p class="text-sm text-gray-600">Preview the assignments before confirming</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-8">
+                    <h3 class="text-md font-medium text-gray-900 mb-4">Assignment Summary</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Students to assign:</span>
+                            <span class="text-sm font-medium">{{this.selectedStudents.length}}</span>
+                        </div>
+                        {{#if (eq this.assignmentMethod "single")}}
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Target route:</span>
+                            <span class="text-sm font-medium">{{this.selectedBulkRoute.name}}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Route capacity after:</span>
+                            <span class="text-sm font-medium">
+                                {{add this.selectedBulkRoute.student_count
+                                this.selectedStudents.length}}/{{this.selectedBulkRoute.max_capacity}}
+                            </span>
+                        </div>
+                        {{else}}
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Assignment method:</span>
+                            <span class="text-sm font-medium">Smart assignment (by location)</span>
+                        </div>
+                        {{/if}}
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Activate immediately:</span>
+                            <span class="text-sm font-medium">{{if this.bulkActivateImmediately "Yes" "No"}}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Allow standby:</span>
+                            <span class="text-sm font-medium">{{if this.bulkAllowStandby "Yes" "No"}}</span>
+                        </div>
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+
+            {{!-- Form Actions --}}
+            {{#if this.selectedStudents.length}}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button type="button" class="btn btn-outline" {{on "click" this.clearSelection}}>
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" disabled={{this.isSaving}}>
+                    {{#if this.isSaving}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Creating Assignments...
+                    {{else}}
+                    <FaIcon @icon="save" class="mr-2" />
+                    Create {{this.selectedStudents.length}} Assignment{{if (gt this.selectedStudents.length 1) "s"}}
+                    {{/if}}
+                </button>
+            </div>
+            {{/if}}
+        </form>
+    </div>
+</div>

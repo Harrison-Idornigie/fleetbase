@@ -1,0 +1,340 @@
+{{!-- New Communication Template --}}
+<div class="school-transport-communication-new">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Send New Message</h1>
+                <p class="text-gray-600 mt-1">Create and send notifications to parents</p>
+            </div>
+            <LinkTo @route="school-transport.communications.index" class="btn btn-outline">
+                <FaIcon @icon="arrow-left" class="mr-2" />
+                Back to Communications
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Message Form --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <form {{on "submit" this.sendMessage}}>
+            <div class="p-6">
+                {{!-- Message Type & Priority --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Message Settings</h2>
+                    <p class="text-sm text-gray-600">Configure message type and delivery options</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label required">Message Type</label>
+                        <select class="form-select {{if this.errors.type 'border-red-500'}}" {{on "change"
+                            this.updateType}} required>
+                            <option value="">Select Type</option>
+                            <option value="notification" selected={{eq this.message.type "notification" }}>General
+                                Notification</option>
+                            <option value="alert" selected={{eq this.message.type "alert" }}>Important Alert</option>
+                            <option value="reminder" selected={{eq this.message.type "reminder" }}>Reminder</option>
+                            <option value="update" selected={{eq this.message.type "update" }}>Route Update</option>
+                        </select>
+                        {{#if this.errors.type}}
+                        <p class="form-error">{{this.errors.type}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Priority</label>
+                        <select class="form-select {{if this.errors.priority 'border-red-500'}}" {{on "change"
+                            this.updatePriority}} required>
+                            <option value="">Select Priority</option>
+                            <option value="low" selected={{eq this.message.priority "low" }}>Low</option>
+                            <option value="normal" selected={{eq this.message.priority "normal" }}>Normal</option>
+                            <option value="high" selected={{eq this.message.priority "high" }}>High</option>
+                            <option value="urgent" selected={{eq this.message.priority "urgent" }}>Urgent</option>
+                        </select>
+                        {{#if this.errors.priority}}
+                        <p class="form-error">{{this.errors.priority}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Send Method</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" checked={{this.sendViaEmail}} {{on "change" this.toggleEmail}}
+                                    class="form-checkbox" />
+                                <span class="ml-2 text-sm">Email</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked={{this.sendViaSMS}} {{on "change" this.toggleSMS}}
+                                    class="form-checkbox" />
+                                <span class="ml-2 text-sm">SMS</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Scheduling --}}
+                <div class="mb-8">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" checked={{this.isScheduled}} {{on "change" this.toggleScheduled}}
+                                class="form-checkbox" />
+                            <span class="ml-2 text-sm font-medium">Schedule for later</span>
+                        </label>
+                    </div>
+
+                    {{#if this.isScheduled}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label required">Send Date</label>
+                            <Input @type="date" @value={{this.scheduledDate}} @min={{this.today}}
+                                class="form-input {{if this.errors.scheduled_date 'border-red-500'}}" required />
+                            {{#if this.errors.scheduled_date}}
+                            <p class="form-error">{{this.errors.scheduled_date}}</p>
+                            {{/if}}
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">Send Time</label>
+                            <Input @type="time" @value={{this.scheduledTime}}
+                                class="form-input {{if this.errors.scheduled_time 'border-red-500'}}" required />
+                            {{#if this.errors.scheduled_time}}
+                            <p class="form-error">{{this.errors.scheduled_time}}</p>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/if}}
+                </div>
+
+                {{!-- Message Content --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Message Content</h2>
+                    <p class="text-sm text-gray-600">Compose your message</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label required">Subject</label>
+                        <Input @type="text" @value={{this.message.subject}} @placeholder="Message subject line"
+                            class="form-input {{if this.errors.subject 'border-red-500'}}" required />
+                        {{#if this.errors.subject}}
+                        <p class="form-error">{{this.errors.subject}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Message Content</label>
+                        <Textarea @value={{this.message.content}} @rows={{6}} @placeholder="Type your message here..."
+                            class="form-textarea {{if this.errors.content 'border-red-500'}}" required />
+                        {{#if this.errors.content}}
+                        <p class="form-error">{{this.errors.content}}</p>
+                        {{/if}}
+                        <p class="form-help mt-1">
+                            Character count: {{this.message.content.length}}
+                            {{#if this.sendViaSMS}}
+                            (SMS limit: 160 characters per message)
+                            {{/if}}
+                        </p>
+                    </div>
+                </div>
+
+                {{!-- Template Selection --}}
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-md font-medium text-gray-900">Use Template</h3>
+                        <LinkTo @route="school-transport.communications.templates"
+                            class="text-sm text-blue-600 hover:text-blue-800">
+                            Manage Templates
+                        </LinkTo>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {{#each this.messageTemplates as |template|}}
+                        <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors {{if (eq this.selectedTemplate template.id) "
+                            border-blue-500 bg-blue-50"}}" {{on "click" (fn this.selectTemplate template)}}>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">{{template.name}}</h4>
+                            <p class="text-xs text-gray-600 mb-2">{{template.description}}</p>
+                            <p class="text-xs text-gray-500">Type: {{capitalize template.type}}</p>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+
+                {{!-- Recipient Selection --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Recipients</h2>
+                    <p class="text-sm text-gray-600">Choose who will receive this message</p>
+                </div>
+
+                {{!-- Recipient Filters --}}
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Filter by Route</label>
+                            <select class="form-select" {{on "change" this.updateRouteFilter}}>
+                                <option value="">All Routes</option>
+                                {{#each this.routes as |route|}}
+                                <option value={{route.id}} selected={{eq this.routeFilter route.id}}>
+                                    {{route.name}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Filter by School</label>
+                            <select class="form-select" {{on "change" this.updateSchoolFilter}}>
+                                <option value="">All Schools</option>
+                                {{#each this.schools as |school|}}
+                                <option value={{school.id}} selected={{eq this.schoolFilter school.id}}>
+                                    {{school.name}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Filter by Grade</label>
+                            <select class="form-select" {{on "change" this.updateGradeFilter}}>
+                                <option value="">All Grades</option>
+                                {{#each this.gradeOptions as |grade|}}
+                                <option value={{grade.value}} selected={{eq this.gradeFilter grade.value}}>
+                                    {{grade.label}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Quick Select</label>
+                            <select class="form-select" {{on "change" this.quickSelectRecipients}}>
+                                <option value="">Quick Select</option>
+                                <option value="all">All Parents</option>
+                                <option value="morning">Morning Route Parents</option>
+                                <option value="afternoon">Afternoon Route Parents</option>
+                                <option value="special-needs">Special Needs Students</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Recipients List --}}
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-md font-medium text-gray-900">Select Recipients</h3>
+                        <div class="flex items-center space-x-4">
+                            <button class="btn btn-sm btn-outline" {{on "click" this.selectAllRecipients}}>
+                                Select All
+                            </button>
+                            <button class="btn btn-sm btn-outline" {{on "click" this.clearRecipients}}>
+                                Clear All
+                            </button>
+                            <span class="text-sm text-gray-600">
+                                {{this.selectedRecipients.length}} selected
+                            </span>
+                        </div>
+                    </div>
+
+                    {{#if this.availableRecipients}}
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                        {{#each this.availableRecipients as |recipient|}}
+                        <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <input type="checkbox" checked={{includes this.selectedRecipientIds recipient.id}}
+                                {{on "change" (fn this.toggleRecipient recipient.id)}} class="form-checkbox" />
+                            {{#if recipient.photo_url}}
+                            <img src={{recipient.photo_url}} alt={{recipient.full_name}}
+                                class="w-10 h-10 rounded-full object-cover" />
+                            {{else}}
+                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <FaIcon @icon="user" class="text-gray-500" />
+                            </div>
+                            {{/if}}
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{recipient.full_name}}</h4>
+                                <p class="text-sm text-gray-600">Student: {{recipient.student_name}} (Grade
+                                    {{recipient.grade}})</p>
+                                <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                    <span>{{recipient.email}}</span>
+                                    <span>{{recipient.phone}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <FaIcon @icon="users" class="text-4xl text-gray-300 mb-4" />
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No recipients found</h3>
+                        <p class="text-gray-600">
+                            {{#if this.hasRecipientFilters}}
+                            No parents match your current filters.
+                            {{else}}
+                            No parents available to message.
+                            {{/if}}
+                        </p>
+                    </div>
+                    {{/if}}
+                </div>
+
+                {{!-- Preview --}}
+                {{#if this.selectedRecipients.length}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Message Preview</h2>
+                    <p class="text-sm text-gray-600">Review your message before sending</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                    <div class="max-w-md">
+                        <h3 class="text-sm font-medium text-gray-900 mb-2">Email Preview</h3>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-2">{{this.message.subject}}</h4>
+                            <p class="text-sm text-gray-700">{{this.message.content}}</p>
+                            <div class="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
+                                School Transportation System
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+
+            {{!-- Form Actions --}}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <LinkTo @route="school-transport.communications.index" class="btn btn-outline">
+                    Cancel
+                </LinkTo>
+                <button type="button" class="btn btn-outline" {{on "click" this.saveAsDraft}}
+                    disabled={{this.isSaving}}>
+                    {{#if this.isSaving}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Saving...
+                    {{else}}
+                    <FaIcon @icon="save" class="mr-2" />
+                    Save as Draft
+                    {{/if}}
+                </button>
+                <button type="submit" class="btn btn-primary" disabled={{or this.isSaving (eq
+                    this.selectedRecipients.length 0)}}>
+                    {{#if this.isScheduled}}
+                    {{#if this.isSaving}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Scheduling...
+                    {{else}}
+                    <FaIcon @icon="clock" class="mr-2" />
+                    Schedule Message
+                    {{/if}}
+                    {{else}}
+                    {{#if this.isSaving}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Sending...
+                    {{else}}
+                    <FaIcon @icon="paper-plane" class="mr-2" />
+                    Send Message
+                    {{/if}}
+                    {{/if}}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

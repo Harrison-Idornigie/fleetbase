@@ -1,0 +1,360 @@
+{{!-- Student View Template --}}
+<div class="school-transport-student-view">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                {{#if this.student.photo_url}}
+                <img src={{this.student.photo_url}} alt={{this.student.full_name}}
+                    class="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
+                {{else}}
+                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                    <FaIcon @icon="user" class="text-gray-500 text-xl" />
+                </div>
+                {{/if}}
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{this.student.full_name}}</h1>
+                    <p class="text-gray-600">Student ID: {{this.student.student_id}} • Grade {{this.student.grade}}</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <LinkTo @route="school-transport.students.edit" @model={{this.student.id}} class="btn btn-outline">
+                    <FaIcon @icon="edit" class="mr-2" />
+                    Edit
+                </LinkTo>
+                <LinkTo @route="school-transport.students.index" class="btn btn-outline">
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Back to Students
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{!-- Main Content --}}
+        <div class="lg:col-span-2 space-y-6">
+            {{!-- Student Information Card --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Student Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Basic Details</h3>
+                            <dl class="mt-3 space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Full Name:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.full_name}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Student ID:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.student_id}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Date of Birth:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{moment-format
+                                        this.student.date_of_birth "MMM DD, YYYY"}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Age:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.age}} years old</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Gender:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.gender}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Grade:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.grade}}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">School & Status</h3>
+                            <dl class="mt-3 space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">School:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.school}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Status:</dt>
+                                    <dd class="text-sm font-medium">
+                                        {{#if this.student.is_active}}
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <FaIcon @icon="check-circle" class="mr-1" />
+                                            Active
+                                        </span>
+                                        {{else}}
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <FaIcon @icon="times-circle" class="mr-1" />
+                                            Inactive
+                                        </span>
+                                        {{/if}}
+                                    </dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Enrollment Date:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{moment-format
+                                        this.student.created_at "MMM DD, YYYY"}}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Parent/Guardian Information --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Parent/Guardian Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Contact Details</h3>
+                            <dl class="mt-3 space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Name:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{this.student.parent_name}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Email:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">
+                                        <a href="mailto:{{this.student.parent_email}}"
+                                            class="text-blue-600 hover:text-blue-800">
+                                            {{this.student.parent_email}}
+                                        </a>
+                                    </dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Phone:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">
+                                        <a href="tel:{{this.student.parent_phone}}"
+                                            class="text-blue-600 hover:text-blue-800">
+                                            {{this.student.parent_phone}}
+                                        </a>
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Emergency Contact</h3>
+                            <dl class="mt-3 space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Name:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">
+                                        {{this.student.emergency_contact_name}}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Phone:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">
+                                        {{#if this.student.emergency_contact_phone}}
+                                        <a href="tel:{{this.student.emergency_contact_phone}}"
+                                            class="text-blue-600 hover:text-blue-800">
+                                            {{this.student.emergency_contact_phone}}
+                                        </a>
+                                        {{else}}
+                                        <span class="text-gray-400">Not provided</span>
+                                        {{/if}}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Address Information --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Address Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Home Address</h3>
+                            <p class="mt-2 text-sm text-gray-900">{{this.student.home_address}}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Transportation</h3>
+                            <dl class="mt-2 space-y-2">
+                                <div>
+                                    <dt class="text-sm text-gray-600">Pickup Location:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">
+                                        {{#if this.student.pickup_location}}
+                                        {{this.student.pickup_location}}
+                                        {{else}}
+                                        <span class="text-gray-400">Same as home address</span>
+                                        {{/if}}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm text-gray-600">Dropoff Location:</dt>
+                                    <dd class="text-sm font-medium text-gray-900">
+                                        {{#if this.student.dropoff_location}}
+                                        {{this.student.dropoff_location}}
+                                        {{else}}
+                                        <span class="text-gray-400">Same as home address</span>
+                                        {{/if}}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Special Needs & Medical Information --}}
+            {{#if (or this.student.special_needs this.student.medical_info)}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Special Needs & Medical Information</h2>
+                </div>
+                <div class="p-6">
+                    {{#if this.student.special_needs}}
+                    <div class="mb-4">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Special Needs</h3>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            {{#each this.student.special_needs as |need|}}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{need}}
+                            </span>
+                            {{/each}}
+                        </div>
+                    </div>
+                    {{/if}}
+                    {{#if this.student.medical_info}}
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Medical Information</h3>
+                        <p class="mt-2 text-sm text-gray-900">{{this.student.medical_info}}</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            {{/if}}
+
+            {{!-- Transportation History --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Transportation History</h2>
+                </div>
+                <div class="p-6">
+                    {{#if this.assignments}}
+                    <div class="space-y-4">
+                        {{#each this.assignments as |assignment|}}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">{{assignment.route.name}}</h4>
+                                    <p class="text-sm text-gray-600">{{assignment.route.description}}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-600">{{moment-format assignment.created_at "MMM DD,
+                                        YYYY"}}</p>
+                                    {{#if assignment.is_active}}
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Active
+                                    </span>
+                                    {{else}}
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Inactive
+                                    </span>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <p class="text-gray-500 text-center py-8">No transportation assignments found.</p>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+
+        {{!-- Sidebar --}}
+        <div class="space-y-6">
+            {{!-- Quick Actions --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
+                </div>
+                <div class="p-4 space-y-3">
+                    <button class="w-full btn btn-outline text-left" {{on "click" this.sendMessage}}>
+                        <FaIcon @icon="envelope" class="mr-2" />
+                        Send Message to Parent
+                    </button>
+                    <button class="w-full btn btn-outline text-left" {{on "click" this.assignToRoute}}>
+                        <FaIcon @icon="bus" class="mr-2" />
+                        Assign to Route
+                    </button>
+                    <button class="w-full btn btn-outline text-left" {{on "click" this.viewAttendance}}>
+                        <FaIcon @icon="calendar-check" class="mr-2" />
+                        View Attendance
+                    </button>
+                    <button class="w-full btn btn-outline text-left" {{on "click" this.generateReport}}>
+                        <FaIcon @icon="file-alt" class="mr-2" />
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+
+            {{!-- Current Assignment --}}
+            {{#if this.currentAssignment}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Current Assignment</h2>
+                </div>
+                <div class="p-6">
+                    <div class="text-center">
+                        <FaIcon @icon="bus" class="text-3xl text-blue-500 mb-2" />
+                        <h3 class="text-lg font-medium text-gray-900">{{this.currentAssignment.route.name}}</h3>
+                        <p class="text-sm text-gray-600 mb-4">{{this.currentAssignment.route.description}}</p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Bus:</span>
+                                <span class="font-medium">{{this.currentAssignment.bus.name}}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Driver:</span>
+                                <span class="font-medium">{{this.currentAssignment.driver.name}}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Pickup Time:</span>
+                                <span class="font-medium">{{this.currentAssignment.pickup_time}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+
+            {{!-- Recent Communications --}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Communications</h2>
+                </div>
+                <div class="p-6">
+                    {{#if this.recentCommunications}}
+                    <div class="space-y-3">
+                        {{#each this.recentCommunications as |comm|}}
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <p class="text-sm text-gray-900">{{comm.subject}}</p>
+                            <p class="text-xs text-gray-600">{{moment-format comm.created_at "MMM DD, YYYY"}}</p>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <p class="text-gray-500 text-center py-4">No recent communications.</p>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

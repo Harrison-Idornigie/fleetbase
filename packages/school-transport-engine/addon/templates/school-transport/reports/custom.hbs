@@ -1,0 +1,496 @@
+{{!-- Custom Reports Template --}}
+<div class="school-transport-custom-reports">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <FaIcon @icon="file-chart" class="text-indigo-600 text-xl" />
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Custom Reports</h1>
+                    <p class="text-gray-600">Create and manage custom reports for specific transportation insights</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <LinkTo @route="school-transport.reports.index" class="btn btn-outline">
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Back to Reports
+                </LinkTo>
+                <button class="btn btn-primary" {{on "click" this.createReport}}>
+                    <FaIcon @icon="plus" class="mr-2" />
+                    Create Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Existing Reports --}}
+    {{#if this.customReports}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {{#each this.customReports as |report|}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {{!-- Report Header --}}
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <FaIcon @icon="file-chart" class="text-indigo-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">{{report.name}}</h3>
+                            <p class="text-sm text-gray-600">{{report.description}}</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="text-gray-400 hover:text-gray-600" {{on "click" (fn this.editReport report)}}
+                            title="Edit Report">
+                            <FaIcon @icon="edit" />
+                        </button>
+                        <button class="text-gray-400 hover:text-gray-600" {{on "click" (fn this.duplicateReport
+                            report)}} title="Duplicate Report">
+                            <FaIcon @icon="copy" />
+                        </button>
+                        <button class="text-gray-400 hover:text-red-600" {{on "click" (fn this.deleteReport report)}}
+                            title="Delete Report">
+                            <FaIcon @icon="trash" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Report Details --}}
+            <div class="px-6 py-4">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Data Sources:</span>
+                        <div class="flex flex-wrap gap-1">
+                            {{#each report.data_sources as |source|}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{source}}
+                            </span>
+                            {{/each}}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Schedule:</span>
+                        <span class="font-medium">
+                            {{#if report.schedule}}
+                            {{report.schedule}}
+                            {{else}}
+                            Manual
+                            {{/if}}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Last Run:</span>
+                        <span class="font-medium">
+                            {{#if report.last_run}}
+                            {{moment-format report.last_run "MMM DD, YYYY 'at' h:mm A"}}
+                            {{else}}
+                            Never
+                            {{/if}}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Status:</span>
+                        {{#if report.is_active}}
+                        <span
+                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Active
+                        </span>
+                        {{else}}
+                        <span
+                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Inactive
+                        </span>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Report Actions --}}
+            <div class="px-6 py-4 border-t border-gray-200">
+                <div class="flex space-x-3">
+                    <button class="flex-1 btn btn-primary btn-sm" {{on "click" (fn this.runReport report)}}
+                        disabled={{this.isRunningReport}}>
+                        {{#if this.isRunningReport}}
+                        <FaIcon @icon="spinner" class="animate-spin mr-1" />
+                        Running...
+                        {{else}}
+                        <FaIcon @icon="play" class="mr-1" />
+                        Run Report
+                        {{/if}}
+                    </button>
+                    <button class="flex-1 btn btn-outline btn-sm" {{on "click" (fn this.viewResults report)}}>
+                        <FaIcon @icon="eye" class="mr-1" />
+                        View Results
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{!-- Create/Edit Report Modal --}}
+    {{#if this.showReportModal}}
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="report-modal">
+        <div
+            class="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-2/3 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        {{#if this.editingReport}}
+                        Edit Report
+                        {{else}}
+                        Create Custom Report
+                        {{/if}}
+                    </h3>
+                    <button class="text-gray-400 hover:text-gray-600" {{on "click" this.closeReportModal}}>
+                        <FaIcon @icon="times" />
+                    </button>
+                </div>
+
+                <form {{on "submit" this.saveReport}}>
+                    <div class="space-y-6">
+                        {{!-- Basic Information --}}
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-gray-900 mb-4">Basic Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Report Name *</label>
+                                    <Input @type="text" @value={{this.reportForm.name}}
+                                        @placeholder="e.g., Monthly Route Performance Analysis" class="form-input"
+                                        required />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                    <select class="form-select" {{on "change" (fn this.updateReportForm "category" )}}>
+                                        <option value="">Select Category</option>
+                                        <option value="attendance">Attendance</option>
+                                        <option value="routes">Routes & Vehicles</option>
+                                        <option value="safety">Safety & Compliance</option>
+                                        <option value="performance">Performance</option>
+                                        <option value="financial">Financial</option>
+                                        <option value="operational">Operational</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                                <Textarea @value={{this.reportForm.description}}
+                                    @placeholder="Describe what this report analyzes and its purpose..."
+                                    class="form-textarea" rows="3" required />
+                            </div>
+                        </div>
+
+                        {{!-- Data Sources --}}
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-gray-900 mb-4">Data Sources</h4>
+                            <p class="text-sm text-gray-600 mb-4">Select the data sources to include in this report:</p>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {{#each this.availableDataSources as |source|}}
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked={{includes this.reportForm.data_sources source.id}}
+                                        {{on "change" (fn this.toggleDataSource source.id)}} class="form-checkbox" />
+                                    <span class="ml-2 text-sm text-gray-700">{{source.name}}</span>
+                                </label>
+                                {{/each}}
+                            </div>
+                        </div>
+
+                        {{!-- Filters & Parameters --}}
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-gray-900 mb-4">Filters & Parameters</h4>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                                        <select class="form-select" {{on "change" (fn this.updateReportForm "date_range"
+                                            )}}>
+                                            <option value="last_7_days">Last 7 Days</option>
+                                            <option value="last_30_days">Last 30 Days</option>
+                                            <option value="last_90_days">Last 90 Days</option>
+                                            <option value="this_month">This Month</option>
+                                            <option value="last_month">Last Month</option>
+                                            <option value="this_year">This Year</option>
+                                            <option value="custom">Custom Range</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Group By</label>
+                                        <select class="form-select" {{on "change" (fn this.updateReportForm "group_by"
+                                            )}}>
+                                            <option value="">No Grouping</option>
+                                            <option value="route">Route</option>
+                                            <option value="driver">Driver</option>
+                                            <option value="vehicle">Vehicle</option>
+                                            <option value="grade">Grade</option>
+                                            <option value="date">Date</option>
+                                            <option value="week">Week</option>
+                                            <option value="month">Month</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{#if (eq this.reportForm.date_range "custom")}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                        <Input @type="date" @value={{this.reportForm.start_date}} class="form-input"
+                                            {{on "change" (fn this.updateReportForm "start_date" )}} />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                        <Input @type="date" @value={{this.reportForm.end_date}} class="form-input"
+                                            {{on "change" (fn this.updateReportForm "end_date" )}} />
+                                    </div>
+                                </div>
+                                {{/if}}
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Additional
+                                        Filters</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox"
+                                                checked={{this.reportForm.filters.include_inactive_students}}
+                                                {{on "change" (fn
+                                                this.updateReportForm "filters.include_inactive_students" )}}
+                                                class="form-checkbox" />
+                                            <span class="ml-2 text-sm text-gray-700">Include inactive students</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox"
+                                                checked={{this.reportForm.filters.include_cancelled_routes}}
+                                                {{on "change" (fn
+                                                this.updateReportForm "filters.include_cancelled_routes" )}}
+                                                class="form-checkbox" />
+                                            <span class="ml-2 text-sm text-gray-700">Include cancelled routes</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" checked={{this.reportForm.filters.include_test_data}}
+                                                {{on "change" (fn this.updateReportForm "filters.include_test_data" )}}
+                                                class="form-checkbox" />
+                                            <span class="ml-2 text-sm text-gray-700">Include test data</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{!-- Output & Scheduling --}}
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-gray-900 mb-4">Output & Scheduling</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Output Format</label>
+                                    <select class="form-select" {{on "change" (fn this.updateReportForm "output_format"
+                                        )}}>
+                                        <option value="html">HTML Report</option>
+                                        <option value="pdf">PDF Document</option>
+                                        <option value="excel">Excel Spreadsheet</option>
+                                        <option value="csv">CSV File</option>
+                                        <option value="json">JSON Data</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
+                                    <select class="form-select" {{on "change" (fn this.updateReportForm "schedule" )}}>
+                                        <option value="">Manual Only</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{#if this.reportForm.schedule}}
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Recipients (Email
+                                    Addresses)</label>
+                                <Textarea @value={{this.reportForm.recipients}}
+                                    @placeholder="Enter email addresses separated by commas..." class="form-textarea"
+                                    rows="2" />
+                                <p class="text-xs text-gray-500 mt-1">Leave empty to send only to report creator</p>
+                            </div>
+                            {{/if}}
+
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Report Status</label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked={{this.reportForm.is_active}} {{on "change" (fn
+                                        this.updateReportForm "is_active" )}} class="form-checkbox" />
+                                    <span class="ml-2 text-sm text-gray-700">Active (available for running)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{!-- Preview --}}
+                        {{#if this.showPreview}}
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-gray-900 mb-4">Report Preview</h4>
+                            <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                                <div class="text-center text-gray-500 py-8">
+                                    <FaIcon @icon="chart-bar" class="text-4xl mb-2" />
+                                    <p>Report preview will be generated after saving</p>
+                                </div>
+                            </div>
+                        </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" class="btn btn-outline" {{on "click" this.closeReportModal}}>
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-outline" {{on "click" this.previewReport}}>
+                            <FaIcon @icon="eye" class="mr-2" />
+                            Preview
+                        </button>
+                        <button type="submit" class="btn btn-primary" disabled={{this.isSaving}}>
+                            {{#if this.isSaving}}
+                            <FaIcon @icon="spinner" class="animate-spin mr-2" />
+                            Saving...
+                            {{else}}
+                            {{#if this.editingReport}}
+                            Update Report
+                            {{else}}
+                            Create Report
+                            {{/if}}
+                            {{/if}}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- Empty State --}}
+    {{#if (eq this.customReports.length 0)}}
+    <div class="text-center py-12">
+        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FaIcon @icon="file-chart" class="text-gray-400 text-3xl" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No custom reports yet</h3>
+        <p class="text-gray-600 mb-6">
+            Create custom reports to analyze specific aspects of your transportation operations and get insights
+            tailored to your needs.
+        </p>
+        <button class="btn btn-primary" {{on "click" this.createReport}}>
+            <FaIcon @icon="plus" class="mr-2" />
+            Create Your First Report
+        </button>
+    </div>
+    {{/if}}
+
+    {{!-- Report Results Modal --}}
+    {{#if this.showResultsModal}}
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="results-modal">
+        <div
+            class="relative top-20 mx-auto p-5 border w-11/12 md:w-5/6 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">{{this.selectedReport.name}} - Results</h3>
+                    <button class="text-gray-400 hover:text-gray-600" {{on "click" this.closeResultsModal}}>
+                        <FaIcon @icon="times" />
+                    </button>
+                </div>
+
+                {{#if this.reportResults}}
+                <div class="space-y-6">
+                    {{!-- Report Summary --}}
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-md font-medium text-gray-900 mb-2">Report Summary</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">Generated:</span>
+                                <br>
+                                <span class="font-medium">{{moment-format this.reportResults.generated_at "MMM DD, YYYY
+                                    'at' h:mm A"}}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Records:</span>
+                                <br>
+                                <span class="font-medium">{{this.reportResults.total_records}}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Date Range:</span>
+                                <br>
+                                <span class="font-medium">{{this.reportResults.date_range}}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Format:</span>
+                                <br>
+                                <span class="font-medium">{{this.reportResults.format}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{!-- Report Data --}}
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <h4 class="text-md font-medium text-gray-900">Report Data</h4>
+                        </div>
+                        <div class="p-4">
+                            {{#if (eq this.reportResults.format "table")}}
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            {{#each this.reportResults.columns as |column|}}
+                                            <th
+                                                class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                {{column}}
+                                            </th>
+                                            {{/each}}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        {{#each this.reportResults.data as |row|}}
+                                        <tr>
+                                            {{#each this.reportResults.columns as |column|}}
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                                {{get row column}}
+                                            </td>
+                                            {{/each}}
+                                        </tr>
+                                        {{/each}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {{else}}
+                            <div class="text-center text-gray-500 py-8">
+                                <FaIcon @icon="file-alt" class="text-4xl mb-2" />
+                                <p>Report data is available for download in {{this.reportResults.format}} format</p>
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{else}}
+                <div class="text-center text-gray-500 py-8">
+                    <FaIcon @icon="spinner" class="animate-spin text-4xl mb-2" />
+                    <p>Loading report results...</p>
+                </div>
+                {{/if}}
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button class="btn btn-outline" {{on "click" this.closeResultsModal}}>
+                        Close
+                    </button>
+                    <button class="btn btn-primary" {{on "click" this.downloadResults}}>
+                        <FaIcon @icon="download" class="mr-2" />
+                        Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+</div>

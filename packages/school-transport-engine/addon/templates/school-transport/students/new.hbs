@@ -1,0 +1,265 @@
+{{!-- New Student Template --}}
+<div class="school-transport-student-new">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Add New Student</h1>
+                <p class="text-gray-600 mt-1">Create a new student profile for transportation services</p>
+            </div>
+            <LinkTo @route="school-transport.students.index" class="btn btn-outline">
+                <FaIcon @icon="arrow-left" class="mr-2" />
+                Back to Students
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Student Form --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <form {{on "submit" this.saveStudent}}>
+            <div class="p-6">
+                {{!-- Basic Information --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Basic Information</h2>
+                    <p class="text-sm text-gray-600">Student's personal and identification details</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label required">First Name</label>
+                        <Input @type="text" @value={{this.student.first_name}}
+                            class="form-input {{if this.errors.first_name 'border-red-500'}}" required />
+                        {{#if this.errors.first_name}}
+                        <p class="form-error">{{this.errors.first_name}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Last Name</label>
+                        <Input @type="text" @value={{this.student.last_name}}
+                            class="form-input {{if this.errors.last_name 'border-red-500'}}" required />
+                        {{#if this.errors.last_name}}
+                        <p class="form-error">{{this.errors.last_name}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Student ID</label>
+                        <Input @type="text" @value={{this.student.student_id}} @placeholder="e.g., STU001"
+                            class="form-input {{if this.errors.student_id 'border-red-500'}}" required />
+                        {{#if this.errors.student_id}}
+                        <p class="form-error">{{this.errors.student_id}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Date of Birth</label>
+                        <Input @type="date" @value={{this.student.date_of_birth}}
+                            class="form-input {{if this.errors.date_of_birth 'border-red-500'}}" required />
+                        {{#if this.errors.date_of_birth}}
+                        <p class="form-error">{{this.errors.date_of_birth}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Gender</label>
+                        <select class="form-select {{if this.errors.gender 'border-red-500'}}" {{on "change"
+                            this.updateGender}} required>
+                            <option value="">Select Gender</option>
+                            {{#each this.genderOptions as |gender|}}
+                            <option value={{gender.value}} selected={{eq this.student.gender gender.value}}>
+                                {{gender.label}}
+                            </option>
+                            {{/each}}
+                        </select>
+                        {{#if this.errors.gender}}
+                        <p class="form-error">{{this.errors.gender}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Grade</label>
+                        <select class="form-select {{if this.errors.grade 'border-red-500'}}" {{on "change"
+                            this.updateGrade}} required>
+                            <option value="">Select Grade</option>
+                            {{#each this.gradeOptions as |grade|}}
+                            <option value={{grade.value}} selected={{eq this.student.grade grade.value}}>
+                                {{grade.label}}
+                            </option>
+                            {{/each}}
+                        </select>
+                        {{#if this.errors.grade}}
+                        <p class="form-error">{{this.errors.grade}}</p>
+                        {{/if}}
+                    </div>
+                </div>
+
+                {{!-- School Information --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">School Information</h2>
+                    <p class="text-sm text-gray-600">School and enrollment details</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label required">School</label>
+                        <select class="form-select {{if this.errors.school 'border-red-500'}}" {{on "change"
+                            this.updateSchool}} required>
+                            <option value="">Select School</option>
+                            {{#each this.schools as |school|}}
+                            <option value={{school.name}} selected={{eq this.student.school school.name}}>
+                                {{school.name}}
+                            </option>
+                            {{/each}}
+                        </select>
+                        {{#if this.errors.school}}
+                        <p class="form-error">{{this.errors.school}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Photo URL</label>
+                        <Input @type="url" @value={{this.student.photo_url}}
+                            @placeholder="https://example.com/photo.jpg" class="form-input" />
+                    </div>
+                </div>
+
+                {{!-- Parent/Guardian Information --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Parent/Guardian Information</h2>
+                    <p class="text-sm text-gray-600">Contact details for emergency and communication</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label required">Parent/Guardian Name</label>
+                        <Input @type="text" @value={{this.student.parent_name}}
+                            class="form-input {{if this.errors.parent_name 'border-red-500'}}" required />
+                        {{#if this.errors.parent_name}}
+                        <p class="form-error">{{this.errors.parent_name}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Parent Email</label>
+                        <Input @type="email" @value={{this.student.parent_email}}
+                            class="form-input {{if this.errors.parent_email 'border-red-500'}}" required />
+                        {{#if this.errors.parent_email}}
+                        <p class="form-error">{{this.errors.parent_email}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Parent Phone</label>
+                        <Input @type="tel" @value={{this.student.parent_phone}}
+                            class="form-input {{if this.errors.parent_phone 'border-red-500'}}" required />
+                        {{#if this.errors.parent_phone}}
+                        <p class="form-error">{{this.errors.parent_phone}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Emergency Contact Name</label>
+                        <Input @type="text" @value={{this.student.emergency_contact_name}} class="form-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Emergency Contact Phone</label>
+                        <Input @type="tel" @value={{this.student.emergency_contact_phone}} class="form-input" />
+                    </div>
+                </div>
+
+                {{!-- Address Information --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Address Information</h2>
+                    <p class="text-sm text-gray-600">Home address and pickup/dropoff locations</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label required">Home Address</label>
+                        <Textarea @value={{this.student.home_address}} @rows={{3}}
+                            @placeholder="Full home address including street, city, state, zip"
+                            class="form-textarea {{if this.errors.home_address 'border-red-500'}}" required />
+                        {{#if this.errors.home_address}}
+                        <p class="form-error">{{this.errors.home_address}}</p>
+                        {{/if}}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Pickup Location</label>
+                            <Textarea @value={{this.student.pickup_location}} @rows={{2}}
+                                @placeholder="Specific pickup location (leave blank to use home address)"
+                                class="form-textarea" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Dropoff Location</label>
+                            <Textarea @value={{this.student.dropoff_location}} @rows={{2}}
+                                @placeholder="Specific dropoff location (leave blank to use home address)"
+                                class="form-textarea" />
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Special Needs --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Special Needs & Accommodations</h2>
+                    <p class="text-sm text-gray-600">Any special accommodations or medical information</p>
+                </div>
+
+                <div class="space-y-6 mb-8">
+                    <div class="form-group">
+                        <label class="form-label">Special Needs</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {{#each this.specialNeedsOptions as |need|}}
+                            <label class="flex items-center">
+                                <input type="checkbox" checked={{includes this.student.special_needs need.value}}
+                                    {{on "change" (fn this.toggleSpecialNeed need.value)}} class="form-checkbox" />
+                                <span class="ml-2 text-sm">{{need.label}}</span>
+                            </label>
+                            {{/each}}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Medical Information</label>
+                        <Textarea @value={{this.student.medical_info}} @rows={{3}}
+                            @placeholder="Any medical conditions, allergies, or special instructions"
+                            class="form-textarea" />
+                    </div>
+                </div>
+
+                {{!-- Status --}}
+                <div class="section-header mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Status</h2>
+                </div>
+
+                <div class="form-group mb-8">
+                    <label class="flex items-center">
+                        <input type="checkbox" checked={{this.student.is_active}} {{on "change" this.toggleActive}}
+                            class="form-checkbox" />
+                        <span class="ml-2">Student is active and eligible for transportation</span>
+                    </label>
+                </div>
+            </div>
+
+            {{!-- Form Actions --}}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <LinkTo @route="school-transport.students.index" class="btn btn-outline">
+                    Cancel
+                </LinkTo>
+                <button type="submit" class="btn btn-primary" disabled={{this.isSaving}}>
+                    {{#if this.isSaving}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Saving...
+                    {{else}}
+                    <FaIcon @icon="save" class="mr-2" />
+                    Save Student
+                    {{/if}}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

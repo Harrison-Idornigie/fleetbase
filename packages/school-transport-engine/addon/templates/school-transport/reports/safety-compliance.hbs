@@ -1,0 +1,426 @@
+{{!-- Safety Compliance Report Template --}}
+<div class="school-transport-safety-compliance-report">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <FaIcon @icon="shield-alt" class="text-red-600 text-xl" />
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Safety Compliance Report</h1>
+                    <p class="text-gray-600">Safety incidents, compliance status, and regulatory adherence</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button class="btn btn-outline" {{on "click" this.exportReport}}>
+                    <FaIcon @icon="download" class="mr-2" />
+                    Export
+                </button>
+                <LinkTo @route="school-transport.reports.index" class="btn btn-outline">
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Back to Reports
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Filters --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <select class="form-select" {{on "change" this.updateDateRange}}>
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="this_week">This Week</option>
+                    <option value="last_week">Last Week</option>
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            {{#if (eq this.dateRange "custom")}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <Input @type="date" @value={{this.startDate}} class="form-input" {{on "change" this.updateStartDate}} />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <Input @type="date" @value={{this.endDate}} class="form-input" {{on "change" this.updateEndDate}} />
+            </div>
+            {{/if}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Incident Type</label>
+                <select class="form-select" {{on "change" this.updateIncidentTypeFilter}}>
+                    <option value="">All Types</option>
+                    <option value="accident">Accident</option>
+                    <option value="near_miss">Near Miss</option>
+                    <option value="violation">Violation</option>
+                    <option value="maintenance">Maintenance Issue</option>
+                    <option value="behavior">Student Behavior</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+                <select class="form-select" {{on "change" this.updateSeverityFilter}}>
+                    <option value="">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-end mt-4">
+            <button class="btn btn-primary" {{on "click" this.applyFilters}}>
+                <FaIcon @icon="filter" class="mr-2" />
+                Apply Filters
+            </button>
+        </div>
+    </div>
+
+    {{!-- Safety Metrics --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <FaIcon @icon="check-circle" class="text-green-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Compliance Rate</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.safetyMetrics.complianceRate}}%</p>
+                    <p class="text-xs text-green-600">+{{this.safetyMetrics.complianceChange}}% from last period</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <FaIcon @icon="exclamation-triangle" class="text-red-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Incidents</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.safetyMetrics.totalIncidents}}</p>
+                    <p class="text-xs text-red-600">{{this.safetyMetrics.incidentsChange}} from last period</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <FaIcon @icon="clock" class="text-yellow-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Days Since Last Incident</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.safetyMetrics.daysSinceLastIncident}}</p>
+                    <p class="text-xs text-gray-600">Target: 30+ days</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FaIcon @icon="clipboard-check" class="text-blue-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Inspections Passed</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.safetyMetrics.inspectionsPassed}}%</p>
+                    <p class="text-xs text-blue-600">{{this.safetyMetrics.inspectionsChange}}% from last period</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {{!-- Incident Trends Chart --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Incident Trends</h2>
+            </div>
+            <div class="p-6">
+                <div class="h-64 flex items-center justify-center">
+                    {{!-- Chart placeholder --}}
+                    <div class="text-center text-gray-500">
+                        <FaIcon @icon="chart-line" class="text-4xl mb-2" />
+                        <p>Incident trend chart will be displayed here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{!-- Compliance Status --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Compliance Status</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {{#each this.complianceItems as |item|}}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            {{#if item.compliant}}
+                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <FaIcon @icon="check-circle" class="text-green-600 text-sm" />
+                            </div>
+                            {{else}}
+                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                <FaIcon @icon="times-circle" class="text-red-600 text-sm" />
+                            </div>
+                            {{/if}}
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{item.name}}</p>
+                                <p class="text-xs text-gray-600">{{item.description}}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            {{#if item.compliant}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Compliant
+                            </span>
+                            {{else}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Non-Compliant
+                            </span>
+                            {{/if}}
+                            {{#if item.last_checked}}
+                            <p class="text-xs text-gray-500 mt-1">{{moment-format item.last_checked "MMM DD"}}</p>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Incidents Table --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Safety Incidents</h2>
+            <div class="flex space-x-2">
+                <Input @type="text" @value={{this.searchQuery}} @placeholder="Search incidents..."
+                    class="form-input text-sm" {{on "input" this.updateSearch}} />
+                <button class="btn btn-primary btn-sm" {{on "click" this.reportIncident}}>
+                    <FaIcon @icon="plus" class="mr-2" />
+                    Report Incident
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Incident</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Severity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date/Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {{#each this.incidents as |incident|}}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {{#if (eq incident.type "accident")}}
+                                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                    <FaIcon @icon="car-crash" class="text-red-600 text-sm" />
+                                </div>
+                                {{else if (eq incident.type "near_miss")}}
+                                <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                                    <FaIcon @icon="exclamation-triangle" class="text-yellow-600 text-sm" />
+                                </div>
+                                {{else if (eq incident.type "violation")}}
+                                <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+                                    <FaIcon @icon="gavel" class="text-orange-600 text-sm" />
+                                </div>
+                                {{else if (eq incident.type "maintenance")}}
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                    <FaIcon @icon="wrench" class="text-blue-600 text-sm" />
+                                </div>
+                                {{else}}
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                    <FaIcon @icon="user" class="text-purple-600 text-sm" />
+                                </div>
+                                {{/if}}
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{incident.title}}</div>
+                                    <div class="text-sm text-gray-500">{{incident.description}}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900 capitalize">{{incident.type}}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if (eq incident.severity "critical")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Critical
+                            </span>
+                            {{else if (eq incident.severity "high")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                High
+                            </span>
+                            {{else if (eq incident.severity "medium")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Medium
+                            </span>
+                            {{else}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Low
+                            </span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{moment-format incident.incident_date "MMM DD, YYYY"}}
+                            <br>
+                            <span class="text-gray-500">{{moment-format incident.incident_time "h:mm A"}}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{#if incident.location}}
+                            {{incident.location}}
+                            {{else}}
+                            <span class="text-gray-400">-</span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if (eq incident.status "open")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Open
+                            </span>
+                            {{else if (eq incident.status "investigating")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Investigating
+                            </span>
+                            {{else if (eq incident.status "resolved")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Resolved
+                            </span>
+                            {{else}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Closed
+                            </span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-900" {{on "click" (fn this.viewIncident
+                                    incident)}} title="View Details">
+                                    <FaIcon @icon="eye" />
+                                </button>
+                                <button class="text-gray-600 hover:text-gray-900" {{on "click" (fn this.editIncident
+                                    incident)}} title="Edit Incident">
+                                    <FaIcon @icon="edit" />
+                                </button>
+                                {{#if (eq incident.status "open")}}
+                                <button class="text-green-600 hover:text-green-900" {{on "click" (fn
+                                    this.resolveIncident incident)}} title="Mark as Resolved">
+                                    <FaIcon @icon="check" />
+                                </button>
+                                {{/if}}
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        {{!-- Pagination --}}
+        {{#if (gt this.incidents.length 0)}}
+        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing {{this.startIndex}} to {{this.endIndex}} of {{this.totalIncidents}} incidents
+            </div>
+            <div class="flex space-x-2">
+                <button class="btn btn-outline btn-sm" disabled={{not this.hasPreviousPage}} {{on "click"
+                    this.previousPage}}>
+                    <FaIcon @icon="chevron-left" class="mr-1" />
+                    Previous
+                </button>
+                <button class="btn btn-outline btn-sm" disabled={{not this.hasNextPage}} {{on "click" this.nextPage}}>
+                    Next
+                    <FaIcon @icon="chevron-right" class="ml-1" />
+                </button>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Safety Recommendations --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Safety Recommendations</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{#each this.safetyRecommendations as |recommendation|}}
+                <div class="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg">
+                    {{#if (eq recommendation.priority "critical")}}
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <FaIcon @icon="exclamation-circle" class="text-red-600 text-sm" />
+                    </div>
+                    {{else if (eq recommendation.priority "high")}}
+                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <FaIcon @icon="exclamation-triangle" class="text-orange-600 text-sm" />
+                    </div>
+                    {{else}}
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <FaIcon @icon="info-circle" class="text-blue-600 text-sm" />
+                    </div>
+                    {{/if}}
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-gray-900">{{recommendation.title}}</h4>
+                        <p class="text-sm text-gray-600 mt-1">{{recommendation.description}}</p>
+                        {{#if recommendation.due_date}}
+                        <p class="text-xs text-gray-500 mt-2">Due: {{moment-format recommendation.due_date "MMM DD,
+                            YYYY"}}</p>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    {{!-- Empty State --}}
+    {{#if (eq this.incidents.length 0)}}
+    <div class="text-center py-12">
+        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FaIcon @icon="shield-alt" class="text-gray-400 text-3xl" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No safety incidents found</h3>
+        <p class="text-gray-600 mb-4">
+            {{#if this.searchQuery}}
+            No incidents match your search criteria.
+            {{else}}
+            No safety incidents reported for the selected date range.
+            {{/if}}
+        </p>
+        <button class="btn btn-primary" {{on "click" this.reportIncident}}>
+            <FaIcon @icon="plus" class="mr-2" />
+            Report Incident
+        </button>
+    </div>
+    {{/if}}
+</div>

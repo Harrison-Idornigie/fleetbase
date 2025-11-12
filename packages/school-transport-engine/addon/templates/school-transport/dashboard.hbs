@@ -1,0 +1,267 @@
+{{!-- School Transport Dashboard Template --}}
+<div class="school-transport-dashboard">
+    {{!-- Page Header --}}
+    <div class="dashboard-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">School Transportation Dashboard</h1>
+                <p class="text-gray-600 mt-1">Overview of student transportation operations</p>
+            </div>
+            <div class="flex space-x-3">
+                <button type="button" class="btn btn-outline" {{on "click" this.refreshDashboard}}
+                    disabled={{this.isLoadingWidget}}>
+                    {{#if this.isLoadingWidget}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    {{else}}
+                    <FaIcon @icon="refresh" class="mr-2" />
+                    {{/if}}
+                    Refresh
+                </button>
+                <button type="button" class="btn btn-danger" {{on "click" this.createEmergencyAlert}}>
+                    <FaIcon @icon="exclamation-triangle" class="mr-2" />
+                    Emergency Alert
+                </button>
+            </div>
+        </div>
+
+        {{!-- Quick Stats Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {{!-- Total Students --}}
+            <div class="stat-card bg-blue-50 border-blue-200" {{on "click" this.navigateToStudents}}>
+                <div class="stat-icon bg-blue-100 text-blue-600">
+                    <FaIcon @icon="user-graduate" />
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-label text-blue-600">Total Students</h3>
+                    <p class="stat-value text-blue-900">{{format-number this.totalStudents}}</p>
+                    <p class="stat-description text-blue-700">{{format-number this.activeStudents}} active</p>
+                </div>
+            </div>
+
+            {{!-- Total Routes --}}
+            <div class="stat-card bg-green-50 border-green-200" {{on "click" this.navigateToRoutes}}>
+                <div class="stat-icon bg-green-100 text-green-600">
+                    <FaIcon @icon="route" />
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-label text-green-600">Active Routes</h3>
+                    <p class="stat-value text-green-900">{{format-number this.activeRoutes}}</p>
+                    <p class="stat-description text-green-700">{{format-number this.totalRoutes}} total routes</p>
+                </div>
+            </div>
+
+            {{!-- Today's Attendance --}}
+            <div class="stat-card bg-purple-50 border-purple-200" {{on "click" this.navigateToReports}}>
+                <div class="stat-icon bg-purple-100 text-purple-600">
+                    <FaIcon @icon="calendar-check" />
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-label text-purple-600">Today's Attendance</h3>
+                    <p class="stat-value text-purple-900">{{format-percentage this.todayAttendanceRate decimals=1}}%</p>
+                    <p class="stat-description text-purple-700">{{format-number this.todayAbsentCount}} absent</p>
+                </div>
+            </div>
+
+            {{!-- Communications --}}
+            <div class="stat-card bg-orange-50 border-orange-200" {{on "click" this.navigateToCommunications}}>
+                <div class="stat-icon bg-orange-100 text-orange-600">
+                    <FaIcon @icon="bullhorn" />
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-label text-orange-600">Recent Communications</h3>
+                    <p class="stat-value text-orange-900">{{this.recentCommunications.length}}</p>
+                    <p class="stat-description text-orange-700">Last 24 hours</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Main Dashboard Content --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{!-- Left Column - Charts and Analytics --}}
+        <div class="lg:col-span-2 space-y-6">
+            {{!-- Route Efficiency Chart --}}
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Route Efficiency</h3>
+                    <div class="card-actions">
+                        <select class="form-select form-select-sm" {{on "change" this.changeDateRange}}>
+                            <option value="7" selected={{eq this.selectedDateRange "7" }}>Last 7 days</option>
+                            <option value="30" selected={{eq this.selectedDateRange "30" }}>Last 30 days</option>
+                            <option value="90" selected={{eq this.selectedDateRange "90" }}>Last 90 days</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {{#if this.routeEfficiencyData.labels}}
+                    <div class="chart-container h-64">
+                        <ChartJs @type="bar" @data={{this.routeEfficiencyData}} @options={{hash responsive=true
+                            maintainAspectRatio=false}} />
+                    </div>
+                    {{else}}
+                    <div class="empty-state">
+                        <FaIcon @icon="chart-bar" class="text-gray-400 text-4xl mb-2" />
+                        <p class="text-gray-500">No route efficiency data available</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+
+            {{!-- Attendance Trends --}}
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Attendance Trends</h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-outline" {{on "click" this.navigateToReports}}>
+                            View Detailed Report
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {{#if this.attendanceTrendData.labels}}
+                    <div class="chart-container h-48">
+                        <ChartJs @type="line" @data={{this.attendanceTrendData}} @options={{hash responsive=true
+                            maintainAspectRatio=false}} />
+                    </div>
+                    {{else}}
+                    <div class="empty-state">
+                        <FaIcon @icon="chart-line" class="text-gray-400 text-4xl mb-2" />
+                        <p class="text-gray-500">No attendance trend data available</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+
+            {{!-- Top Performing Routes --}}
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Top Performing Routes</h3>
+                </div>
+                <div class="card-body">
+                    {{#if this.topPerformingRoutes}}
+                    <div class="space-y-3">
+                        {{#each this.topPerformingRoutes as |route|}}
+                        <div class="route-performance-item cursor-pointer" {{on "click" (fn this.viewRoute route.id)}}>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-900">{{route.name}}</h4>
+                                    <p class="text-sm text-gray-600">{{route.school}}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-semibold text-green-600">{{format-percentage
+                                        route.efficiency decimals=1}}%</div>
+                                    <div class="text-sm text-gray-500">{{format-percentage route.utilization
+                                        decimals=0}}% capacity</div>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <div class="empty-state">
+                        <FaIcon @icon="trophy" class="text-gray-400 text-4xl mb-2" />
+                        <p class="text-gray-500">No route performance data available</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+
+        {{!-- Right Column - Quick Actions and Recent Activity --}}
+        <div class="space-y-6">
+            {{!-- Quick Actions --}}
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Quick Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-3">
+                        <button type="button" class="action-btn w-full" {{on "click" this.navigateToStudents}}>
+                            <FaIcon @icon="user-plus" class="mr-3" />
+                            Add New Student
+                        </button>
+                        <button type="button" class="action-btn w-full" {{on "click" this.navigateToRoutes}}>
+                            <FaIcon @icon="plus-circle" class="mr-3" />
+                            Create Route
+                        </button>
+                        <button type="button" class="action-btn w-full" {{on "click" this.navigateToAssignments}}>
+                            <FaIcon @icon="exchange-alt" class="mr-3" />
+                            Manage Assignments
+                        </button>
+                        <button type="button" class="action-btn w-full" {{on "click" this.navigateToCommunications}}>
+                            <FaIcon @icon="envelope" class="mr-3" />
+                            Send Communication
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Recent Communications --}}
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Communications</h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-primary" {{on "click"
+                            this.navigateToCommunications}}>
+                            View All
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {{#if this.recentCommunications}}
+                    <div class="space-y-3">
+                        {{#each this.recentCommunications as |communication|}}
+                        <div class="communication-item cursor-pointer" {{on "click" (fn this.viewCommunication
+                            communication.id)}}>
+                            <div class="p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-gray-900 text-sm">{{communication.subject}}</h4>
+                                        <p class="text-xs text-gray-600 mt-1">{{communication.type}} • {{format-date
+                                            communication.created_at format="short"}}</p>
+                                    </div>
+                                    <div class="ml-2">
+                                        <span class="status-badge status-{{communication.status}}">
+                                            {{communication.status}}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <div class="empty-state">
+                        <FaIcon @icon="inbox" class="text-gray-400 text-3xl mb-2" />
+                        <p class="text-gray-500 text-sm">No recent communications</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+
+            {{!-- Student Distribution --}}
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Student Distribution</h3>
+                </div>
+                <div class="card-body">
+                    {{#if this.studentsBySchool}}
+                    <div class="space-y-3">
+                        {{#each this.studentsBySchool as |school|}}
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-700">{{school.name}}</span>
+                            <span class="text-sm font-medium text-gray-900">{{school.count}}</span>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{else}}
+                    <div class="empty-state">
+                        <FaIcon @icon="school" class="text-gray-400 text-3xl mb-2" />
+                        <p class="text-gray-500 text-sm">No student distribution data</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

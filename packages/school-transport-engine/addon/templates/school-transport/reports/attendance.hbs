@@ -1,0 +1,341 @@
+{{!-- Attendance Report Template --}}
+<div class="school-transport-attendance-report">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FaIcon @icon="calendar-check" class="text-blue-600 text-xl" />
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Attendance Report</h1>
+                    <p class="text-gray-600">Student pickup/drop-off attendance and patterns</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button class="btn btn-outline" {{on "click" this.exportReport}}>
+                    <FaIcon @icon="download" class="mr-2" />
+                    Export
+                </button>
+                <LinkTo @route="school-transport.reports.index" class="btn btn-outline">
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Back to Reports
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Filters --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <select class="form-select" {{on "change" this.updateDateRange}}>
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="this_week">This Week</option>
+                    <option value="last_week">Last Week</option>
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            {{#if (eq this.dateRange "custom")}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <Input @type="date" @value={{this.startDate}} class="form-input" {{on "change" this.updateStartDate}} />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <Input @type="date" @value={{this.endDate}} class="form-input" {{on "change" this.updateEndDate}} />
+            </div>
+            {{/if}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Route</label>
+                <select class="form-select" {{on "change" this.updateRouteFilter}}>
+                    <option value="">All Routes</option>
+                    {{#each this.routes as |route|}}
+                    <option value={{route.id}}>{{route.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                <select class="form-select" {{on "change" this.updateGradeFilter}}>
+                    <option value="">All Grades</option>
+                    <option value="K">Kindergarten</option>
+                    <option value="1">1st Grade</option>
+                    <option value="2">2nd Grade</option>
+                    <option value="3">3rd Grade</option>
+                    <option value="4">4th Grade</option>
+                    <option value="5">5th Grade</option>
+                    <option value="6">6th Grade</option>
+                    <option value="7">7th Grade</option>
+                    <option value="8">8th Grade</option>
+                    <option value="9">9th Grade</option>
+                    <option value="10">10th Grade</option>
+                    <option value="11">11th Grade</option>
+                    <option value="12">12th Grade</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-end mt-4">
+            <button class="btn btn-primary" {{on "click" this.applyFilters}}>
+                <FaIcon @icon="filter" class="mr-2" />
+                Apply Filters
+            </button>
+        </div>
+    </div>
+
+    {{!-- Summary Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <FaIcon @icon="check-circle" class="text-green-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Present</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.attendanceSummary.present}}</p>
+                    <p class="text-xs text-green-600">{{this.attendanceSummary.presentPercentage}}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <FaIcon @icon="times-circle" class="text-red-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Absent</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.attendanceSummary.absent}}</p>
+                    <p class="text-xs text-red-600">{{this.attendanceSummary.absentPercentage}}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <FaIcon @icon="clock" class="text-yellow-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Late</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.attendanceSummary.late}}</p>
+                    <p class="text-xs text-yellow-600">{{this.attendanceSummary.latePercentage}}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FaIcon @icon="question-circle" class="text-blue-600 text-xl" />
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">No Show</p>
+                    <p class="text-2xl font-bold text-gray-900">{{this.attendanceSummary.noShow}}</p>
+                    <p class="text-xs text-blue-600">{{this.attendanceSummary.noShowPercentage}}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{!-- Daily Attendance Chart --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Daily Attendance Trend</h2>
+            </div>
+            <div class="p-6">
+                <div class="h-64 flex items-center justify-center">
+                    {{!-- Chart placeholder --}}
+                    <div class="text-center text-gray-500">
+                        <FaIcon @icon="chart-line" class="text-4xl mb-2" />
+                        <p>Attendance trend chart will be displayed here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{!-- Attendance by Route --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Attendance by Route</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {{#each this.routeAttendance as |route|}}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <FaIcon @icon="route" class="text-blue-600 text-sm" />
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{route.name}}</p>
+                                <p class="text-xs text-gray-600">{{route.total_students}} students</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-900">{{route.attendance_percentage}}%</p>
+                            <p class="text-xs text-gray-600">{{route.present_count}}/{{route.total_students}}</p>
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Detailed Attendance Table --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Detailed Attendance Records</h2>
+            <div class="flex space-x-2">
+                <Input @type="text" @value={{this.searchQuery}} @placeholder="Search students..."
+                    class="form-input text-sm" {{on "input" this.updateSearch}} />
+                <select class="form-select text-sm" {{on "change" this.updateStatusFilter}}>
+                    <option value="">All Status</option>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="late">Late</option>
+                    <option value="no_show">No Show</option>
+                </select>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pickup Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Drop-off Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {{#each this.attendanceRecords as |record|}}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {{#if record.student.photo_url}}
+                                <img src={{record.student.photo_url}} alt={{record.student.full_name}}
+                                    class="w-8 h-8 rounded-full object-cover mr-3" />
+                                {{else}}
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                    <FaIcon @icon="user" class="text-gray-500 text-sm" />
+                                </div>
+                                {{/if}}
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{record.student.full_name}}</div>
+                                    <div class="text-sm text-gray-500">Grade {{record.student.grade}}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{record.route.name}}</div>
+                            <div class="text-sm text-gray-500">{{record.route.vehicle.license_plate}}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{moment-format record.date "MMM DD, YYYY"}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{#if record.pickup_time}}
+                            {{moment-format record.pickup_time "h:mm A"}}
+                            {{else}}
+                            <span class="text-gray-400">-</span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{#if record.dropoff_time}}
+                            {{moment-format record.dropoff_time "h:mm A"}}
+                            {{else}}
+                            <span class="text-gray-400">-</span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if (eq record.status "present")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <FaIcon @icon="check" class="mr-1" />
+                                Present
+                            </span>
+                            {{else if (eq record.status "absent")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <FaIcon @icon="times" class="mr-1" />
+                                Absent
+                            </span>
+                            {{else if (eq record.status "late")}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <FaIcon @icon="clock" class="mr-1" />
+                                Late
+                            </span>
+                            {{else}}
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <FaIcon @icon="question" class="mr-1" />
+                                No Show
+                            </span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{#if record.notes}}
+                            {{record.notes}}
+                            {{else}}
+                            <span class="text-gray-400">-</span>
+                            {{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        {{!-- Pagination --}}
+        {{#if (gt this.attendanceRecords.length 0)}}
+        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing {{this.startIndex}} to {{this.endIndex}} of {{this.totalRecords}} records
+            </div>
+            <div class="flex space-x-2">
+                <button class="btn btn-outline btn-sm" disabled={{not this.hasPreviousPage}} {{on "click"
+                    this.previousPage}}>
+                    <FaIcon @icon="chevron-left" class="mr-1" />
+                    Previous
+                </button>
+                <button class="btn btn-outline btn-sm" disabled={{not this.hasNextPage}} {{on "click" this.nextPage}}>
+                    Next
+                    <FaIcon @icon="chevron-right" class="ml-1" />
+                </button>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Empty State --}}
+    {{#if (eq this.attendanceRecords.length 0)}}
+    <div class="text-center py-12">
+        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FaIcon @icon="calendar-check" class="text-gray-400 text-3xl" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No attendance records found</h3>
+        <p class="text-gray-600">
+            {{#if this.searchQuery}}
+            No records match your search criteria.
+            {{else}}
+            No attendance records available for the selected date range.
+            {{/if}}
+        </p>
+    </div>
+    {{/if}}
+</div>
