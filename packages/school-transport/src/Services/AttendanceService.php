@@ -5,6 +5,8 @@ namespace Fleetbase\SchoolTransportEngine\Services;
 use Fleetbase\SchoolTransportEngine\Models\Attendance;
 use Fleetbase\SchoolTransportEngine\Models\BusAssignment;
 use Fleetbase\SchoolTransportEngine\Models\Student;
+use Fleetbase\SchoolTransportEngine\Models\Bus;
+use Fleetbase\FleetOps\Models\Position;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -34,6 +36,9 @@ class AttendanceService
                 ];
             }
 
+            // Get current bus location from FleetOps Position data for more accurate coordinates
+            $busLocation = $this->getCurrentBusLocation($assignment->bus_uuid);
+
             $attendance = Attendance::create([
                 'company_uuid' => $assignment->company_uuid,
                 'student_uuid' => $studentUuid,
@@ -46,7 +51,7 @@ class AttendanceService
                 'actual_time' => $data['actual_time'] ?? now()->toTimeString(),
                 'present' => true,
                 'location' => $data['location'] ?? $assignment->pickup_stop,
-                'coordinates' => $data['coordinates'] ?? $assignment->pickup_coordinates,
+                'coordinates' => $busLocation ?? $data['coordinates'] ?? $assignment->pickup_coordinates,
                 'recorded_by_uuid' => $data['recorded_by'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'status' => 'completed'
@@ -89,6 +94,9 @@ class AttendanceService
                 ];
             }
 
+            // Get current bus location from FleetOps Position data for more accurate coordinates
+            $busLocation = $this->getCurrentBusLocation($assignment->bus_uuid);
+
             $attendance = Attendance::create([
                 'company_uuid' => $assignment->company_uuid,
                 'student_uuid' => $studentUuid,
@@ -101,7 +109,7 @@ class AttendanceService
                 'actual_time' => $data['actual_time'] ?? now()->toTimeString(),
                 'present' => true,
                 'location' => $data['location'] ?? $assignment->dropoff_stop,
-                'coordinates' => $data['coordinates'] ?? $assignment->dropoff_coordinates,
+                'coordinates' => $busLocation ?? $data['coordinates'] ?? $assignment->dropoff_coordinates,
                 'recorded_by_uuid' => $data['recorded_by'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'status' => 'completed'
@@ -306,5 +314,38 @@ class AttendanceService
             ->where('event_type', 'dropoff')
             ->where('present', true)
             ->exists();
+    }
+
+    /**
+     * Get current bus location from FleetOps Position data
+     *
+     * @param string $busUuid
+     * @return array|null
+     */
+    protected function getCurrentBusLocation($busUuid)
+    {
+        try {
+            $bus = Bus::find($busUuid);
+            if (!$bus) {
+                return null;
+            }
+
+            // Get the most recent position from FleetOps
+            $latestPosition = $bus->positions()
+                ->where('created_at', '>=', now()->subHours(1)) // Only consider recent positions
+                ->latest('created_at')
+                ->first();
+
+            if ($latestPosition && $latestPosition->coordinates) {
+                return [
+                    'lat' => $latestPosition->coordinates->getLat(),
+                    'lng' => $latestPosition->coordinates->getLng()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to get bus location from FleetOps: ' . $e->getMessage());
+        }
+
+        return null;
     }
 }

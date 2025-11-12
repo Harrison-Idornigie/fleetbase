@@ -87,6 +87,25 @@ class BusController extends FleetbaseController
                         'capacity' => $bus->capacity,
                         'current_occupancy' => $bus->current_occupancy,
                         'available_seats' => $bus->available_seats,
+                        'status_display' => $bus->status_display,
+                        'driver' => $bus->driver,
+                        'route' => $bus->route,
+                        'fuel_type' => $bus->fuel_type,
+                        'odometer' => $bus->odometer,
+                        'needs_maintenance' => $bus->needsMaintenance(),
+                        'insurance_expired' => $bus->insuranceExpired(),
+                        'registration_expired' => $bus->registrationExpired(),
+                        'is_active' => $bus->is_active,
+                        'warranty' => $bus->warranty,
+                        'maintenances_count' => $bus->maintenances()->count(),
+                        'created_at' => $bus->created_at,
+                        'updated_at' => $bus->updated_at
+                    ];
+                });
+            }
+        );
+    }
+
     /**
      * Get route playback data with safety compliance settings
      */
@@ -122,7 +141,7 @@ class BusController extends FleetbaseController
         ];
 
         $routeData = $bus->getRoutePlayback($dateRange, $filters);
-        
+
         // Apply safety settings to route data
         if ($safetySettings['speed_limit_enforcement']) {
             $routeData = $this->enforceSpeedLimits($routeData, $routingSettings['school_zone_speed_limit']);
@@ -167,24 +186,6 @@ class BusController extends FleetbaseController
         // Implementation would check against assigned route
         // This is a placeholder for route deviation detection
         return $routeData;
-    }
-                        'status_display' => $bus->status_display,
-                        'driver' => $bus->driver,
-                        'route' => $bus->route,
-                        'fuel_type' => $bus->fuel_type,
-                        'odometer' => $bus->odometer,
-                        'needs_maintenance' => $bus->needsMaintenance(),
-                        'insurance_expired' => $bus->insuranceExpired(),
-                        'registration_expired' => $bus->registrationExpired(),
-                        'is_active' => $bus->is_active,
-                        'warranty' => $bus->warranty,
-                        'maintenances_count' => $bus->maintenances()->count(),
-                        'created_at' => $bus->created_at,
-                        'updated_at' => $bus->updated_at
-                    ];
-                });
-            }
-        );
     }
 
     /**
@@ -519,15 +520,17 @@ class BusController extends FleetbaseController
             'estimated_downtime_hours' => 'nullable|integer|min:0',
         ]);
 
-        $maintenance = $bus->scheduleMaintenance([
-            'type' => $request->input('type'),
-            'scheduled_at' => $request->input('scheduled_at'),
-            'summary' => $request->input('summary'),
-            'priority' => $request->input('priority', 'normal'),
-            'notes' => $request->input('notes'),
-            'estimated_downtime_hours' => $request->input('estimated_downtime_hours'),
-            'odometer' => $bus->odometer,
-        ]);
+        $maintenance = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->scheduleMaintenance($bus, [
+                'type' => $request->input('type'),
+                'scheduled_at' => $request->input('scheduled_at'),
+                'summary' => $request->input('summary'),
+                'priority' => $request->input('priority', 'normal'),
+                'notes' => $request->input('notes'),
+                'estimated_downtime_hours' => $request->input('estimated_downtime_hours'),
+                'odometer' => $bus->odometer,
+                'created_by_uuid' => auth()->id(),
+            ]);
 
         return response()->json([
             'message' => 'Maintenance scheduled successfully',
@@ -557,17 +560,18 @@ class BusController extends FleetbaseController
             'report' => 'nullable|string|max:500',
         ]);
 
-        $fuelReport = $bus->recordFuelReport([
-            'amount' => $request->input('amount'),
-            'volume' => $request->input('volume'),
-            'currency' => $request->input('currency', 'USD'),
-            'metric_unit' => $request->input('metric_unit', 'liters'),
-            'odometer' => $request->input('odometer', $bus->odometer),
-            'driver_uuid' => $request->input('driver_uuid'),
-            'reported_by_uuid' => auth()->id(),
-            'report' => $request->input('report'),
-            'location' => $bus->location,
-        ]);
+        $fuelReport = app(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class)
+            ->recordFuelReport($bus, [
+                'amount' => $request->input('amount'),
+                'volume' => $request->input('volume'),
+                'currency' => $request->input('currency', 'USD'),
+                'metric_unit' => $request->input('metric_unit', 'liters'),
+                'odometer' => $request->input('odometer', $bus->odometer),
+                'driver_uuid' => $request->input('driver_uuid'),
+                'reported_by_uuid' => auth()->id(),
+                'report' => $request->input('report'),
+                'location' => $bus->location,
+            ]);
 
         // Update bus odometer if provided
         if ($request->filled('odometer')) {
@@ -581,105 +585,188 @@ class BusController extends FleetbaseController
     }
 
     /**
-     * Get maintenance history for a bus.
+     * Get fuel analytics for a bus.
      */
-    public function maintenanceHistory(string $id): JsonResponse
-    {
-        $bus = Bus::where('uuid', $id)
-            ->where('company_uuid', session('company'))
-            ->firstOrFail();
-
-        $maintenances = $bus->maintenances()
-            ->orderBy('scheduled_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'bus_id' => $bus->uuid,
-            'bus_number' => $bus->bus_number,
-            'maintenances' => $maintenances
-        ]);
-    }
-
-    /**
-     * Get fuel reports for a bus.
-     */
-    public function fuelReports(Request $request, string $id): JsonResponse
-    {
-        $bus = Bus::where('uuid', $id)
-            ->where('company_uuid', session('company'))
-            ->firstOrFail();
-
-        $query = \Fleetbase\FleetOps\Models\FuelReport::where('vehicle_uuid', $bus->uuid);
-
-        // Filter by date range if provided
-        if ($request->filled('start_date')) {
-            $query->where('created_at', '>=', $request->input('start_date'));
-        }
-        if ($request->filled('end_date')) {
-            $query->where('created_at', '<=', $request->input('end_date'));
-        }
-
-        $fuelReports = $query->orderBy('created_at', 'desc')->get();
-
-        return response()->json([
-            'bus_id' => $bus->uuid,
-            'bus_number' => $bus->bus_number,
-            'fuel_reports' => $fuelReports,
-            'total_fuel_cost' => $fuelReports->sum('amount'),
-            'total_fuel_volume' => $fuelReports->sum('volume'),
-        ]);
-    }
-
-    /**
-     * Get route playback data for a bus on a specific date or date range.
-     * Shows the complete journey with student pickup/dropoff events.
-     */
-    public function routePlayback(Request $request, string $id): JsonResponse
+    public function fuelAnalytics(Request $request, string $id): JsonResponse
     {
         $bus = Bus::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
 
         $this->validate($request, [
-            'date' => 'required_without:start_date|date',
-            'start_date' => 'required_without:date|date',
-            'end_date' => 'required_with:start_date|date|after_or_equal:start_date',
-            'student_uuid' => 'nullable|string|exists:students,uuid',
-            'trip_uuid' => 'nullable|string|exists:trips,uuid',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        try {
-            if ($request->filled('date')) {
-                // Single day playback
-                $date = new \DateTime($request->input('date'));
-                $startDate = clone $date;
-                $startDate->setTime(0, 0, 0);
-                $endDate = clone $date;
-                $endDate->setTime(23, 59, 59);
-            } else {
-                // Date range playback
-                $startDate = new \DateTime($request->input('start_date') . ' 00:00:00');
-                $endDate = new \DateTime($request->input('end_date') . ' 23:59:59');
-            }
-
-            // Check if date range is not too large (max 7 days for performance)
-            $daysDiff = $startDate->diff($endDate)->days;
-            if ($daysDiff > 7) {
-                return response()->json([
-                    'error' => 'Date range too large. Maximum 7 days allowed for route playback.'
-                ], 422);
-            }
-
-            $playbackData = $bus->getRoutePlayback($startDate, $endDate, [
-                'student_uuid' => $request->input('student_uuid'),
-                'trip_uuid' => $request->input('trip_uuid'),
+        $analytics = app(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class)
+            ->getFuelAnalytics($bus, [
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
             ]);
 
-            return response()->json($playbackData);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Failed to generate route playback: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json($analytics);
+    }
+
+    /**
+     * Get fuel efficiency for a specific route.
+     */
+    public function routeFuelEfficiency(Request $request, string $id, string $routeId): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $efficiency = app(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class)
+            ->getRouteFuelEfficiency($bus, $routeId);
+
+        return response()->json($efficiency);
+    }
+
+    /**
+     * Get driver fuel usage patterns for a bus.
+     */
+    public function driverFuelPatterns(string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $patterns = app(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class)
+            ->getDriverFuelPatterns($bus);
+
+        return response()->json([
+            'bus_id' => $bus->uuid,
+            'bus_number' => $bus->bus_number,
+            'driver_patterns' => $patterns
+        ]);
+    }
+
+    /**
+     * Get maintenance analytics for a bus.
+     */
+    public function maintenanceAnalytics(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $analytics = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->getMaintenanceAnalytics($bus, [
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+            ]);
+
+        return response()->json($analytics);
+    }
+
+    /**
+     * Get maintenance schedule for a bus.
+     */
+    public function maintenanceSchedule(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'days_ahead' => 'nullable|integer|min:1|max:365',
+        ]);
+
+        $schedule = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->getMaintenanceSchedule($bus, $request->input('days_ahead', 30));
+
+        return response()->json($schedule);
+    }
+
+    /**
+     * Check safety compliance for a bus.
+     */
+    public function safetyCompliance(string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $compliance = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->checkSafetyCompliance($bus);
+
+        return response()->json($compliance);
+    }
+
+    /**
+     * Get predictive maintenance alerts for a bus.
+     */
+    public function predictiveMaintenance(string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $alerts = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->generatePredictiveMaintenance($bus);
+
+        return response()->json($alerts);
+    }
+
+    /**
+     * Get maintenance cost analysis for a bus.
+     */
+    public function maintenanceCostAnalysis(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'months' => 'nullable|integer|min:1|max:24',
+        ]);
+
+        $analysis = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->analyzeMaintenanceCosts($bus, $request->input('months', 12));
+
+        return response()->json($analysis);
+    }
+
+    /**
+     * Get fuel efficiency trends for a bus.
+     */
+    public function fuelEfficiencyTrends(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'months' => 'nullable|integer|min:1|max:24',
+        ]);
+
+        $trends = app(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class)
+            ->analyzeFuelEfficiencyTrends($bus, $request->input('months', 12));
+
+        return response()->json($trends);
+    }
+
+    /**
+     * Get maintenance history with cost analysis.
+     */
+    public function maintenanceHistory(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'months' => 'nullable|integer|min:1|max:24',
+        ]);
+
+        $history = app(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class)
+            ->getMaintenanceHistory($bus, $request->input('months', 12));
+
+        return response()->json($history);
     }
 }

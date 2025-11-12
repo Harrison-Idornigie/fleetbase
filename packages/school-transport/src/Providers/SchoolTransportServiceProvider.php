@@ -98,5 +98,8 @@ class SchoolTransportServiceProvider extends ServiceProvider
         $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\RouteOptimizationService::class);
         $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\EmailNotificationService::class);
         $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\SmsNotificationService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\RoutePlaybackService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class);
     }
 }

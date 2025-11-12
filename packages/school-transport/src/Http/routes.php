@@ -73,6 +73,15 @@ Route::prefix('school-transport')->middleware(['api', 'auth:sanctum'])->group(fu
         Route::post('/{bus}/fuel', [BusController::class, 'recordFuel']);
         Route::get('/{bus}/fuel', [BusController::class, 'fuelReports']);
         Route::get('/{bus}/route-playback', [BusController::class, 'routePlayback']);
+
+        // Analytics and reporting routes
+        Route::get('/{bus}/fuel-analytics', [BusController::class, 'fuelAnalytics']);
+        Route::get('/{bus}/maintenance-analytics', [BusController::class, 'maintenanceAnalytics']);
+        Route::get('/{bus}/safety-compliance', [BusController::class, 'safetyCompliance']);
+        Route::get('/{bus}/route-fuel-efficiency', [BusController::class, 'routeFuelEfficiency']);
+        Route::get('/{bus}/predictive-maintenance', [BusController::class, 'predictiveMaintenance']);
+        Route::get('/{bus}/maintenance-cost-analysis', [BusController::class, 'maintenanceCostAnalysis']);
+        Route::get('/{bus}/fuel-efficiency-trends', [BusController::class, 'fuelEfficiencyTrends']);
     });
 
     // Driver management routes

@@ -5,6 +5,8 @@ namespace Fleetbase\SchoolTransportEngine\Services;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
 use Fleetbase\SchoolTransportEngine\Models\BusAssignment;
 use Fleetbase\SchoolTransportEngine\Models\Student;
+use Fleetbase\FleetOps\Support\OSRM;
+use Fleetbase\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -135,7 +137,7 @@ class RouteOptimizationService
     }
 
     /**
-     * Calculate distance between two coordinates using Haversine formula
+     * Calculate distance between two coordinates using FleetOps OSRM (more accurate)
      *
      * @param float $lat1
      * @param float $lon1
@@ -144,6 +146,42 @@ class RouteOptimizationService
      * @return float Distance in kilometers
      */
     protected function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        try {
+            $startPoint = new Point($lat1, $lon1);
+            $endPoint = new Point($lat2, $lon2);
+
+            // Use FleetOps OSRM for accurate routing distance
+            $routeData = OSRM::getRoute($startPoint, $endPoint, [
+                'overview' => 'false', // We don't need the geometry
+                'steps' => false
+            ]);
+
+            if (isset($routeData['routes']) && !empty($routeData['routes'])) {
+                $distanceMeters = $routeData['routes'][0]['distance'] ?? 0;
+                return $distanceMeters / 1000; // Convert to kilometers
+            }
+        } catch (\Exception $e) {
+            Log::warning('OSRM distance calculation failed, falling back to Haversine', [
+                'error' => $e->getMessage(),
+                'coordinates' => [$lat1, $lon1, $lat2, $lon2]
+            ]);
+        }
+
+        // Fallback to Haversine formula if OSRM fails
+        return $this->calculateHaversineDistance($lat1, $lon1, $lat2, $lon2);
+    }
+
+    /**
+     * Calculate distance using Haversine formula (fallback)
+     *
+     * @param float $lat1
+     * @param float $lon1
+     * @param float $lat2
+     * @param float $lon2
+     * @return float Distance in kilometers
+     */
+    protected function calculateHaversineDistance($lat1, $lon1, $lat2, $lon2)
     {
         $earthRadius = 6371; // km
 
