@@ -1,0 +1,72 @@
+{{!-- Edit Student Template --}}
+<div class="school-transport-student-edit">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Edit Student</h1>
+                <p class="text-gray-600 mt-1">Update student information and settings</p>
+            </div>
+            <div class="flex space-x-3">
+                <LinkTo @route="school-transport.students.view" @model={{this.student.id}} class="btn btn-outline">
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Back to Student
+                </LinkTo>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Progress Indicator --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex-1">
+                <div class="flex items-center space-x-4">
+                    <button 
+                        class="flex items-center space-x-2 {{if (eq this.selectedTab 'basic-info') 'text-blue-600 font-semibold' 'text-gray-600'}}"
+                        {{on "click" (fn this.selectTab 'basic-info')}}>
+                        <div class="w-8 h-8 rounded-full {{if (eq this.selectedTab 'basic-info') 'bg-blue-600 text-white' 'bg-gray-200 text-gray-600'}} flex items-center justify-center">
+                            1
+                        </div>
+                        <span>Basic Info</span>
+                    </button>
+                    <div class="flex-1 h-1 bg-gray-200"></div>
+                    <button 
+                        class="flex items-center space-x-2 {{if (eq this.selectedTab 'contact') 'text-blue-600 font-semibold' 'text-gray-600'}}"
+                        {{on "click" (fn this.selectTab 'contact')}}>
+                        <div class="w-8 h-8 rounded-full {{if (eq this.selectedTab 'contact') 'bg-blue-600 text-white' 'bg-gray-200 text-gray-600'}} flex items-center justify-center">
+                            2
+                        </div>
+                        <span>Contact Info</span>
+                    </button>
+                    <div class="flex-1 h-1 bg-gray-200"></div>
+                    <button 
+                        class="flex items-center space-x-2 {{if (eq this.selectedTab 'medical') 'text-blue-600 font-semibold' 'text-gray-600'}}"
+                        {{on "click" (fn this.selectTab 'medical')}}>
+                        <div class="w-8 h-8 rounded-full {{if (eq this.selectedTab 'medical') 'bg-blue-600 text-white' 'bg-gray-200 text-gray-600'}} flex items-center justify-center">
+                            3
+                        </div>
+                        <span>Medical & Special Needs</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Form Content --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <StudentForm 
+            @student={{this.student}}
+            @schools={{this.model.schools}}
+            @gradeOptions={{this.model.gradeOptions}}
+            @statusOptions={{this.model.statusOptions}}
+            @specialNeedsOptions={{this.model.specialNeedsOptions}}
+            @selectedTab={{this.selectedTab}}
+            @onSave={{this.saveStudent}}
+            @onCancel={{this.cancelEdit}}
+            @isLoading={{this.isLoading}}
+            @errors={{this.errors}}
+            @mode="edit"
+        />
+    </div>
+</div>
+

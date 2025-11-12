@@ -1,0 +1,98 @@
+{{!-- Edit Route Template --}}
+<div class="school-transport-route-edit">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Edit Route</h1>
+                <p class="text-gray-600 mt-1">Update route information and settings</p>
+            </div>
+            <LinkTo @route="school-transport.routes.view" @model={{this.route.id}} class="btn btn-outline">
+                <FaIcon @icon="arrow-left" class="mr-2" />
+                Back to Route
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Progress Steps --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex items-center justify-between">
+            {{#each (array 1 2 3 4) as |step|}}
+                <div class="flex items-center {{if (not-eq step 4) 'flex-1'}}">
+                    <button 
+                        class="flex items-center space-x-2 {{if (eq this.currentStep step) 'text-blue-600 font-semibold' 'text-gray-600'}}"
+                        {{on "click" (fn this.goToStep step)}}>
+                        <div class="w-10 h-10 rounded-full {{if (eq this.currentStep step) 'bg-blue-600 text-white' 'bg-gray-200 text-gray-600'}} flex items-center justify-center font-semibold">
+                            {{step}}
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="text-sm">{{this.stepTitle}}</div>
+                        </div>
+                    </button>
+                    {{#unless (eq step 4)}}
+                        <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                    {{/unless}}
+                </div>
+            {{/each}}
+        </div>
+        <p class="text-gray-600 text-sm mt-4">{{this.stepDescription}}</p>
+    </div>
+
+    {{!-- Form Content --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <RouteForm 
+            @route={{this.route}}
+            @schools={{this.model.schools}}
+            @vehicles={{this.model.vehicles}}
+            @drivers={{this.model.drivers}}
+            @typeOptions={{this.model.typeOptions}}
+            @statusOptions={{this.model.statusOptions}}
+            @currentStep={{this.currentStep}}
+            @onSave={{this.saveRoute}}
+            @onCancel={{this.cancelEdit}}
+            @onNextStep={{this.nextStep}}
+            @onPreviousStep={{this.previousStep}}
+            @isLoading={{this.isLoading}}
+            @errors={{this.errors}}
+            @mode="edit"
+        />
+    </div>
+
+    {{!-- Action Buttons --}}
+    <div class="flex justify-between mt-6">
+        <button 
+            class="btn btn-outline"
+            {{on "click" this.cancelEdit}}
+            disabled={{this.isLoading}}>
+            <FaIcon @icon="times" class="mr-2" />
+            Cancel
+        </button>
+        <div class="flex space-x-3">
+            {{#unless this.isFirstStep}}
+                <button 
+                    class="btn btn-outline"
+                    {{on "click" this.previousStep}}
+                    disabled={{this.isLoading}}>
+                    <FaIcon @icon="arrow-left" class="mr-2" />
+                    Previous
+                </button>
+            {{/unless}}
+            <button 
+                class="btn btn-primary"
+                {{on "click" this.validateAndProceed}}
+                disabled={{this.isLoading}}>
+                {{#if this.isLoading}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Saving...
+                {{else if this.isLastStep}}
+                    <FaIcon @icon="save" class="mr-2" />
+                    Save Changes
+                {{else}}
+                    Next
+                    <FaIcon @icon="arrow-right" class="ml-2" />
+                {{/if}}
+            </button>
+        </div>
+    </div>
+</div>
+

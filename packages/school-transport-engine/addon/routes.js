@@ -30,14 +30,39 @@ export default buildRoutes(function() {
       this.route('index', { path: '/' });
       this.route('new');
       this.route('view', { path: '/:communication_id' });
+      this.route('edit', { path: '/:communication_id/edit' });
       this.route('templates');
     });
     
     this.route('dashboard');
+    this.route('parent-dashboard');
+    
     this.route('reports', function() {
+      this.route('index', { path: '/' });
+      this.route('new');
+      this.route('view', { path: '/:report_id' });
       this.route('attendance');
       this.route('route-efficiency');
       this.route('safety-compliance');
+      this.route('custom');
+    });
+    
+    this.route('safety', function() {
+      this.route('index', { path: '/' });
+      this.route('incidents', function() {
+        this.route('index', { path: '/' });
+        this.route('new');
+        this.route('view', { path: '/:incident_id' });
+      });
+      this.route('inspections', function() {
+        this.route('index', { path: '/' });
+        this.route('new');
+        this.route('view', { path: '/:inspection_id' });
+      });
+      this.route('certifications', function() {
+        this.route('index', { path: '/' });
+        this.route('view', { path: '/:certification_id' });
+      });
     });
   });
 });
