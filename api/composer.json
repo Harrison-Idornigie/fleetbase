@@ -23,6 +23,7 @@
         "fleetbase/core-api": "^1.6.24",
         "fleetbase/fleetops-api": "^0.6.25",
         "fleetbase/registry-bridge": "^0.1.0",
+        "fleetbase/school-transport": "*",
         "fleetbase/storefront-api": "^0.4.6",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^10.0",
@@ -49,6 +50,10 @@
         "phpunit/phpunit": "^10.0"
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "../packages/school-transport"
+        },
         {
             "type": "composer",
             "url": "https://registry.fleetbase.io"
