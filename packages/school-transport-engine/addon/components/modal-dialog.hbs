@@ -1,246 +1,227 @@
 <div class="modal-overlay {{if @isOpen 'modal-open'}}" {{on "click" this.handleOverlayClick}}>
-  <div
-    class="modal-dialog modal-{{or @size 'md'}} {{if @centered 'modal-centered'}}"
-    {{on "click" this.stopPropagation}}
-  >
-    <div class="modal-content">
-      {{!-- Modal Header --}}
-      <div class="modal-header {{if @headerClass @headerClass}}">
-        <h3 class="modal-title">
-          {{#if @icon}}
-            <FaIcon @icon={{@icon}} />
-          {{/if}}
-          {{@title}}
-        </h3>
-        {{#if @closeable}}
-          <button
-            type="button"
-            class="modal-close"
-            {{on "click" @onClose}}
-            aria-label="Close"
-          >
-            <FaIcon @icon="times" />
-          </button>
-        {{/if}}
-      </div>
+    <div class="modal-dialog modal-{{or @size 'md'}} {{if @centered 'modal-centered'}}" {{on "click"
+        this.stopPropagation}}>
+        <div class="modal-content">
+            {{!-- Modal Header --}}
+            <div class="modal-header {{if @headerClass @headerClass}}">
+                <h3 class="modal-title">
+                    {{#if @icon}}
+                    <FaIcon @icon={{@icon}} />
+                    {{/if}}
+                    {{@title}}
+                </h3>
+                {{#if @closeable}}
+                <button type="button" class="modal-close" {{on "click" @onClose}} aria-label="Close">
+                    <FaIcon @icon="times" />
+                </button>
+                {{/if}}
+            </div>
 
-      {{!-- Modal Body --}}
-      <div class="modal-body {{if @bodyClass @bodyClass}}">
-        {{#if @isLoading}}
-          <div class="modal-loading">
-            <FaIcon @icon="spinner" @spin={{true}} @size="2x" />
-            <p>{{or @loadingMessage "Loading..."}}</p>
-          </div>
-        {{else}}
-          {{yield}}
-        {{/if}}
-      </div>
+            {{!-- Modal Body --}}
+            <div class="modal-body {{if @bodyClass @bodyClass}}">
+                {{#if @isLoading}}
+                <div class="modal-loading">
+                    <FaIcon @icon="spinner" @spin={{true}} @size="2x" />
+                    <p>{{or @loadingMessage "Loading..."}}</p>
+                </div>
+                {{else}}
+                {{yield}}
+                {{/if}}
+            </div>
 
-      {{!-- Modal Footer --}}
-      {{#if (or @onConfirm @onCancel @footerActions)}}
-        <div class="modal-footer {{if @footerClass @footerClass}}">
-          {{#if @footerActions}}
-            {{#each @footerActions as |action|}}
-              <Button
-                @text={{action.text}}
-                @icon={{action.icon}}
-                @onClick={{action.handler}}
-                @appearance={{or action.appearance "default"}}
-                @disabled={{or action.disabled @isLoading}}
-                @isLoading={{and @isLoading action.loading}}
-              />
-            {{/each}}
-          {{else}}
-            {{#if @onCancel}}
-              <Button
-                @text={{or @cancelText "Cancel"}}
-                @onClick={{@onCancel}}
-                @appearance="secondary"
-                @disabled={{@isLoading}}
-              />
+            {{!-- Modal Footer --}}
+            {{#if (or @onConfirm @onCancel @footerActions)}}
+            <div class="modal-footer {{if @footerClass @footerClass}}">
+                {{#if @footerActions}}
+                {{#each @footerActions as |action|}}
+                <Button @text={{action.text}} @icon={{action.icon}} @onClick={{action.handler}} @appearance={{or
+                    action.appearance "default" }} @disabled={{or action.disabled @isLoading}} @isLoading={{and
+                    @isLoading action.loading}} />
+                {{/each}}
+                {{else}}
+                {{#if @onCancel}}
+                <Button @text={{or @cancelText "Cancel" }} @onClick={{@onCancel}} @appearance="secondary"
+                    @disabled={{@isLoading}} />
+                {{/if}}
+                {{#if @onConfirm}}
+                <Button @text={{or @confirmText "Confirm" }} @onClick={{@onConfirm}} @appearance={{or
+                    @confirmAppearance "primary" }} @disabled={{@isLoading}} @isLoading={{@isLoading}} />
+                {{/if}}
+                {{/if}}
+            </div>
             {{/if}}
-            {{#if @onConfirm}}
-              <Button
-                @text={{or @confirmText "Confirm"}}
-                @onClick={{@onConfirm}}
-                @appearance={{or @confirmAppearance "primary"}}
-                @disabled={{@isLoading}}
-                @isLoading={{@isLoading}}
-              />
-            {{/if}}
-          {{/if}}
         </div>
-      {{/if}}
     </div>
-  </div>
 </div>
 
 <style>
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    animation: fadeIn 0.2s ease-in-out;
-  }
-
-  .modal-overlay.modal-open {
-    display: flex;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.2s ease-in-out;
     }
-    to {
-      opacity: 1;
+
+    .modal-overlay.modal-open {
+        display: flex;
     }
-  }
 
-  .modal-dialog {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    animation: slideIn 0.3s ease-out;
-  }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
 
-  @keyframes slideIn {
-    from {
-      transform: translateY(-50px);
-      opacity: 0;
+        to {
+            opacity: 1;
+        }
     }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
 
-  .modal-dialog.modal-sm {
-    width: 90%;
-    max-width: 400px;
-  }
-
-  .modal-dialog.modal-md {
-    width: 90%;
-    max-width: 600px;
-  }
-
-  .modal-dialog.modal-lg {
-    width: 90%;
-    max-width: 900px;
-  }
-
-  .modal-dialog.modal-xl {
-    width: 95%;
-    max-width: 1200px;
-  }
-
-  .modal-dialog.modal-centered {
-    margin: auto;
-  }
-
-  .modal-content {
-    display: flex;
-    flex-direction: column;
-    max-height: inherit;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .modal-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1a202c;
-    margin: 0;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #718096;
-    cursor: pointer;
-    padding: 0.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-
-  .modal-close:hover {
-    background: #edf2f7;
-    color: #2d3748;
-  }
-
-  .modal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.5rem;
-  }
-
-  .modal-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem;
-    color: #718096;
-  }
-
-  .modal-loading p {
-    margin-top: 1rem;
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 1.5rem;
-    border-top: 1px solid #e2e8f0;
-  }
-
-  @media (max-width: 768px) {
     .modal-dialog {
-      width: 95%;
-      max-height: 95vh;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-dialog.modal-sm {
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .modal-dialog.modal-md {
+        width: 90%;
+        max-width: 600px;
+    }
+
+    .modal-dialog.modal-lg {
+        width: 90%;
+        max-width: 900px;
+    }
+
+    .modal-dialog.modal-xl {
+        width: 95%;
+        max-width: 1200px;
+    }
+
+    .modal-dialog.modal-centered {
+        margin: auto;
+    }
+
+    .modal-content {
+        display: flex;
+        flex-direction: column;
+        max-height: inherit;
     }
 
     .modal-header {
-      padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a202c;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #718096;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+        background: #edf2f7;
+        color: #2d3748;
     }
 
     .modal-body {
-      padding: 1rem;
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    .modal-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        color: #718096;
+    }
+
+    .modal-loading p {
+        margin-top: 1rem;
     }
 
     .modal-footer {
-      padding: 1rem;
-      flex-direction: column;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding: 1.5rem;
+        border-top: 1px solid #e2e8f0;
     }
 
-    .modal-footer button {
-      width: 100%;
+    @media (max-width: 768px) {
+        .modal-dialog {
+            width: 95%;
+            max-height: 95vh;
+        }
+
+        .modal-header {
+            padding: 1rem;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-footer {
+            padding: 1rem;
+            flex-direction: column;
+        }
+
+        .modal-footer button {
+            width: 100%;
+        }
     }
-  }
 </style>
