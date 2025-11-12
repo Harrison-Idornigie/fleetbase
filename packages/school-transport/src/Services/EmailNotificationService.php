@@ -37,18 +37,92 @@ class EmailNotificationService
     }
 
     /**
-     * Send bus arrival notification
+     * Send bus arrival notification with enhanced ETA information
      *
      * @param string $to
-     * @param array $tripData
+     * @param string $message Custom message or null for default
+     * @param array $data Notification data including ETA information
      * @return bool
      */
-    public function sendArrivalNotification(string $to, array $tripData): bool
+    public function sendArrivalNotification(string $to, string $message = null, array $data = []): bool
     {
-        $subject = "Bus Arriving Soon - Route {$tripData['route_name']}";
-        $message = "Your child's bus is approaching the stop. Estimated arrival in {$tripData['eta_minutes']} minutes.";
+        $studentName = $data['student_name'] ?? 'Your child';
+        $busNumber = $data['bus_number'] ?? 'School Bus';
+        $stopName = $data['stop_name'] ?? 'the bus stop';
+        $routeName = $data['route_name'] ?? 'School Route';
+        $etaMinutes = $data['eta_minutes'] ?? null;
+        $isArriving = $data['is_arriving'] ?? false;
 
-        return $this->sendParentNotification($to, $subject, $message, $tripData);
+        // Build subject line
+        if ($isArriving) {
+            $subject = "🚌 Bus Arriving NOW - {$routeName}";
+        } elseif ($etaMinutes !== null && $etaMinutes <= 5) {
+            $subject = "🚌 Bus Arriving Soon - {$routeName}";
+        } else {
+            $subject = "🚌 Bus Update - {$routeName}";
+        }
+
+        // Build email message if not provided
+        if (!$message) {
+            if ($isArriving) {
+                $message = "
+                <h2>🚌 Bus Arriving Now!</h2>
+                <p><strong>{$busNumber}</strong> is arriving NOW at <strong>{$stopName}</strong> for <strong>{$studentName}</strong>.</p>
+                <p style='color: #DC2626; font-weight: bold;'>Please be ready at the bus stop!</p>
+                ";
+            } elseif ($etaMinutes !== null) {
+                if ($etaMinutes <= 1) {
+                    $message = "
+                    <h2>🚌 Bus Arriving Soon!</h2>
+                    <p><strong>{$busNumber}</strong> will arrive at <strong>{$stopName}</strong> in less than 1 minute for <strong>{$studentName}</strong>.</p>
+                    <p style='color: #F59E0B; font-weight: bold;'>Please be ready at the bus stop!</p>
+                    ";
+                } elseif ($etaMinutes <= 10) {
+                    $message = "
+                    <h2>🚌 Bus Arriving Soon!</h2>
+                    <p><strong>{$busNumber}</strong> will arrive at <strong>{$stopName}</strong> in approximately <strong>{$etaMinutes} minutes</strong> for <strong>{$studentName}</strong>.</p>
+                    <p style='color: #F59E0B; font-weight: bold;'>Please be ready at the bus stop!</p>
+                    ";
+                } else {
+                    $message = "
+                    <h2>🚌 Bus Update</h2>
+                    <p><strong>{$busNumber}</strong> will arrive at <strong>{$stopName}</strong> in approximately <strong>{$etaMinutes} minutes</strong> for <strong>{$studentName}</strong>.</p>
+                    <p>We'll send another update when the bus is closer.</p>
+                    ";
+                }
+            } else {
+                $message = "
+                <h2>🚌 Bus En Route</h2>
+                <p><strong>{$busNumber}</strong> is on route to <strong>{$stopName}</strong> for <strong>{$studentName}</strong>.</p>
+                <p>Estimated arrival time will be updated shortly.</p>
+                ";
+            }
+
+            // Add live tracking information if available
+            if (!empty($data['tracking_link'])) {
+                $message .= "
+                <p style='margin-top: 20px;'>
+                    <a href='{$data['tracking_link']}' style='background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
+                        📍 Track Bus Live
+                    </a>
+                </p>
+                ";
+            }
+
+            // Add additional route information
+            $message .= "
+            <hr style='margin: 20px 0;'>
+            <p style='color: #6B7280; font-size: 12px;'>
+                Route: {$routeName}<br>
+                Bus: {$busNumber}<br>
+                Stop: {$stopName}<br>
+                Student: {$studentName}<br>
+                Time: " . now()->format('Y-m-d H:i:s') . "
+            </p>
+            ";
+        }
+
+        return $this->sendParentNotification($to, $subject, $message, $data);
     }
 
     /**

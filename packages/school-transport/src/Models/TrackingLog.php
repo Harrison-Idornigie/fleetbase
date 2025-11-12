@@ -81,7 +81,12 @@ class TrackingLog extends Model
         'temperature_celsius',
         'metadata',
         'company_uuid',
-        'created_by_uuid'
+        'created_by_uuid',
+        // ETA-related fields
+        'eta_data',
+        'proximity_alerts',
+        'next_stop_eta_minutes',
+        'next_stop_distance_km'
     ];
 
     /**
@@ -103,7 +108,12 @@ class TrackingLog extends Model
         'temperature_celsius' => 'decimal:1',
         'gps_timestamp' => 'datetime',
         'device_timestamp' => 'datetime',
-        'metadata' => 'array'
+        'metadata' => 'array',
+        // ETA-related casts
+        'eta_data' => 'array',
+        'proximity_alerts' => 'array',
+        'next_stop_eta_minutes' => 'decimal:2',
+        'next_stop_distance_km' => 'decimal:2'
     ];
 
     /**
@@ -234,5 +244,164 @@ class TrackingLog extends Model
             'idle' => 'Idle',
             default => ucfirst($this->engine_status ?? 'Unknown')
         };
+    }
+
+    /**
+     * Set ETA data for this tracking log.
+     *
+     * @param array $etaData
+     * @return void
+     */
+    public function setETAData(array $etaData): void
+    {
+        $this->eta_data = $etaData;
+        $this->save();
+    }
+
+    /**
+     * Get formatted ETA for next stop.
+     *
+     * @return string
+     */
+    public function getFormattedNextStopETA(): string
+    {
+        if (!$this->next_stop_eta_minutes) {
+            return 'N/A';
+        }
+
+        $minutes = $this->next_stop_eta_minutes;
+
+        if ($minutes < 1) {
+            return 'Arriving now';
+        } elseif ($minutes < 60) {
+            return round($minutes) . ' min';
+        } else {
+            $hours = floor($minutes / 60);
+            $mins = round($minutes % 60);
+            return "{$hours}h {$mins}m";
+        }
+    }
+
+    /**
+     * Check if bus is approaching next stop.
+     *
+     * @param float $thresholdMinutes
+     * @return bool
+     */
+    public function isApproachingNextStop(float $thresholdMinutes = 5): bool
+    {
+        return $this->next_stop_eta_minutes && $this->next_stop_eta_minutes <= $thresholdMinutes;
+    }
+
+    /**
+     * Check if bus is very close to next stop.
+     *
+     * @param float $thresholdKm
+     * @return bool
+     */
+    public function isNearNextStop(float $thresholdKm = 0.5): bool
+    {
+        return $this->next_stop_distance_km && $this->next_stop_distance_km <= $thresholdKm;
+    }
+
+    /**
+     * Get proximity alert level.
+     *
+     * @return string|null
+     */
+    public function getProximityAlertLevel(): ?string
+    {
+        if ($this->isNearNextStop(0.2)) {
+            return 'immediate';
+        } elseif ($this->isNearNextStop(0.5)) {
+            return 'very_close';
+        } elseif ($this->isApproachingNextStop(2)) {
+            return 'close';
+        } elseif ($this->isApproachingNextStop(10)) {
+            return 'approaching';
+        }
+
+        return null;
+    }
+
+    /**
+     * Add proximity alert.
+     *
+     * @param string $alertType
+     * @param array $alertData
+     * @return void
+     */
+    public function addProximityAlert(string $alertType, array $alertData = []): void
+    {
+        $alerts = $this->proximity_alerts ?? [];
+        $alerts[] = [
+            'type' => $alertType,
+            'data' => $alertData,
+            'timestamp' => now()->toISOString()
+        ];
+
+        $this->proximity_alerts = $alerts;
+        $this->save();
+    }
+
+    /**
+     * Calculate ETA to destination using external service.
+     *
+     * @param array $destination
+     * @param array $options
+     * @return array|null
+     */
+    public function calculateETATo(array $destination, array $options = []): ?array
+    {
+        $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        try {
+            $origin = [
+                'lat' => $this->latitude,
+                'lng' => $this->longitude
+            ];
+
+            return $etaService->calculateETAWithProvider(
+                $options['provider'] ?? 'google',
+                $origin,
+                $destination,
+                $options
+            );
+        } catch (\Exception $e) {
+            \Log::error('Failed to calculate ETA from tracking log', [
+                'tracking_log_id' => $this->uuid,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Update next stop ETA information.
+     *
+     * @param array $stopCoordinates
+     * @param array $options
+     * @return bool
+     */
+    public function updateNextStopETA(array $stopCoordinates, array $options = []): bool
+    {
+        $eta = $this->calculateETATo($stopCoordinates, $options);
+
+        if ($eta) {
+            $this->next_stop_eta_minutes = $eta['duration_minutes'];
+            $this->next_stop_distance_km = $eta['distance_km'];
+
+            // Store full ETA data
+            $this->setETAData([
+                'destination' => $stopCoordinates,
+                'eta_result' => $eta,
+                'calculated_at' => now()->toISOString(),
+                'provider' => $options['provider'] ?? 'google'
+            ]);
+
+            return true;
+        }
+
+        return false;
     }
 }

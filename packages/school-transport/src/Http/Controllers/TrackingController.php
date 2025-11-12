@@ -511,4 +511,181 @@ class TrackingController extends FleetbaseController
             'timestamp' => now()
         ]);
     }
+
+    /**
+     * Calculate ETA for a bus to reach a specific destination.
+     */
+    public function calculateETA(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'bus_id' => 'required|string|exists:school_transport_buses,uuid',
+            'destination_lat' => 'required|numeric|between:-90,90',
+            'destination_lng' => 'required|numeric|between:-180,180',
+            'provider' => 'nullable|string|in:google,mapbox'
+        ]);
+
+        $bus = Bus::where('uuid', $request->input('bus_id'))
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        $destinationCoordinates = [
+            'lat' => $request->input('destination_lat'),
+            'lng' => $request->input('destination_lng')
+        ];
+
+        $options = [
+            'provider' => $request->input('provider', 'google')
+        ];
+
+        $eta = $etaService->calculateBusETA($bus, $destinationCoordinates, $options);
+
+        return response()->json($eta);
+    }
+
+    /**
+     * Get ETA for all stops on a route.
+     */
+    public function getRouteETAs(Request $request, string $tripId): JsonResponse
+    {
+        $trip = Trip::where('uuid', $tripId)
+            ->where('company_uuid', session('company'))
+            ->with(['route', 'bus'])
+            ->firstOrFail();
+
+        $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        $options = [
+            'provider' => $request->input('provider', 'google')
+        ];
+
+        $routeETAs = $etaService->calculateRouteETAs($trip, $options);
+
+        return response()->json($routeETAs);
+    }
+
+    /**
+     * Get ETA for a specific stop.
+     */
+    public function getStopETA(Request $request, string $routeId, string $stopId): JsonResponse
+    {
+        // Find active trip for this route
+        $trip = Trip::where('route_uuid', $routeId)
+            ->where('company_uuid', session('company'))
+            ->where('status', 'in_progress')
+            ->with(['route', 'bus'])
+            ->firstOrFail();
+
+        $route = $trip->route;
+        if (!$route->stops) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Route has no stops defined'
+            ]);
+        }
+
+        // Find the specific stop
+        $stop = collect($route->stops)->firstWhere('id', $stopId);
+        if (!$stop) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Stop not found on route'
+            ]);
+        }
+
+        $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        $destinationCoordinates = [
+            'lat' => $stop['coordinates']['lat'],
+            'lng' => $stop['coordinates']['lng']
+        ];
+
+        $options = [
+            'provider' => $request->input('provider', 'google')
+        ];
+
+        $eta = $etaService->calculateBusETA($trip->bus, $destinationCoordinates, $options);
+
+        if ($eta['success']) {
+            $eta['stop_id'] = $stopId;
+            $eta['stop_name'] = $stop['name'];
+            $eta['route_id'] = $routeId;
+            $eta['trip_id'] = $trip->uuid;
+        }
+
+        return response()->json($eta);
+    }
+
+    /**
+     * Check if a bus is near a stop.
+     */
+    public function checkProximity(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'bus_id' => 'required|string|exists:school_transport_buses,uuid',
+            'stop_lat' => 'required|numeric|between:-90,90',
+            'stop_lng' => 'required|numeric|between:-180,180',
+            'threshold_km' => 'nullable|numeric|min:0.1|max:5'
+        ]);
+
+        $bus = Bus::where('uuid', $request->input('bus_id'))
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        $stopCoordinates = [
+            'lat' => $request->input('stop_lat'),
+            'lng' => $request->input('stop_lng')
+        ];
+
+        $thresholdKm = $request->input('threshold_km', 0.5);
+
+        $isNear = $etaService->isBusNearStop($bus, $stopCoordinates, $thresholdKm);
+
+        return response()->json([
+            'bus_id' => $bus->uuid,
+            'bus_number' => $bus->bus_number,
+            'stop_coordinates' => $stopCoordinates,
+            'threshold_km' => $thresholdKm,
+            'is_near_stop' => $isNear,
+            'checked_at' => now()->toISOString()
+        ]);
+    }
+
+    /**
+     * Get cached ETA if available.
+     */
+    public function getCachedETA(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'bus_id' => 'required|string|exists:school_transport_buses,uuid',
+            'destination_lat' => 'required|numeric|between:-90,90',
+            'destination_lng' => 'required|numeric|between:-180,180'
+        ]);
+
+        $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        $destinationCoordinates = [
+            'lat' => $request->input('destination_lat'),
+            'lng' => $request->input('destination_lng')
+        ];
+
+        $cachedETA = $etaService->getCachedETA($request->input('bus_id'), $destinationCoordinates);
+
+        if ($cachedETA) {
+            return response()->json([
+                'success' => true,
+                'cached' => true,
+                ...$cachedETA
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'cached' => false,
+            'message' => 'No cached ETA available'
+        ]);
+    }
 }

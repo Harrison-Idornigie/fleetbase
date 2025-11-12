@@ -55,15 +55,48 @@ class SmsNotificationService
     }
 
     /**
-     * Send bus arrival notification
+     * Send arrival notification with ETA information
      *
      * @param string $to
-     * @param array $tripData
+     * @param string $message Custom message or null for default
+     * @param array $data Notification data including ETA information
      * @return bool
      */
-    public function sendArrivalNotification(string $to, array $tripData): bool
+    public function sendArrivalNotification(string $to, string $message = null, array $data = []): bool
     {
-        $message = "Bus Alert: Your child's bus is arriving in {$tripData['eta_minutes']} min. Route: {$tripData['route_name']}";
+        if (!$message) {
+            // Build default message with enhanced ETA information
+            $studentName = $data['student_name'] ?? 'your child';
+            $busNumber = $data['bus_number'] ?? 'School Bus';
+            $stopName = $data['stop_name'] ?? 'your stop';
+            $etaMinutes = $data['eta_minutes'] ?? null;
+            $isArriving = $data['is_arriving'] ?? false;
+
+            if ($isArriving) {
+                $message = "🚌 {$busNumber} is arriving NOW at {$stopName} for {$studentName}. Please be ready!";
+            } elseif ($etaMinutes !== null) {
+                if ($etaMinutes <= 1) {
+                    $message = "🚌 {$busNumber} will arrive at {$stopName} in less than 1 minute for {$studentName}. Please be ready!";
+                } elseif ($etaMinutes <= 5) {
+                    $message = "🚌 {$busNumber} will arrive at {$stopName} in {$etaMinutes} minutes for {$studentName}. Please be ready!";
+                } else {
+                    $message = "🚌 {$busNumber} will arrive at {$stopName} in approximately {$etaMinutes} minutes for {$studentName}.";
+                }
+            } else {
+                $message = "🚌 {$busNumber} is on route to {$stopName} for {$studentName}. Estimated arrival time will be updated shortly.";
+            }
+
+            // Add live tracking link if available
+            if (!empty($data['tracking_link'])) {
+                $message .= " Track live: {$data['tracking_link']}";
+            }
+
+            // Add additional info if provided
+            if (!empty($data['route_name'])) {
+                $message .= " Route: {$data['route_name']}";
+            }
+        }
+
         return $this->send($to, $message);
     }
 

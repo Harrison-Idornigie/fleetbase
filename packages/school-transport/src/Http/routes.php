@@ -127,6 +127,13 @@ Route::prefix('school-transport')->middleware(['api', 'auth:sanctum'])->group(fu
         Route::post('/bulk', [TrackingController::class, 'bulkStore']);
         Route::get('/statistics', [TrackingController::class, 'statistics']);
         Route::get('/realtime', [TrackingController::class, 'realtime']);
+
+        // ETA and proximity routes
+        Route::post('/calculate-eta', [TrackingController::class, 'calculateETA']);
+        Route::get('/routes/{trip}/etas', [TrackingController::class, 'getRouteETAs']);
+        Route::get('/routes/{route}/stops/{stop}/eta', [TrackingController::class, 'getStopETA']);
+        Route::post('/check-proximity', [TrackingController::class, 'checkProximity']);
+        Route::get('/cached-eta', [TrackingController::class, 'getCachedETA']);
     });
 
     // Alert management routes
