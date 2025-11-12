@@ -521,7 +521,7 @@ class TrackingController extends FleetbaseController
             'bus_id' => 'required|string|exists:school_transport_buses,uuid',
             'destination_lat' => 'required|numeric|between:-90,90',
             'destination_lng' => 'required|numeric|between:-180,180',
-            'provider' => 'nullable|string|in:google,mapbox'
+            'provider' => 'nullable|string|in:osrm,google,mapbox' // Added free OSRM option
         ]);
 
         $bus = Bus::where('uuid', $request->input('bus_id'))
@@ -536,7 +536,7 @@ class TrackingController extends FleetbaseController
         ];
 
         $options = [
-            'provider' => $request->input('provider', 'google')
+            'provider' => $request->input('provider', 'osrm') // Free OSRM as default
         ];
 
         $eta = $etaService->calculateBusETA($bus, $destinationCoordinates, $options);
@@ -557,7 +557,7 @@ class TrackingController extends FleetbaseController
         $etaService = app(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
 
         $options = [
-            'provider' => $request->input('provider', 'google')
+            'provider' => $request->input('provider', 'osrm') // Free OSRM as default
         ];
 
         $routeETAs = $etaService->calculateRouteETAs($trip, $options);
@@ -602,7 +602,7 @@ class TrackingController extends FleetbaseController
         ];
 
         $options = [
-            'provider' => $request->input('provider', 'google')
+            'provider' => $request->input('provider', 'osrm') // Free OSRM as default
         ];
 
         $eta = $etaService->calculateBusETA($trip->bus, $destinationCoordinates, $options);

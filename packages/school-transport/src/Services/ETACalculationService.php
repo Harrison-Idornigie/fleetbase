@@ -7,25 +7,27 @@ use Fleetbase\SchoolTransportEngine\Models\Trip;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
 use Fleetbase\SchoolTransportEngine\Models\TrackingLog;
 use Fleetbase\SchoolTransportEngine\Events\ETAUpdated;
+use Fleetbase\FleetOps\Support\OSRM;
+use Fleetbase\LaravelMysqlSpatial\Types\Point;
 use Fleetbase\Support\Utils;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Service for calculating real-time ETAs using various mapping services
+ * Service for calculating real-time ETAs using FleetBase's free OSRM routing service
  */
 class ETACalculationService
 {
     /**
-     * @var string Default mapping provider
+     * @var string Default mapping provider (OSRM is free and built into FleetBase)
      */
-    protected $defaultProvider = 'google';
+    protected $defaultProvider = 'osrm';
 
     /**
-     * @var array Available mapping providers
+     * @var array Available mapping providers (OSRM is free, Google/Mapbox require paid API keys)
      */
-    protected $providers = ['google', 'mapbox'];
+    protected $providers = ['osrm', 'google', 'mapbox'];
 
     /**
      * Calculate ETA for a bus to reach a specific stop
@@ -148,7 +150,84 @@ class ETACalculationService
     }
 
     /**
-     * Calculate ETA using Google Maps API
+     * Calculate ETA using FleetBase's built-in OSRM service (FREE)
+     *
+     * @param array $origin
+     * @param array $destination
+     * @param array $options
+     * @return array
+     */
+    protected function calculateETAWithOSRM(array $origin, array $destination, array $options = []): array
+    {
+        try {
+            $startPoint = new Point($origin['lat'], $origin['lng']);
+            $endPoint = new Point($destination['lat'], $destination['lng']);
+
+            // Use FleetBase's OSRM service (completely free)
+            $routeData = OSRM::getRoute($startPoint, $endPoint, [
+                'overview' => 'full',
+                'geometries' => 'geojson',
+                'steps' => false
+            ]);
+
+            if (!isset($routeData['routes']) || empty($routeData['routes'])) {
+                throw new \Exception('No route found with OSRM');
+            }
+
+            $route = $routeData['routes'][0];
+            $durationSeconds = $route['duration'] ?? 0;
+            $distanceMeters = $route['distance'] ?? 0;
+
+            return [
+                'duration_minutes' => round($durationSeconds / 60, 1),
+                'distance_km' => round($distanceMeters / 1000, 2),
+                'traffic_factor' => 1.0, // OSRM doesn't include live traffic, but it's free!
+                'polyline' => $route['geometry'] ?? null,
+                'provider' => 'osrm'
+            ];
+        } catch (\Exception $e) {
+            Log::warning('OSRM ETA calculation failed', [
+                'origin' => $origin,
+                'destination' => $destination,
+                'error' => $e->getMessage()
+            ]);
+
+            // Fallback to Haversine calculation if OSRM fails
+            return $this->calculateETAWithHaversine($origin, $destination);
+        }
+    }
+
+    /**
+     * Fallback ETA calculation using Haversine distance (always available)
+     *
+     * @param array $origin
+     * @param array $destination
+     * @return array
+     */
+    protected function calculateETAWithHaversine(array $origin, array $destination): array
+    {
+        $distanceKm = $this->calculateHaversineDistance(
+            $origin['lat'],
+            $origin['lng'],
+            $destination['lat'],
+            $destination['lng']
+        );
+
+        // Estimate driving time: average city speed ~30 km/h for school buses
+        $avgSpeedKmh = 30;
+        $durationMinutes = ($distanceKm / $avgSpeedKmh) * 60;
+
+        return [
+            'duration_minutes' => round($durationMinutes, 1),
+            'distance_km' => round($distanceKm, 2),
+            'traffic_factor' => 1.0,
+            'polyline' => null,
+            'provider' => 'haversine_fallback'
+        ];
+    }
+
+    /**
+     * Calculate ETA using Google Maps API (REQUIRES PAID API KEY)
      *
      * @param array $origin
      * @param array $destination
@@ -159,7 +238,7 @@ class ETACalculationService
     {
         $apiKey = config('services.google.maps_api_key');
         if (!$apiKey) {
-            throw new \Exception('Google Maps API key not configured');
+            throw new \Exception('Google Maps API key not configured. Consider using free OSRM instead.');
         }
 
         $params = [
@@ -205,7 +284,7 @@ class ETACalculationService
     }
 
     /**
-     * Calculate ETA using Mapbox API
+     * Calculate ETA using Mapbox API (REQUIRES PAID API KEY)
      *
      * @param array $origin
      * @param array $destination
@@ -216,7 +295,7 @@ class ETACalculationService
     {
         $apiKey = config('services.mapbox.access_token');
         if (!$apiKey) {
-            throw new \Exception('Mapbox access token not configured');
+            throw new \Exception('Mapbox access token not configured. Consider using free OSRM instead.');
         }
 
         $coordinates = "{$origin['lng']},{$origin['lat']};{$destination['lng']},{$destination['lat']}";
@@ -263,12 +342,16 @@ class ETACalculationService
     protected function calculateETAWithProvider(string $provider, array $origin, array $destination, array $options = []): array
     {
         switch ($provider) {
+            case 'osrm':
+                return $this->calculateETAWithOSRM($origin, $destination, $options);
             case 'google':
                 return $this->calculateETAWithGoogle($origin, $destination, $options);
             case 'mapbox':
                 return $this->calculateETAWithMapbox($origin, $destination, $options);
             default:
-                throw new \Exception("Unsupported ETA provider: {$provider}");
+                // Default to free OSRM if unsupported provider is requested
+                Log::warning("Unsupported ETA provider '{$provider}', falling back to OSRM");
+                return $this->calculateETAWithOSRM($origin, $destination, $options);
         }
     }
 

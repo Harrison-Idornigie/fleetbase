@@ -94,7 +94,7 @@ class MonitorETAAndProximity implements ShouldQueue
 
             // Calculate ETAs for all stops on the route
             $routeETAs = $etaService->calculateRouteETAs($trip, [
-                'provider' => Setting::lookupCompany($companyUuid, 'school_transport.eta_provider', 'google')
+                'provider' => Setting::lookupCompany($companyUuid, 'school_transport.eta_provider', 'osrm') // Free OSRM as default
             ]);
 
             if (!$routeETAs['success']) {

@@ -1,18 +1,26 @@
 # ETA Calculation and Real-Time Tracking Configuration
 
-This file describes the configuration options for the real-time ETA calculation system.
+This file describes the configuration options for the real-time ETA calculation system using **FleetBase's FREE OSRM routing service** (no API keys required).
 
 ## Environment Variables
 
 Add these to your `.env` file to configure the ETA system:
 
-### Google Maps API Configuration
+### FleetBase OSRM Service (FREE - Recommended)
 ```env
+# OSRM routing host (uses FleetBase's free service by default)
+OSRM_HOST=https://router.project-osrm.org
+```
+
+### Google Maps API Configuration (OPTIONAL - PAID)
+```env
+# Only needed if you want traffic-aware routing (requires billing setup)
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 ```
 
-### Mapbox Configuration (Alternative)
+### Mapbox Configuration (OPTIONAL - PAID)
 ```env
+# Alternative paid service (requires API token)
 MAPBOX_ACCESS_TOKEN=your_mapbox_access_token_here
 ```
 
@@ -21,8 +29,9 @@ MAPBOX_ACCESS_TOKEN=your_mapbox_access_token_here
 # Enable/disable ETA monitoring globally
 ETA_MONITORING_ENABLED=true
 
-# Default ETA calculation provider (google|mapbox)
-ETA_DEFAULT_PROVIDER=google
+# Default ETA calculation provider (osrm|google|mapbox)
+# OSRM is free and works great for school transport!
+ETA_DEFAULT_PROVIDER=osrm
 
 # ETA update interval in seconds (default: 30)
 ETA_UPDATE_INTERVAL=30
@@ -37,7 +46,33 @@ ETA_NOTIFICATION_THRESHOLD=10
 ETA_MONITORING_QUEUE=default
 ```
 
-### School Transport Settings
+## Routing Service Comparison
+
+### FREE Option: OSRM (Open Source Routing Machine)
+✅ **Completely FREE** - No API keys, billing, or usage limits  
+✅ **Built into FleetBase** - Already configured and ready to use  
+✅ **Reliable routing** - Excellent for school bus routes  
+✅ **OpenStreetMap data** - Comprehensive global coverage  
+✅ **Fast performance** - Optimized routing engine  
+⚠️ **No live traffic** - Uses historical/average speeds  
+
+### PAID Option: Google Maps Distance Matrix API
+❌ **Requires billing setup** - $5-20 per 1000 requests  
+✅ **Live traffic data** - Real-time traffic-aware ETAs  
+✅ **High accuracy** - Excellent routing quality  
+❌ **Usage limits** - Rate limiting and quotas  
+❌ **API key management** - Security considerations  
+
+### PAID Option: Mapbox Directions API  
+❌ **Requires API token** - $0.50-4.00 per 1000 requests  
+✅ **Traffic data available** - Real-time traffic insights  
+✅ **Good routing** - Quality alternative to Google  
+❌ **Monthly billing** - Usage-based pricing  
+❌ **Setup complexity** - Token management required  
+
+**💡 Recommendation:** Start with **OSRM (free)** for most school transport needs. Only consider paid services if you specifically need live traffic data for heavy urban routes.
+
+## School Transport Settings
 
 These settings can be configured per company in the settings system or as defaults:
 
@@ -58,7 +93,7 @@ The following settings can be configured per company through the Settings API:
 
 ### ETA Monitoring
 - `school_transport.eta_monitoring_enabled` (boolean, default: true)
-- `school_transport.eta_provider` (string, default: 'google')
+- `school_transport.eta_provider` (string, default: 'osrm')
 - `school_transport.eta_notification_threshold` (integer, default: 10 minutes)
 - `school_transport.proximity_threshold_km` (float, default: 0.5)
 
@@ -84,7 +119,7 @@ Body:
     "bus_id": "uuid",
     "destination_lat": 40.7128,
     "destination_lng": -74.0060,
-    "provider": "google" // optional
+    "provider": "osrm" // optional, defaults to osrm (free)
 }
 ```
 
