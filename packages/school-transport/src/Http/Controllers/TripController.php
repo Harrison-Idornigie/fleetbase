@@ -8,6 +8,8 @@ use Fleetbase\SchoolTransportEngine\Models\Bus;
 use Fleetbase\SchoolTransportEngine\Models\Driver;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
 use Fleetbase\SchoolTransportEngine\Models\Attendance;
+use Fleetbase\SchoolTransportEngine\Events\TripStatusChanged;
+use Fleetbase\SchoolTransportEngine\Events\StudentCheckInOut;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -343,6 +345,8 @@ class TripController extends FleetbaseController
             ->where('status', 'scheduled')
             ->firstOrFail();
 
+        $oldStatus = $trip->status;
+
         $trip->update([
             'status' => 'in_progress',
             'actual_start_time' => now()
@@ -350,6 +354,9 @@ class TripController extends FleetbaseController
 
         // Update bus status
         $trip->bus->update(['status' => 'in_route']);
+
+        // Broadcast trip status change event
+        event(new TripStatusChanged($trip->fresh(), $oldStatus, 'in_progress'));
 
         return response()->json([
             'trip' => $trip->fresh()->load(['bus', 'driver', 'route']),
@@ -375,6 +382,8 @@ class TripController extends FleetbaseController
             ->where('status', 'in_progress')
             ->firstOrFail();
 
+        $oldStatus = $trip->status;
+
         $trip->update([
             'status' => 'completed',
             'actual_end_time' => $request->input('actual_end_time', now()),
@@ -386,6 +395,9 @@ class TripController extends FleetbaseController
 
         // Update bus status back to available
         $trip->bus->update(['status' => 'available']);
+
+        // Broadcast trip status change event
+        event(new TripStatusChanged($trip->fresh(), $oldStatus, 'completed'));
 
         return response()->json([
             'trip' => $trip->fresh()->load(['bus', 'driver', 'route']),

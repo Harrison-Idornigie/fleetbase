@@ -40,8 +40,11 @@ class SchoolTransportServiceProvider extends ServiceProvider
                         'school-transport.routes.create' => 'Create Routes',
                         'school-transport.routes.update' => 'Update Routes',
                         'school-transport.routes.delete' => 'Delete Routes',
+                        'school-transport.routes.optimize' => 'Optimize Routes',
                         'school-transport.assignments.view' => 'View Assignments',
                         'school-transport.assignments.manage' => 'Manage Assignments',
+                        'school-transport.tracking.view' => 'View Real-time Tracking',
+                        'school-transport.tracking.manage' => 'Manage Tracking Data',
                     ],
                     'menu' => [
                         'text' => 'School Transport',
@@ -85,5 +88,10 @@ class SchoolTransportServiceProvider extends ServiceProvider
         $this->app->bind('school-transport.route', Controllers\SchoolRouteController::class);
         $this->app->bind('school-transport.assignment', Controllers\BusAssignmentController::class);
         $this->app->bind('school-transport.communication', Controllers\CommunicationController::class);
+
+        // Register services as singletons
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\RouteOptimizationService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\EmailNotificationService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\SmsNotificationService::class);
     }
 }

@@ -125,6 +125,8 @@ class CommunicationController extends FleetbaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.manage');
+
         $this->validate($request, [
             'type' => 'required|in:notification,alert,reminder,update,emergency',
             'title' => 'required|string|max:255',
@@ -234,6 +236,8 @@ class CommunicationController extends FleetbaseController
      */
     public function updateStatus(Request $request, string $id): JsonResponse
     {
+        $this->authorize('school-transport.manage');
+
         $communication = Communication::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -277,6 +281,8 @@ class CommunicationController extends FleetbaseController
      */
     public function sendNotification(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.manage');
+
         $this->validate($request, [
             'type' => 'required|in:delay,route_change,emergency,absence',
             'route_id' => 'nullable|exists:school_transport_routes,uuid',

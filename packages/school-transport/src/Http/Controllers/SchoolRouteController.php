@@ -4,10 +4,13 @@ namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\BusAssignment;
-use Fleetbase\SchoolTransportEngine\Models\Student;
+use Fleetbase\SchoolTransportEngine\Models\School;
+use Fleetbase\SchoolTransportEngine\Models\Stop;
+use Fleetbase\SchoolTransportEngine\Services\RouteOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SchoolRouteController extends FleetbaseController
 {
@@ -101,6 +104,8 @@ class SchoolRouteController extends FleetbaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.routes.create');
+
         $this->validate($request, [
             'route_name' => 'required|string|max:255',
             'route_number' => 'nullable|string|max:50',
@@ -209,6 +214,8 @@ class SchoolRouteController extends FleetbaseController
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        $this->authorize('school-transport.routes.update');
+
         $route = SchoolRoute::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -272,6 +279,8 @@ class SchoolRouteController extends FleetbaseController
      */
     public function destroy(string $id): JsonResponse
     {
+        $this->authorize('school-transport.routes.delete');
+
         $route = SchoolRoute::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -326,30 +335,61 @@ class SchoolRouteController extends FleetbaseController
     }
 
     /**
-     * Optimize route stops order.
+     * Optimize route stops order using nearest neighbor algorithm.
      */
-    public function optimizeRoute(Request $request, string $id): JsonResponse
+    public function optimizeRoute(Request $request, string $id, RouteOptimizationService $optimizationService): JsonResponse
     {
-        $route = SchoolRoute::where('uuid', $id)
-            ->where('company_uuid', session('company'))
-            ->firstOrFail();
+        $this->authorize('school-transport.routes.optimize');
 
-        // This would integrate with a routing optimization service
-        // For now, we'll return a mock optimized route
-        $optimizedStops = $route->optimizeStops();
+        try {
+            $route = SchoolRoute::where('uuid', $id)
+                ->where('company_uuid', session('company'))
+                ->firstOrFail();
 
-        // Update route with optimized waypoints
-        $route->update(['waypoints' => $optimizedStops]);
+            // Run optimization algorithm
+            $result = $optimizationService->optimizeRoute($route);
 
-        return response()->json([
-            'message' => 'Route optimized successfully',
-            'optimized_stops' => $optimizedStops,
-            'estimated_savings' => [
-                'time_minutes' => rand(5, 15),
-                'distance_miles' => round(rand(1, 5) * 0.1, 1),
-                'fuel_cost' => round(rand(2, 8) * 0.5, 2)
-            ]
-        ]);
+            if (!$result['success']) {
+                return response()->json($result, 400);
+            }
+
+            // Update the route with optimized data
+            $route->update([
+                'waypoints' => $result['waypoints'],
+                'estimated_distance' => $result['total_distance'],
+                'estimated_duration' => $result['estimated_duration']
+            ]);
+
+            // Update stop sequences in database
+            foreach ($result['optimized_stops'] as $index => $stop) {
+                if ($stop['type'] !== 'destination') {
+                    DB::table('bus_assignments')
+                        ->where('uuid', $stop['id'])
+                        ->update(['sequence_number' => $index + 1]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Route optimized successfully',
+                'optimized_stops' => $result['optimized_stops'],
+                'waypoints' => $result['waypoints'],
+                'total_distance_km' => $result['total_distance'],
+                'estimated_duration_minutes' => $result['estimated_duration'],
+                'estimated_savings' => [
+                    'distance_saved_km' => $result['savings']['distance_saved'],
+                    'time_saved_minutes' => $result['savings']['time_saved'],
+                    'distance_percentage' => $result['savings']['distance_percentage'],
+                    'time_percentage' => $result['savings']['time_percentage']
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Route optimization failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -9,6 +9,7 @@ use Fleetbase\SchoolTransportEngine\Models\Driver;
 use Fleetbase\SchoolTransportEngine\Models\Student;
 use Fleetbase\SchoolTransportEngine\Models\Trip;
 use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
+use Fleetbase\SchoolTransportEngine\Events\AlertCreated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -189,6 +190,9 @@ class AlertController extends FleetbaseController
             'coordinates' => $request->input('coordinates'),
             'company_uuid' => session('company')
         ]);
+
+        // Broadcast alert created event
+        event(new AlertCreated($alert));
 
         return response()->json([
             'alert' => $alert->load(['bus', 'driver', 'student', 'trip', 'route'])

@@ -1,3 +1,50 @@
-<div class="route-map h-80 w-full rounded-lg overflow-hidden">
-    <LiveMap @mapId={{this.mapId}} class="h-full w-full" />
+<div class="route-map-container" {{did-insert this.initializeMap}} ...attributes>
+    {{yield}}
 </div>
+
+<style>
+    .route-map-container {
+        width: 100%;
+        height: 500px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .map-marker-pickup {
+        background-color: #10b981;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .map-marker-dropoff {
+        background-color: #f59e0b;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .map-marker-number {
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    .map-popup h4 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        color: #1f2937;
+    }
+
+    .map-popup p {
+        margin: 4px 0;
+        font-size: 13px;
+        color: #6b7280;
+    }
+</style>

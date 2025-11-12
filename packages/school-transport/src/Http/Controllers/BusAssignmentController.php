@@ -118,6 +118,8 @@ class BusAssignmentController extends FleetbaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.assignments.manage');
+
         $this->validate($request, [
             'student_id' => 'required|exists:school_transport_students,uuid',
             'route_id' => 'required|exists:school_transport_routes,uuid',
@@ -258,6 +260,8 @@ class BusAssignmentController extends FleetbaseController
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        $this->authorize('school-transport.assignments.manage');
+
         $assignment = BusAssignment::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -298,6 +302,8 @@ class BusAssignmentController extends FleetbaseController
      */
     public function destroy(string $id): JsonResponse
     {
+        $this->authorize('school-transport.assignments.manage');
+
         $assignment = BusAssignment::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -315,6 +321,8 @@ class BusAssignmentController extends FleetbaseController
      */
     public function bulkAssign(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.assignments.manage');
+
         $this->validate($request, [
             'assignments' => 'required|array|max:500',
             'assignments.*.student_id' => 'required|exists:school_transport_students,uuid',

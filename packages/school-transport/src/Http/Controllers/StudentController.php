@@ -92,6 +92,8 @@ class StudentController extends FleetbaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.students.create');
+
         $this->validate($request, [
             'student_id' => 'required|string|unique:school_transport_students,student_id',
             'first_name' => 'required|string|max:255',
@@ -185,6 +187,8 @@ class StudentController extends FleetbaseController
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        $this->authorize('school-transport.students.update');
+
         $student = Student::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -236,6 +240,8 @@ class StudentController extends FleetbaseController
      */
     public function destroy(string $id): JsonResponse
     {
+        $this->authorize('school-transport.students.delete');
+
         $student = Student::where('uuid', $id)
             ->where('company_uuid', session('company'))
             ->firstOrFail();
@@ -266,6 +272,8 @@ class StudentController extends FleetbaseController
      */
     public function bulkImport(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.students.create');
+
         $this->validate($request, [
             'students' => 'required|array|max:1000',
             'students.*.student_id' => 'required|string',

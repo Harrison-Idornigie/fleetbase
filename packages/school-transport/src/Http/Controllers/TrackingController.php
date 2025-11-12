@@ -7,6 +7,7 @@ use Fleetbase\SchoolTransportEngine\Models\TrackingLog;
 use Fleetbase\SchoolTransportEngine\Models\Bus;
 use Fleetbase\SchoolTransportEngine\Models\Trip;
 use Fleetbase\SchoolTransportEngine\Models\Driver;
+use Fleetbase\SchoolTransportEngine\Events\BusLocationUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -99,6 +100,8 @@ class TrackingController extends FleetbaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.tracking.manage');
+
         $this->validate($request, [
             'bus_uuid' => 'required|exists:school_transport_buses,uuid',
             'latitude' => 'required|numeric|between:-90,90',
@@ -159,6 +162,9 @@ class TrackingController extends FleetbaseController
             'temperature_celsius' => $request->input('temperature_celsius'),
             'company_uuid' => session('company')
         ]);
+
+        // Broadcast location update event
+        event(new BusLocationUpdated($trackingLog));
 
         return response()->json([
             'tracking_log' => $trackingLog->load(['bus', 'trip', 'driver'])
@@ -360,6 +366,8 @@ class TrackingController extends FleetbaseController
      */
     public function bulkStore(Request $request): JsonResponse
     {
+        $this->authorize('school-transport.tracking.manage');
+
         $this->validate($request, [
             'logs' => 'required|array|max:1000',
             'logs.*.bus_uuid' => 'required|exists:school_transport_buses,uuid',
