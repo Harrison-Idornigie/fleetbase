@@ -24,6 +24,9 @@ class AdminUserSeeder extends Seeder
         $user->password = Hash::make($password);
         $user->type = 'admin';
         $user->email_verified_at = now();
+        if (empty($user->uuid)) {
+            $user->uuid = (string) \Illuminate\Support\Str::uuid();
+        }
         $user->save();
 
         $this->command->info("Admin user created/updated: {$email} (password: {$password})");

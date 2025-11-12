@@ -72,13 +72,20 @@ services:
   console:
     image: node:18-alpine
     ports:
-      - "4200:4200"
+      - "4301:4200"
     volumes:
       - ./console:/console
     working_dir: /console
     command: sh -c "npm install -g ember-cli pnpm && pnpm install && pnpm start -- --host 0.0.0.0 --port 4200"
     environment:
       - NODE_ENV=development
+      - API_HOST=http://localhost:8011
+      - API_NAMESPACE=int/v1
+      - SOCKETCLUSTER_PATH=/socketcluster/
+      - SOCKETCLUSTER_HOST=localhost
+      - SOCKETCLUSTER_SECURE=false
+      - SOCKETCLUSTER_PORT=38000
+      - OSRM_HOST=https://router.project-osrm.org
 
   application:
     image: fleetbase/fleetbase-api:latest
