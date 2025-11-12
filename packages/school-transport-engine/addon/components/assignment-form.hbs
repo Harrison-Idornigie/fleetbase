@@ -1,0 +1,529 @@
+<div class="assignment-form">
+  {{!-- Form Header --}}
+  <div class="form-header mb-4">
+    <h3 class="text-lg font-semibold">
+      {{if @assignment.id "Edit Assignment" "Create New Assignment"}}
+    </h3>
+    <p class="text-sm text-gray-600 mt-1">
+      Assign students to routes with pickup and dropoff details
+    </p>
+  </div>
+
+  {{!-- Student Selection Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="user-graduate" @size="sm" class="mr-2" />
+        Student Information
+      </h4>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {{!-- Student Selection --}}
+      <div class="form-group">
+        <label class="form-label required">Student</label>
+        <PowerSelect
+          @options={{@students}}
+          @selected={{@assignment.student_id}}
+          @onChange={{fn @onChange "student_id"}}
+          @searchField="name"
+          @placeholder="Search and select student"
+          class="{{if @errors.student_id 'error'}}"
+          as |student|
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-medium">{{student.name}}</div>
+              <div class="text-xs text-gray-500">Grade {{student.grade}} - ID: {{student.student_id}}</div>
+            </div>
+            {{#if student.special_needs}}
+              <span class="badge badge-warning">Special Needs</span>
+            {{/if}}
+          </div>
+        </PowerSelect>
+        {{#if @errors.student_id}}
+          <span class="error-message">{{@errors.student_id}}</span>
+        {{/if}}
+      </div>
+
+      {{!-- Assignment Status --}}
+      <div class="form-group">
+        <label class="form-label required">Status</label>
+        <PowerSelect
+          @options={{this.statusOptions}}
+          @selected={{@assignment.status}}
+          @onChange={{fn @onChange "status"}}
+          @placeholder="Select status"
+          class="{{if @errors.status 'error'}}"
+          as |status|
+        >
+          {{status}}
+        </PowerSelect>
+        {{#if @errors.status}}
+          <span class="error-message">{{@errors.status}}</span>
+        {{/if}}
+      </div>
+
+      {{!-- Effective Date --}}
+      <div class="form-group">
+        <label class="form-label required">Effective From</label>
+        <Input
+          @type="date"
+          @value={{@assignment.effective_date}}
+          class="form-input {{if @errors.effective_date 'error'}}"
+        />
+        {{#if @errors.effective_date}}
+          <span class="error-message">{{@errors.effective_date}}</span>
+        {{/if}}
+      </div>
+
+      {{!-- Expiry Date --}}
+      <div class="form-group">
+        <label class="form-label">Expires On</label>
+        <Input
+          @type="date"
+          @value={{@assignment.expiry_date}}
+          class="form-input"
+        />
+        <span class="text-xs text-gray-500 mt-1">Leave blank for no expiration</span>
+      </div>
+    </div>
+  </div>
+
+  {{!-- Morning Route Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3 flex items-center justify-between">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="sun" @size="sm" class="mr-2" />
+        Morning Route (Pickup)
+      </h4>
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <Input
+          @type="checkbox"
+          @checked={{@assignment.morning_route_enabled}}
+          {{on "change" (fn this.toggleMorningRoute)}}
+          class="form-checkbox"
+        />
+        <span class="text-sm">Enable Morning Route</span>
+      </label>
+    </div>
+
+    {{#if @assignment.morning_route_enabled}}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {{!-- Morning Route --}}
+        <div class="form-group">
+          <label class="form-label required">Morning Route</label>
+          <PowerSelect
+            @options={{@routes}}
+            @selected={{@assignment.morning_route_id}}
+            @onChange={{fn @onChange "morning_route_id"}}
+            @searchField="name"
+            @placeholder="Select morning route"
+            class="{{if @errors.morning_route_id 'error'}}"
+            as |route|
+          >
+            <div>
+              <div class="font-medium">{{route.name}}</div>
+              <div class="text-xs text-gray-500">{{route.route_number}} - {{route.route_type}}</div>
+            </div>
+          </PowerSelect>
+          {{#if @errors.morning_route_id}}
+            <span class="error-message">{{@errors.morning_route_id}}</span>
+          {{/if}}
+        </div>
+
+        {{!-- Morning Stop --}}
+        <div class="form-group">
+          <label class="form-label required">Pickup Stop</label>
+          <PowerSelect
+            @options={{this.morningStops}}
+            @selected={{@assignment.morning_stop_id}}
+            @onChange={{fn @onChange "morning_stop_id"}}
+            @searchField="name"
+            @placeholder="Select pickup stop"
+            @disabled={{not @assignment.morning_route_id}}
+            class="{{if @errors.morning_stop_id 'error'}}"
+            as |stop|
+          >
+            <div>
+              <div class="font-medium">{{stop.name}}</div>
+              <div class="text-xs text-gray-500">{{stop.address}} - {{stop.scheduled_time}}</div>
+            </div>
+          </PowerSelect>
+          {{#if @errors.morning_stop_id}}
+            <span class="error-message">{{@errors.morning_stop_id}}</span>
+          {{/if}}
+        </div>
+
+        {{!-- Morning Pickup Time --}}
+        <div class="form-group">
+          <label class="form-label">Expected Pickup Time</label>
+          <Input
+            @type="time"
+            @value={{@assignment.morning_pickup_time}}
+            class="form-input"
+            disabled
+          />
+          <span class="text-xs text-gray-500 mt-1">Based on stop schedule</span>
+        </div>
+
+        {{!-- Morning Special Instructions --}}
+        <div class="form-group">
+          <label class="form-label">Special Instructions</label>
+          <Textarea
+            @value={{@assignment.morning_instructions}}
+            rows="2"
+            placeholder="Any special pickup instructions"
+            class="form-input"
+          />
+        </div>
+      </div>
+    {{else}}
+      <div class="empty-state text-center py-6">
+        <p class="text-gray-500 text-sm">Morning route is disabled</p>
+      </div>
+    {{/if}}
+  </div>
+
+  {{!-- Afternoon Route Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3 flex items-center justify-between">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="moon" @size="sm" class="mr-2" />
+        Afternoon Route (Dropoff)
+      </h4>
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <Input
+          @type="checkbox"
+          @checked={{@assignment.afternoon_route_enabled}}
+          {{on "change" (fn this.toggleAfternoonRoute)}}
+          class="form-checkbox"
+        />
+        <span class="text-sm">Enable Afternoon Route</span>
+      </label>
+    </div>
+
+    {{#if @assignment.afternoon_route_enabled}}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {{!-- Afternoon Route --}}
+        <div class="form-group">
+          <label class="form-label required">Afternoon Route</label>
+          <PowerSelect
+            @options={{@routes}}
+            @selected={{@assignment.afternoon_route_id}}
+            @onChange={{fn @onChange "afternoon_route_id"}}
+            @searchField="name"
+            @placeholder="Select afternoon route"
+            class="{{if @errors.afternoon_route_id 'error'}}"
+            as |route|
+          >
+            <div>
+              <div class="font-medium">{{route.name}}</div>
+              <div class="text-xs text-gray-500">{{route.route_number}} - {{route.route_type}}</div>
+            </div>
+          </PowerSelect>
+          {{#if @errors.afternoon_route_id}}
+            <span class="error-message">{{@errors.afternoon_route_id}}</span>
+          {{/if}}
+        </div>
+
+        {{!-- Afternoon Stop --}}
+        <div class="form-group">
+          <label class="form-label required">Dropoff Stop</label>
+          <PowerSelect
+            @options={{this.afternoonStops}}
+            @selected={{@assignment.afternoon_stop_id}}
+            @onChange={{fn @onChange "afternoon_stop_id"}}
+            @searchField="name"
+            @placeholder="Select dropoff stop"
+            @disabled={{not @assignment.afternoon_route_id}}
+            class="{{if @errors.afternoon_stop_id 'error'}}"
+            as |stop|
+          >
+            <div>
+              <div class="font-medium">{{stop.name}}</div>
+              <div class="text-xs text-gray-500">{{stop.address}} - {{stop.scheduled_time}}</div>
+            </div>
+          </PowerSelect>
+          {{#if @errors.afternoon_stop_id}}
+            <span class="error-message">{{@errors.afternoon_stop_id}}</span>
+          {{/if}}
+        </div>
+
+        {{!-- Afternoon Dropoff Time --}}
+        <div class="form-group">
+          <label class="form-label">Expected Dropoff Time</label>
+          <Input
+            @type="time"
+            @value={{@assignment.afternoon_dropoff_time}}
+            class="form-input"
+            disabled
+          />
+          <span class="text-xs text-gray-500 mt-1">Based on stop schedule</span>
+        </div>
+
+        {{!-- Afternoon Special Instructions --}}
+        <div class="form-group">
+          <label class="form-label">Special Instructions</label>
+          <Textarea
+            @value={{@assignment.afternoon_instructions}}
+            rows="2"
+            placeholder="Any special dropoff instructions"
+            class="form-input"
+          />
+        </div>
+      </div>
+    {{else}}
+      <div class="empty-state text-center py-6">
+        <p class="text-gray-500 text-sm">Afternoon route is disabled</p>
+      </div>
+    {{/if}}
+  </div>
+
+  {{!-- Days Active Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="calendar" @size="sm" class="mr-2" />
+        Active Days
+      </h4>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      {{#each this.daysOfWeek as |day|}}
+        <label class="day-checkbox flex items-center space-x-2 cursor-pointer px-4 py-2 border rounded-lg {{if (includes @assignment.days_of_week day.value) 'bg-blue-50 border-blue-500' 'bg-white'}}">
+          <Input
+            @type="checkbox"
+            @checked={{includes @assignment.days_of_week day.value}}
+            {{on "change" (fn this.toggleDay day.value)}}
+            class="form-checkbox"
+          />
+          <span class="font-medium">{{day.label}}</span>
+        </label>
+      {{/each}}
+    </div>
+    {{#if @errors.days_of_week}}
+      <span class="error-message">{{@errors.days_of_week}}</span>
+    {{/if}}
+  </div>
+
+  {{!-- Special Requirements Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="exclamation-triangle" @size="sm" class="mr-2" />
+        Special Requirements
+      </h4>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {{!-- Requires Wheelchair --}}
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <Input
+          @type="checkbox"
+          @checked={{@assignment.requires_wheelchair}}
+          class="form-checkbox"
+        />
+        <span class="text-sm">Requires Wheelchair Access</span>
+      </label>
+
+      {{!-- Requires Car Seat --}}
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <Input
+          @type="checkbox"
+          @checked={{@assignment.requires_car_seat}}
+          class="form-checkbox"
+        />
+        <span class="text-sm">Requires Car Seat</span>
+      </label>
+
+      {{!-- Requires Monitor --}}
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <Input
+          @type="checkbox"
+          @checked={{@assignment.requires_monitor}}
+          class="form-checkbox"
+        />
+        <span class="text-sm">Requires Monitor/Aide</span>
+      </label>
+
+      {{!-- Requires Special Assistance --}}
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <Input
+          @type="checkbox"
+          @checked={{@assignment.requires_special_assistance}}
+          class="form-checkbox"
+        />
+        <span class="text-sm">Requires Special Assistance</span>
+      </label>
+    </div>
+
+    {{!-- Special Requirements Notes --}}
+    <div class="form-group mt-4">
+      <label class="form-label">Special Requirements Details</label>
+      <Textarea
+        @value={{@assignment.special_requirements}}
+        rows="3"
+        placeholder="Describe any special requirements, accommodations, or medical needs"
+        class="form-input"
+      />
+    </div>
+  </div>
+
+  {{!-- Emergency Contact Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="phone" @size="sm" class="mr-2" />
+        Emergency Contact Override
+      </h4>
+      <p class="text-xs text-gray-500 mt-1">Override student's default emergency contacts for this assignment</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {{!-- Emergency Contact Name --}}
+      <div class="form-group">
+        <label class="form-label">Contact Name</label>
+        <Input
+          @type="text"
+          @value={{@assignment.emergency_contact_name}}
+          placeholder="Leave blank to use student's default"
+          class="form-input"
+        />
+      </div>
+
+      {{!-- Emergency Contact Phone --}}
+      <div class="form-group">
+        <label class="form-label">Contact Phone</label>
+        <Input
+          @type="tel"
+          @value={{@assignment.emergency_contact_phone}}
+          placeholder="Leave blank to use student's default"
+          class="form-input"
+        />
+      </div>
+    </div>
+  </div>
+
+  {{!-- Notes Section --}}
+  <div class="form-section mb-6">
+    <div class="section-header mb-3">
+      <h4 class="text-md font-semibold flex items-center">
+        <FaIcon @icon="sticky-note" @size="sm" class="mr-2" />
+        Additional Notes
+      </h4>
+    </div>
+
+    <Textarea
+      @value={{@assignment.notes}}
+      rows="4"
+      placeholder="Any additional notes or instructions for this assignment"
+      class="form-input"
+    />
+  </div>
+
+  {{!-- Conflict Warning --}}
+  {{#if this.hasConflicts}}
+    <div class="alert alert-warning mb-4">
+      <FaIcon @icon="exclamation-triangle" class="mr-2" />
+      <div>
+        <strong>Assignment Conflicts Detected</strong>
+        <ul class="mt-2 text-sm">
+          {{#each this.conflicts as |conflict|}}
+            <li>{{conflict}}</li>
+          {{/each}}
+        </ul>
+      </div>
+    </div>
+  {{/if}}
+
+  {{!-- Form Actions --}}
+  <div class="form-actions flex items-center justify-between pt-4 border-t">
+    <div>
+      {{#if @assignment.id}}
+        <Button
+          @type="danger"
+          @text="Delete Assignment"
+          @icon="trash"
+          {{on "click" @onDelete}}
+        />
+      {{/if}}
+    </div>
+    <div class="flex items-center space-x-3">
+      <Button
+        @type="default"
+        @text="Cancel"
+        {{on "click" @onCancel}}
+      />
+      <Button
+        @type="primary"
+        @text={{if @assignment.id "Update Assignment" "Create Assignment"}}
+        @isLoading={{@isSubmitting}}
+        {{on "click" @onSubmit}}
+      />
+    </div>
+  </div>
+</div>
+
+<style>
+  .assignment-form {
+    @apply max-w-5xl mx-auto;
+  }
+
+  .form-section {
+    @apply bg-white rounded-lg border p-4;
+  }
+
+  .section-header {
+    @apply pb-2 border-b;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .form-label.required::after {
+    content: "*";
+    @apply text-red-500 ml-1;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+
+  .form-input.error {
+    @apply border-red-500;
+  }
+
+  .error-message {
+    @apply text-red-500 text-xs mt-1 block;
+  }
+
+  .form-checkbox {
+    @apply w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500;
+  }
+
+  .day-checkbox {
+    @apply transition-all;
+  }
+
+  .badge {
+    @apply px-2 py-1 text-xs rounded-full font-medium;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .alert {
+    @apply p-4 rounded-lg flex items-start;
+  }
+
+  .alert-warning {
+    @apply bg-yellow-50 border border-yellow-300 text-yellow-800;
+  }
+
+  .empty-state {
+    @apply bg-gray-50 rounded;
+  }
+</style>
