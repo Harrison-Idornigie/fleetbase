@@ -443,7 +443,8 @@ export default class SchoolTransportApiService extends Service {
    * Get parent dashboard data
    */
   async getParentDashboard(parentId) {
-    return await this.get(`/parents/${parentId}/dashboard`);
+    const id = parentId || 'me';
+    return await this.get(`/parents/${id}/dashboard`);
   }
 
   /**
@@ -454,17 +455,43 @@ export default class SchoolTransportApiService extends Service {
   }
 
   /**
+   * Get student ETAs for parent dashboard
+   */
+  async getStudentETAs(studentId) {
+    return await this.get(`/students/${studentId}/etas`);
+  }
+
+  /**
+   * Subscribe to arrival alerts for a student (parent scope)
+   */
+  async subscribeArrivalAlerts(parentId, studentId) {
+    const id = parentId || 'me';
+    const body = { student_id: studentId };
+    return await this.post(`/parents/${id}/subscriptions/arrival`, body);
+  }
+
+  /**
+   * Unsubscribe to arrival alerts for a student (parent scope)
+   */
+  async unsubscribeArrivalAlerts(parentId, studentId) {
+    const id = parentId || 'me';
+    return await this.delete(`/parents/${id}/subscriptions/arrival/${studentId}`);
+  }
+
+  /**
    * Get arrival notifications
    */
   async getArrivalNotifications(parentId, params = {}) {
-    return await this.get(`/parents/${parentId}/notifications`, params);
+    const id = parentId || 'me';
+    return await this.get(`/parents/${id}/notifications`, params);
   }
 
   /**
    * Update notification preferences
    */
   async updateNotificationPreferences(parentId, data) {
-    return await this.put(`/parents/${parentId}/notification-preferences`, data);
+    const id = parentId || 'me';
+    return await this.put(`/parents/${id}/notification-preferences`, data);
   }
 
   // ===== Safety & Compliance API Methods =====
@@ -481,6 +508,36 @@ export default class SchoolTransportApiService extends Service {
    */
   async getVehicleInspections(vehicleId, params = {}) {
     return await this.get(`/vehicles/${vehicleId}/inspections`, params);
+  }
+
+  /**
+   * Get list of vehicles for use in UI components
+   */
+  async getVehicles(params = {}) {
+    return await this.get('/vehicles', params);
+  }
+
+  // ===== Notifications / Messaging =====
+  /**
+   * Get in-app notifications (parent scope)
+   */
+  async getNotifications(parentId, params = {}) {
+    const id = parentId || 'me';
+    return await this.get(`/parents/${id}/notifications`, params);
+  }
+
+  /**
+   * Update a notification
+   */
+  async updateNotification(notificationId, data) {
+    return await this.put(`/notifications/${notificationId}`, data);
+  }
+
+  /**
+   * Delete a notification
+   */
+  async deleteNotification(notificationId) {
+    return await this.delete(`/notifications/${notificationId}`);
   }
 
   /**

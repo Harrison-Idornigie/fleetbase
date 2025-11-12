@@ -1,0 +1,12 @@
+<div class="chart-widget p-3 bg-white border rounded">
+    <div class="flex items-center justify-between mb-2">
+        <div class="font-medium">{{@title}}</div>
+        {{#if @controls}}
+        <div class="controls flex items-center space-x-2">{{yield}}</div>
+        {{/if}}
+    </div>
+    <canvas id={{this.canvasId}} width="400" height="200"></canvas>
+    {{#if @showLegend}}
+    <div class="chart-legend mt-2 text-xs text-gray-600">{{@legend}}</div>
+    {{/if}}
+</div>

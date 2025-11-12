@@ -1,0 +1,343 @@
+<div class="report-generator p-6 bg-white rounded-lg shadow">
+    <div class="header mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Generate Report</h2>
+        <p class="text-gray-600 mt-1">Create custom reports for your transportation operations</p>
+    </div>
+
+    <form {{on "submit" this.handleSubmit}} class="space-y-6">
+        {{!-- Report Type Selection --}}
+        <div class="form-section">
+            <label class="form-label required">Report Type</label>
+            <PowerSelect 
+                @options={{this.reportTypes}} 
+                @selected={{@data.reportType}} 
+                @onChange={{fn @onChange "reportType"}}
+                @searchEnabled={{false}}
+                @placeholder="Select report type"
+                class="{{if @errors.reportType 'error'}}"
+                as |type|>
+                <div class="flex items-center">
+                    <FaIcon @icon={{type.icon}} @size="sm" class="mr-2"/>
+                    <div>
+                        <div class="font-medium">{{type.label}}</div>
+                        <div class="text-xs text-gray-500">{{type.description}}</div>
+                    </div>
+                </div>
+            </PowerSelect>
+            {{#if @errors.reportType}}
+            <span class="error-message">{{@errors.reportType}}</span>
+            {{/if}}
+        </div>
+
+        {{!-- Report Name --}}
+        <div class="form-group">
+            <label class="form-label required">Report Name</label>
+            <Input 
+                @type="text" 
+                @value={{@data.name}}
+                placeholder="Enter report name"
+                class="form-input {{if @errors.name 'error'}}"
+                {{on "input" (fn @onChange "name")}}
+            />
+            {{#if @errors.name}}
+            <span class="error-message">{{@errors.name}}</span>
+            {{/if}}
+        </div>
+
+        {{!-- Date Range --}}
+        <div class="form-section">
+            <label class="form-label required">Date Range</label>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm text-gray-600">Start Date</label>
+                    <Input 
+                        @type="date" 
+                        @value={{@data.startDate}}
+                        class="form-input {{if @errors.startDate 'error'}}"
+                        {{on "input" (fn @onChange "startDate")}}
+                    />
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">End Date</label>
+                    <Input 
+                        @type="date" 
+                        @value={{@data.endDate}}
+                        class="form-input {{if @errors.endDate 'error'}}"
+                        {{on "input" (fn @onChange "endDate")}}
+                    />
+                </div>
+            </div>
+            {{#if @errors.startDate}}
+            <span class="error-message">{{@errors.startDate}}</span>
+            {{/if}}
+            {{#if @errors.endDate}}
+            <span class="error-message">{{@errors.endDate}}</span>
+            {{/if}}
+        </div>
+
+        {{!-- Filters --}}
+        <div class="form-section">
+            <label class="form-label">Filters</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{#if this.showSchoolFilter}}
+                <div>
+                    <label class="text-sm text-gray-600">School</label>
+                    <PowerSelect 
+                        @options={{@schools}} 
+                        @selected={{@data.selectedSchool}}
+                        @onChange={{fn @onChange "selectedSchool"}}
+                        @searchField="name"
+                        @placeholder="All Schools"
+                        @allowClear={{true}}
+                        as |school|>
+                        {{school.name}}
+                    </PowerSelect>
+                </div>
+                {{/if}}
+
+                {{#if this.showRouteFilter}}
+                <div>
+                    <label class="text-sm text-gray-600">Route</label>
+                    <PowerSelect 
+                        @options={{@routes}} 
+                        @selected={{@data.selectedRoute}}
+                        @onChange={{fn @onChange "selectedRoute"}}
+                        @searchField="name"
+                        @placeholder="All Routes"
+                        @allowClear={{true}}
+                        as |route|>
+                        {{route.route_number}} - {{route.name}}
+                    </PowerSelect>
+                </div>
+                {{/if}}
+
+                {{#if this.showGradeFilter}}
+                <div>
+                    <label class="text-sm text-gray-600">Grade</label>
+                    <PowerSelect 
+                        @options={{this.gradeOptions}} 
+                        @selected={{@data.selectedGrade}}
+                        @onChange={{fn @onChange "selectedGrade"}}
+                        @placeholder="All Grades"
+                        @allowClear={{true}}
+                        as |grade|>
+                        Grade {{grade}}
+                    </PowerSelect>
+                </div>
+                {{/if}}
+
+                {{#if this.showDriverFilter}}
+                <div>
+                    <label class="text-sm text-gray-600">Driver</label>
+                    <PowerSelect 
+                        @options={{@drivers}} 
+                        @selected={{@data.selectedDriver}}
+                        @onChange={{fn @onChange "selectedDriver"}}
+                        @searchField="name"
+                        @placeholder="All Drivers"
+                        @allowClear={{true}}
+                        as |driver|>
+                        {{driver.name}}
+                    </PowerSelect>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+
+        {{!-- Format Selection --}}
+        <div class="form-section">
+            <label class="form-label required">Export Format</label>
+            <div class="flex flex-wrap gap-3">
+                {{#each this.formatOptions as |format|}}
+                <label class="format-option cursor-pointer">
+                    <Input 
+                        @type="radio" 
+                        name="format"
+                        @checked={{eq @data.format format.value}}
+                        {{on "change" (fn @onChange "format" format.value)}}
+                        class="form-radio"
+                    />
+                    <div class="flex items-center space-x-2 px-4 py-3 border rounded-lg {{if (eq @data.format format.value) 'border-blue-500 bg-blue-50' 'border-gray-300'}}">
+                        <FaIcon @icon={{format.icon}} class="{{if (eq @data.format format.value) 'text-blue-600' 'text-gray-600'}}"/>
+                        <span class="font-medium">{{format.label}}</span>
+                    </div>
+                </label>
+                {{/each}}
+            </div>
+            {{#if @errors.format}}
+            <span class="error-message">{{@errors.format}}</span>
+            {{/if}}
+        </div>
+
+        {{!-- Options --}}
+        <div class="form-section">
+            <label class="form-label">Report Options</label>
+            <div class="space-y-3">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <Input 
+                        @type="checkbox" 
+                        @checked={{@data.includeCharts}}
+                        {{on "change" (fn @onChange "includeCharts")}}
+                        class="form-checkbox"
+                    />
+                    <span class="text-sm">Include Charts and Graphs</span>
+                </label>
+
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <Input 
+                        @type="checkbox" 
+                        @checked={{@data.includeSummary}}
+                        {{on "change" (fn @onChange "includeSummary")}}
+                        class="form-checkbox"
+                    />
+                    <span class="text-sm">Include Executive Summary</span>
+                </label>
+
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <Input 
+                        @type="checkbox" 
+                        @checked={{@data.includeDetails}}
+                        {{on "change" (fn @onChange "includeDetails")}}
+                        class="form-checkbox"
+                    />
+                    <span class="text-sm">Include Detailed Data</span>
+                </label>
+
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <Input 
+                        @type="checkbox" 
+                        @checked={{@data.saveAsTemplate}}
+                        {{on "change" (fn @onChange "saveAsTemplate")}}
+                        class="form-checkbox"
+                    />
+                    <span class="text-sm">Save as Template for Future Use</span>
+                </label>
+            </div>
+        </div>
+
+        {{!-- Schedule Options --}}
+        <div class="form-section">
+            <label class="flex items-center space-x-2 cursor-pointer mb-3">
+                <Input 
+                    @type="checkbox" 
+                    @checked={{@data.scheduleReport}}
+                    {{on "change" (fn @onChange "scheduleReport")}}
+                    class="form-checkbox"
+                />
+                <span class="font-medium">Schedule Recurring Report</span>
+            </label>
+
+            {{#if @data.scheduleReport}}
+            <div class="grid grid-cols-2 gap-4 ml-6">
+                <div>
+                    <label class="text-sm text-gray-600">Frequency</label>
+                    <PowerSelect 
+                        @options={{this.frequencyOptions}} 
+                        @selected={{@data.frequency}}
+                        @onChange={{fn @onChange "frequency"}}
+                        @searchEnabled={{false}}
+                        as |freq|>
+                        {{freq.label}}
+                    </PowerSelect>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">Time</label>
+                    <Input 
+                        @type="time" 
+                        @value={{@data.scheduleTime}}
+                        class="form-input"
+                        {{on "input" (fn @onChange "scheduleTime")}}
+                    />
+                </div>
+            </div>
+            {{/if}}
+        </div>
+
+        {{!-- Recipients --}}
+        {{#if @data.scheduleReport}}
+        <div class="form-section">
+            <label class="form-label">Email Recipients</label>
+            <Textarea 
+                @value={{@data.recipients}}
+                rows="3"
+                placeholder="Enter email addresses separated by commas"
+                class="form-input"
+                {{on "input" (fn @onChange "recipients")}}
+            />
+            <p class="text-xs text-gray-500 mt-1">Separate multiple email addresses with commas</p>
+        </div>
+        {{/if}}
+
+        {{!-- Actions --}}
+        <div class="flex items-center justify-between pt-6 border-t">
+            <Button 
+                @type="default" 
+                @text="Cancel" 
+                {{on "click" @onCancel}}
+            />
+            <div class="flex space-x-3">
+                {{#if @data.scheduleReport}}
+                <Button 
+                    @type="primary" 
+                    @text="Schedule Report" 
+                    @icon="calendar-check"
+                    @isLoading={{@isSubmitting}}
+                    {{on "click" @onSubmit}}
+                />
+                {{else}}
+                <Button 
+                    @type="primary" 
+                    @text="Generate Report" 
+                    @icon="file-download"
+                    @isLoading={{@isSubmitting}}
+                    {{on "click" @onSubmit}}
+                />
+                {{/if}}
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.report-generator {
+    @apply max-w-4xl mx-auto;
+}
+
+.form-section {
+    @apply space-y-2;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700;
+}
+
+.form-label.required::after {
+    content: "*";
+    @apply text-red-500 ml-1;
+}
+
+.form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.form-input.error {
+    @apply border-red-500;
+}
+
+.error-message {
+    @apply text-red-500 text-xs mt-1 block;
+}
+
+.form-checkbox,
+.form-radio {
+    @apply w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500;
+}
+
+.format-option input[type="radio"] {
+    @apply sr-only;
+}
+
+.format-option div {
+    @apply transition-all;
+}
+</style>

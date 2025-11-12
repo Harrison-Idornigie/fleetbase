@@ -1,0 +1,31 @@
+<div class="notification-center p-3 bg-white border rounded">
+    <div class="header flex items-center justify-between mb-3">
+        <h4 class="font-semibold">Notifications</h4>
+        <div class="flex items-center gap-2">
+            <Button @type="default" @size="sm" @icon="sync" @onClick={{this.refresh}} />
+            <PowerSelect @options={{this.filters}} @selected={{this.selectedFilter}} @onChange={{this.setFilter}}
+                @placeholder="Filter" class="text-sm" as |f|>{{f.label}}</PowerSelect>
+        </div>
+    </div>
+
+    {{#if this.notificationsList.length}}
+    <ul class="space-y-2">
+        {{#each this.notificationsList as |n|}}
+        <li class="p-3 border rounded flex items-start justify-between bg-white hover:shadow-sm">
+            <div>
+                <div class="font-medium">{{n.title}}</div>
+                <div class="text-xs text-gray-500">{{n.message}}</div>
+                <div class="text-xs text-gray-400 mt-1">{{this.formatTimestamp n.timestamp}}</div>
+            </div>
+            <div class="flex flex-col items-end space-y-2">
+                <Button @type="ghost" @size="xs" @text={{if n.read "Mark Unread" "Mark Read" }} @onClick={{fn
+                    this.toggleRead n}} />
+                <Button @type="ghost" @size="xs" @icon="trash" @onClick={{fn this.deleteNotification n}} />
+            </div>
+        </li>
+        {{/each}}
+    </ul>
+    {{else}}
+    <div class="text-sm text-gray-500 py-6 text-center">No notifications</div>
+    {{/if}}
+</div>

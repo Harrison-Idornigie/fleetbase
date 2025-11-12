@@ -1,0 +1,453 @@
+<div class="communication-composer">
+    {{!-- Form Header --}}
+    <div class="form-header mb-4">
+        <h3 class="text-lg font-semibold">
+            {{if @communication.id "Edit Communication" "Compose New Communication"}}
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">
+            Send messages to parents and guardians via multiple channels
+        </p>
+    </div>
+
+    {{!-- Communication Type & Channel --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="paper-plane" @size="sm" class="mr-2" />
+                Communication Settings
+            </h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{!-- Communication Type --}}
+            <div class="form-group">
+                <label class="form-label required">Type</label>
+                <PowerSelect @options={{this.communicationTypes}} @selected={{@communication.type}} @onChange={{fn
+                    @onChange "type" }} @placeholder="Select type" class="{{if @errors.type 'error'}}" as |type|>
+                    <div class="flex items-center">
+                        <FaIcon @icon={{this.getTypeIcon type}} @size="sm" class="mr-2" />
+                        {{type}}
+                    </div>
+                </PowerSelect>
+                {{#if @errors.type}}
+                <span class="error-message">{{@errors.type}}</span>
+                {{/if}}
+            </div>
+
+            {{!-- Priority --}}
+            <div class="form-group">
+                <label class="form-label required">Priority</label>
+                <PowerSelect @options={{this.priorityLevels}} @selected={{@communication.priority}} @onChange={{fn
+                    @onChange "priority" }} @placeholder="Select priority" class="{{if @errors.priority 'error'}}" as
+                    |priority|>
+                    <div class="flex items-center">
+                        <span class="priority-indicator priority-{{lowercase priority}} mr-2"></span>
+                        {{priority}}
+                    </div>
+                </PowerSelect>
+                {{#if @errors.priority}}
+                <span class="error-message">{{@errors.priority}}</span>
+                {{/if}}
+            </div>
+
+            {{!-- Status --}}
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <Input @type="text" @value={{@communication.status}} class="form-input" disabled />
+            </div>
+        </div>
+
+        {{!-- Delivery Channels --}}
+        <div class="form-group mt-4">
+            <label class="form-label required">Delivery Channels</label>
+            <div class="flex flex-wrap gap-3">
+                {{#each this.deliveryChannels as |channel|}}
+                <label
+                    class="channel-option flex items-center space-x-2 cursor-pointer px-4 py-2 border rounded-lg {{if (includes @communication.channels channel.value) 'bg-blue-50 border-blue-500' 'bg-white'}}">
+                    <Input @type="checkbox" @checked={{includes @communication.channels channel.value}} {{on "change"
+                        (fn this.toggleChannel channel.value)}} class="form-checkbox" />
+                    <FaIcon @icon={{channel.icon}} @size="sm" />
+                    <span class="font-medium">{{channel.label}}</span>
+                </label>
+                {{/each}}
+            </div>
+            {{#if @errors.channels}}
+            <span class="error-message">{{@errors.channels}}</span>
+            {{/if}}
+        </div>
+    </div>
+
+    {{!-- Recipients Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="users" @size="sm" class="mr-2" />
+                Recipients
+            </h4>
+        </div>
+
+        {{!-- Recipient Selection Method --}}
+        <div class="mb-4">
+            <label class="form-label">Select Recipients By</label>
+            <div class="flex flex-wrap gap-2">
+                {{#each this.recipientMethods as |method|}}
+                <Button @type={{if (eq this.selectedMethod method.value) "primary" "default" }} @size="sm"
+                    @text={{method.label}} @icon={{method.icon}} {{on "click" (fn this.selectRecipientMethod
+                    method.value)}} />
+                {{/each}}
+            </div>
+        </div>
+
+        {{!-- Recipient Selection Based on Method --}}
+        {{#if (eq this.selectedMethod "all")}}
+        <div class="alert alert-info">
+            <FaIcon @icon="info-circle" class="mr-2" />
+            This message will be sent to all parents and guardians in the system.
+        </div>
+        {{else if (eq this.selectedMethod "students")}}
+        <div class="form-group">
+            <label class="form-label required">Select Students</label>
+            <PowerSelect @options={{@students}} @selected={{@communication.student_ids}} @onChange={{fn
+                @onChange "student_ids" }} @searchField="name" @placeholder="Search and select students"
+                @multiple={{true}} class="{{if @errors.student_ids 'error'}}" as |student|>
+                <div>
+                    <div class="font-medium">{{student.name}}</div>
+                    <div class="text-xs text-gray-500">Grade {{student.grade}} - ID: {{student.student_id}}</div>
+                </div>
+            </PowerSelect>
+            {{#if @errors.student_ids}}
+            <span class="error-message">{{@errors.student_ids}}</span>
+            {{/if}}
+        </div>
+        {{else if (eq this.selectedMethod "routes")}}
+        <div class="form-group">
+            <label class="form-label required">Select Routes</label>
+            <PowerSelect @options={{@routes}} @selected={{@communication.route_ids}} @onChange={{fn
+                @onChange "route_ids" }} @searchField="name" @placeholder="Search and select routes" @multiple={{true}}
+                class="{{if @errors.route_ids 'error'}}" as |route|>
+                <div>
+                    <div class="font-medium">{{route.name}}</div>
+                    <div class="text-xs text-gray-500">{{route.route_number}} - {{route.route_type}}</div>
+                </div>
+            </PowerSelect>
+            {{#if @errors.route_ids}}
+            <span class="error-message">{{@errors.route_ids}}</span>
+            {{/if}}
+        </div>
+        {{else if (eq this.selectedMethod "schools")}}
+        <div class="form-group">
+            <label class="form-label required">Select Schools</label>
+            <PowerSelect @options={{@schools}} @selected={{@communication.school_ids}} @onChange={{fn
+                @onChange "school_ids" }} @searchField="name" @placeholder="Search and select schools"
+                @multiple={{true}} class="{{if @errors.school_ids 'error'}}" as |school|>
+                {{school.name}}
+            </PowerSelect>
+            {{#if @errors.school_ids}}
+            <span class="error-message">{{@errors.school_ids}}</span>
+            {{/if}}
+        </div>
+        {{else if (eq this.selectedMethod "grades")}}
+        <div class="form-group">
+            <label class="form-label required">Select Grades</label>
+            <PowerSelect @options={{this.gradeOptions}} @selected={{@communication.grades}} @onChange={{fn
+                @onChange "grades" }} @placeholder="Select grades" @multiple={{true}}
+                class="{{if @errors.grades 'error'}}" as |grade|>
+                Grade {{grade}}
+            </PowerSelect>
+            {{#if @errors.grades}}
+            <span class="error-message">{{@errors.grades}}</span>
+            {{/if}}
+        </div>
+        {{/if}}
+
+        {{!-- Recipient Count --}}
+        {{#if this.recipientCount}}
+        <div class="mt-3 p-3 bg-blue-50 rounded-lg">
+            <div class="flex items-center">
+                <FaIcon @icon="users" class="text-blue-600 mr-2" />
+                <span class="font-medium text-blue-800">
+                    {{this.recipientCount}} recipient{{if (gt this.recipientCount 1) "s"}} selected
+                </span>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Message Content Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3 flex items-center justify-between">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="envelope" @size="sm" class="mr-2" />
+                Message Content
+            </h4>
+            {{#if this.templates.length}}
+            <PowerSelect @options={{this.templates}} @selected={{this.selectedTemplate}}
+                @onChange={{this.applyTemplate}} @searchField="name" @placeholder="Load from template"
+                @allowClear={{true}} @triggerClass="text-sm" as |template|>
+                {{template.name}}
+            </PowerSelect>
+            {{/if}}
+        </div>
+
+        {{!-- Subject (for Email/Push) --}}
+        {{#if (or (includes @communication.channels "email") (includes @communication.channels "push"))}}
+        <div class="form-group mb-4">
+            <label class="form-label required">Subject</label>
+            <Input @type="text" @value={{@communication.subject}} placeholder="Enter message subject"
+                class="form-input {{if @errors.subject 'error'}}" />
+            {{#if @errors.subject}}
+            <span class="error-message">{{@errors.subject}}</span>
+            {{/if}}
+        </div>
+        {{/if}}
+
+        {{!-- Message Body --}}
+        <div class="form-group">
+            <label class="form-label required">Message</label>
+            <Textarea @value={{@communication.message}} rows="8" placeholder="Enter your message here..."
+                class="form-input {{if @errors.message 'error'}}" />
+            <div class="flex items-center justify-between mt-2">
+                <span class="text-xs text-gray-500">
+                    {{this.characterCount}} characters
+                    {{#if (includes @communication.channels "sms")}}
+                    ({{this.smsSegments}} SMS segment{{if (gt this.smsSegments 1) "s"}})
+                    {{/if}}
+                </span>
+                <div class="flex gap-2">
+                    <Button @type="ghost" @size="xs" @text="Insert Variable" @icon="code" {{on "click"
+                        this.showVariables}} />
+                </div>
+            </div>
+            {{#if @errors.message}}
+            <span class="error-message">{{@errors.message}}</span>
+            {{/if}}
+        </div>
+
+        {{!-- Variables Panel --}}
+        {{#if this.showingVariables}}
+        <div class="variables-panel mt-3 p-3 bg-gray-50 rounded-lg">
+            <h5 class="font-medium text-sm mb-2">Available Variables</h5>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {{#each this.availableVariables as |variable|}}
+                <button type="button" class="variable-tag text-xs px-2 py-1 bg-white border rounded hover:bg-blue-50"
+                    {{on "click" (fn this.insertVariable variable)}}>
+                    {{variable}}
+                </button>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        {{!-- Attachments (for Email) --}}
+        {{#if (includes @communication.channels "email")}}
+        <div class="form-group mt-4">
+            <label class="form-label">Attachments</label>
+            <div
+                class="file-upload-area border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50">
+                <FaIcon @icon="cloud-upload" @size="2x" class="text-gray-400 mb-2" />
+                <p class="text-sm text-gray-600">Click to upload or drag and drop</p>
+                <p class="text-xs text-gray-500 mt-1">PDF, DOC, XLS, Images (Max 10MB)</p>
+                <input type="file" multiple class="hidden" {{on "change" this.handleFileUpload}} />
+            </div>
+            {{#if @communication.attachments.length}}
+            <div class="attachments-list mt-2 space-y-2">
+                {{#each @communication.attachments as |file index|}}
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <FaIcon @icon="file" class="text-gray-500 mr-2" />
+                        <span class="text-sm">{{file.name}}</span>
+                        <span class="text-xs text-gray-500 ml-2">({{format-bytes file.size}})</span>
+                    </div>
+                    <Button @type="ghost" @size="xs" @icon="times" {{on "click" (fn this.removeAttachment index)}} />
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Scheduling Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="calendar-clock" @size="sm" class="mr-2" />
+                Scheduling
+            </h4>
+        </div>
+
+        <div class="flex items-start space-x-6">
+            <label class="flex items-start space-x-2 cursor-pointer">
+                <Input @type="radio" name="schedule-type" @checked={{eq @communication.schedule_type "immediate" }}
+                    {{on "change" (fn this.setScheduleType "immediate" )}} class="form-radio mt-1" />
+                <div>
+                    <span class="font-medium block">Send Immediately</span>
+                    <span class="text-xs text-gray-500">Message will be sent right away</span>
+                </div>
+            </label>
+
+            <label class="flex items-start space-x-2 cursor-pointer">
+                <Input @type="radio" name="schedule-type" @checked={{eq @communication.schedule_type "scheduled" }}
+                    {{on "change" (fn this.setScheduleType "scheduled" )}} class="form-radio mt-1" />
+                <div>
+                    <span class="font-medium block">Schedule for Later</span>
+                    <span class="text-xs text-gray-500">Choose a specific date and time</span>
+                </div>
+            </label>
+        </div>
+
+        {{#if (eq @communication.schedule_type "scheduled")}}
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="form-group">
+                <label class="form-label required">Schedule Date</label>
+                <Input @type="date" @value={{@communication.scheduled_date}} min={{this.today}}
+                    class="form-input {{if @errors.scheduled_date 'error'}}" />
+                {{#if @errors.scheduled_date}}
+                <span class="error-message">{{@errors.scheduled_date}}</span>
+                {{/if}}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Schedule Time</label>
+                <Input @type="time" @value={{@communication.scheduled_time}}
+                    class="form-input {{if @errors.scheduled_time 'error'}}" />
+                {{#if @errors.scheduled_time}}
+                <span class="error-message">{{@errors.scheduled_time}}</span>
+                {{/if}}
+            </div>
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Options Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="cog" @size="sm" class="mr-2" />
+                Delivery Options
+            </h4>
+        </div>
+
+        <div class="space-y-3">
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <Input @type="checkbox" @checked={{@communication.require_acknowledgment}} class="form-checkbox" />
+                <div>
+                    <span class="text-sm font-medium">Require Acknowledgment</span>
+                    <p class="text-xs text-gray-500">Recipients must confirm they've read the message</p>
+                </div>
+            </label>
+
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <Input @type="checkbox" @checked={{@communication.track_delivery}} class="form-checkbox" />
+                <div>
+                    <span class="text-sm font-medium">Track Delivery</span>
+                    <p class="text-xs text-gray-500">Monitor delivery and read status for each recipient</p>
+                </div>
+            </label>
+
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <Input @type="checkbox" @checked={{@communication.save_as_template}} class="form-checkbox" />
+                <div>
+                    <span class="text-sm font-medium">Save as Template</span>
+                    <p class="text-xs text-gray-500">Reuse this message content in the future</p>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    {{!-- Form Actions --}}
+    <div class="form-actions flex items-center justify-between pt-4 border-t">
+        <div>
+            <Button @type="default" @text="Save as Draft" @icon="save" {{on "click" @onSaveDraft}} />
+        </div>
+        <div class="flex items-center space-x-3">
+            <Button @type="default" @text="Cancel" {{on "click" @onCancel}} />
+            <Button @type="primary" @text={{if (eq @communication.schedule_type "immediate"
+                ) "Send Now" "Schedule Message" }} @icon="paper-plane" @isLoading={{@isSubmitting}} {{on "click"
+                @onSubmit}} />
+        </div>
+    </div>
+</div>
+
+<style>
+    .communication-composer {
+        @apply max-w-5xl mx-auto;
+    }
+
+    .form-section {
+        @apply bg-white rounded-lg border p-4;
+    }
+
+    .section-header {
+        @apply pb-2 border-b;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+    }
+
+    .form-label.required::after {
+        content: "*";
+        @apply text-red-500 ml-1;
+    }
+
+    .form-input {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    }
+
+    .form-input.error {
+        @apply border-red-500;
+    }
+
+    .error-message {
+        @apply text-red-500 text-xs mt-1 block;
+    }
+
+    .form-checkbox {
+        @apply w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500;
+    }
+
+    .form-radio {
+        @apply w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500;
+    }
+
+    .channel-option {
+        @apply transition-all;
+    }
+
+    .priority-indicator {
+        @apply w-3 h-3 rounded-full;
+    }
+
+    .priority-low {
+        @apply bg-gray-400;
+    }
+
+    .priority-normal {
+        @apply bg-blue-500;
+    }
+
+    .priority-high {
+        @apply bg-orange-500;
+    }
+
+    .priority-urgent {
+        @apply bg-red-500;
+    }
+
+    .alert {
+        @apply p-4 rounded-lg flex items-center;
+    }
+
+    .alert-info {
+        @apply bg-blue-50 border border-blue-300 text-blue-800;
+    }
+
+    .variable-tag {
+        @apply transition-colors font-mono;
+    }
+
+    .file-upload-area {
+        @apply transition-colors;
+    }
+</style>

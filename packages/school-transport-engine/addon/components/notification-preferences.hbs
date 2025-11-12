@@ -1,0 +1,71 @@
+<div class="notification-preferences">
+    <form {{on "submit" this.onSubmit}} class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-section p-3 bg-white border rounded-lg">
+                <h5 class="font-semibold mb-2">Channels</h5>
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.email}} {{on "change" (fn
+                            this.toggleChannel "email" )}} class="form-checkbox" />
+                        <span>Email</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.sms}} {{on "change" (fn
+                            this.toggleChannel "sms" )}} class="form-checkbox" />
+                        <span>SMS</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.push}} {{on "change" (fn
+                            this.toggleChannel "push" )}} class="form-checkbox" />
+                        <span>Push Notifications</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.in_app}} {{on "change" (fn
+                            this.toggleChannel "in_app" )}} class="form-checkbox" />
+                        <span>In-App</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section p-3 bg-white border rounded-lg">
+                <h5 class="font-semibold mb-2">Events</h5>
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.arrival}} {{on "change" (fn
+                            this.toggleEvent "arrival" )}} class="form-checkbox" />
+                        <span>Arrival Alerts</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.delay}} {{on "change" (fn
+                            this.toggleEvent "delay" )}} class="form-checkbox" />
+                        <span>Delays</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.cancellations}} {{on "change" (fn
+                            this.toggleEvent "cancellations" )}} class="form-checkbox" />
+                        <span>Route Cancellations</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <Input @type="checkbox" @checked={{this.localPrefs.emergency}} {{on "change" (fn
+                            this.toggleEvent "emergency" )}} class="form-checkbox" />
+                        <span>Emergency Alerts</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t">
+            <div class="text-sm text-gray-500">You’ll receive notifications based on selected channels and events.</div>
+            <div class="flex items-center space-x-2">
+                <Button @type="default" @text="Reset" @onClick={{this.reset}} />
+                <Button @type="primary" @text="Save" @onClick={{this.save}} />
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .notification-preferences .form-section {
+        @apply p-3;
+    }
+</style>

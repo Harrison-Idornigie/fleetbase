@@ -1,0 +1,108 @@
+<div class="parent-dashboard max-w-6xl mx-auto">
+    <div class="header mb-4">
+        <h2 class="text-2xl font-semibold">Parent Dashboard</h2>
+        <p class="text-sm text-gray-600">Overview of your children, assignments, and live bus tracking</p>
+    </div>
+
+    {{!-- Student Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div>
+            <DashboardCard @subtitle="Children" @value={{this.metrics.childrenCount}}
+                @description="Total children in your family" @icon="user" />
+        </div>
+        <div>
+            <DashboardCard @subtitle="Active Routes" @value={{this.metrics.activeRoutesCount}} @description="Today"
+                @icon="route" />
+        </div>
+        <div>
+            <DashboardCard @subtitle="Vehicles Nearby" @value={{this.metrics.nearbyVehicles}} @description="Within 5 km"
+                @icon="bus" />
+        </div>
+        <div>
+            <DashboardCard @subtitle="Active Alerts" @value={{this.metrics.activeAlerts}} @description="Need attention"
+                @icon="exclamation-triangle" />
+        </div>
+    </div>
+
+    <div class="students-grid grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {{#each this.students as |student|}}
+        <div class="student-card p-4 rounded-lg border bg-white shadow-sm cursor-pointer {{if (eq this.selectedStudent student) 'border-blue-500'}}"
+            {{on "click" (fn this.selectStudent student)}}>
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-lg">{{student.name}}</div>
+                    <div class="text-xs text-gray-500">Grade {{student.grade}} • ID: {{student.student_id}}</div>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-600">{{this.getStudentStatus student}}</span>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <div class="text-sm text-gray-700">Assigned Routes:</div>
+                <ul class="text-sm text-gray-600 mt-1 list-disc list-inside">
+                    {{#each student.assignments as |a|}}
+                    <li>{{a.route_name}} ({{a.type}})</li>
+                    {{/each}}
+                </ul>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between">
+                <div class="text-sm text-gray-600">Next Pickup</div>
+                <div class="text-sm font-medium">{{this.getNextPickupTime student}}</div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    {{!-- Main Content: Tracker + Assignments --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="col-span-2">
+            <div class="box bg-white border p-4 rounded-lg mb-4">
+                <h4 class="font-semibold mb-2">Live Bus Tracker</h4>
+                <BusTracker @selectedStudent={{this.selectedStudent}} @onVehicleSelected={{this.selectVehicle}} />
+            </div>
+
+            <div class="box bg-white border p-4 rounded-lg">
+                <h4 class="font-semibold mb-3">Arrival Alerts</h4>
+                <ArrivalAlerts @selectedStudent={{this.selectedStudent}} />
+            </div>
+            <div class="box bg-white border p-4 rounded-lg mt-4">
+                <h4 class="font-semibold mb-2">Route Efficiency</h4>
+                <ChartWidget @title="Route Efficiency" @data={{this.metrics.routeEfficiencyChart}} @type="line" />
+            </div>
+        </div>
+
+        <div>
+            <div class="box bg-white border p-4 rounded-lg mb-4">
+                <h4 class="font-semibold mb-3">Active Assignments</h4>
+                <DataTable @columns={{this.assignmentColumns}} @data={{this.assignments}}
+                    @onRowClick={{this.openAssignment}} @emptyMessage="No assignments found" />
+            </div>
+
+            <div class="box bg-white border p-4 rounded-lg mb-4">
+                <h4 class="font-semibold mb-3">Notification Preferences</h4>
+                <NotificationPreferences @preferences={{this.preferences}} @onSave={{this.savePreferences}} />
+            </div>
+            <div class="box bg-white border p-4 rounded-lg mb-4">
+                <h4 class="font-semibold mb-3">Notifications</h4>
+                <NotificationCenter />
+            </div>
+
+            <div class="box bg-white border p-4 rounded-lg">
+                <h4 class="font-semibold mb-3">Quick Actions</h4>
+                <div class="flex flex-col gap-2">
+                    <Button @type="default" @text="Request Transit Support" @onClick={{this.openSupport}} />
+                    <Button @type="default" @text="View Safety Reports" @onClick={{this.openSafetyReports}} />
+                    <Button @type="primary" @text="Contact Driver" @onClick={{this.contactDriver}} />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .student-card:hover {
+        @apply shadow;
+    }
+</style>
