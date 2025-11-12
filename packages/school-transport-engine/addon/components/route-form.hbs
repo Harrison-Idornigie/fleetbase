@@ -1,599 +1,441 @@
 <div class="route-form">
-  {{!-- Form Header --}}
-  <div class="form-header mb-4">
-    <h3 class="text-lg font-semibold">
-      {{if @route.id "Edit Route" "Create New Route"}}
-    </h3>
-    <p class="text-sm text-gray-600 mt-1">
-      Configure route details, stops, and vehicle assignment
-    </p>
-  </div>
-
-  {{!-- Basic Information Section --}}
-  <div class="form-section mb-6">
-    <div class="section-header mb-3">
-      <h4 class="text-md font-semibold flex items-center">
-        <FaIcon @icon="route" @size="sm" class="mr-2" />
-        Basic Information
-      </h4>
+    {{!-- Form Header --}}
+    <div class="form-header mb-4">
+        <h3 class="text-lg font-semibold">
+            {{if @route.id "Edit Route" "Create New Route"}}
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">
+            Configure route details, stops, and vehicle assignment
+        </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {{!-- Route Name --}}
-      <div class="form-group">
-        <label class="form-label required">Route Name</label>
-        <Input
-          @type="text"
-          @value={{@route.name}}
-          placeholder="e.g., Morning Route A"
-          class="form-input {{if @errors.name 'error'}}"
-        />
-        {{#if @errors.name}}
-          <span class="error-message">{{@errors.name}}</span>
-        {{/if}}
-      </div>
+    {{!-- Basic Information Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="route" @size="sm" class="mr-2" />
+                Basic Information
+            </h4>
+        </div>
 
-      {{!-- Route Number --}}
-      <div class="form-group">
-        <label class="form-label required">Route Number</label>
-        <Input
-          @type="text"
-          @value={{@route.route_number}}
-          placeholder="e.g., R-001"
-          class="form-input {{if @errors.route_number 'error'}}"
-        />
-        {{#if @errors.route_number}}
-          <span class="error-message">{{@errors.route_number}}</span>
-        {{/if}}
-      </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{!-- Route Name --}}
+            <div class="form-group">
+                <label class="form-label required">Route Name</label>
+                <Input @type="text" @value={{@route.name}} placeholder="e.g., Morning Route A"
+                    class="form-input {{if @errors.name 'error'}}" />
+                {{#if @errors.name}}
+                <span class="error-message">{{@errors.name}}</span>
+                {{/if}}
+            </div>
 
-      {{!-- Route Type --}}
-      <div class="form-group">
-        <label class="form-label required">Route Type</label>
-        <PowerSelect
-          @options={{this.routeTypes}}
-          @selected={{@route.route_type}}
-          @onChange={{fn @onChange "route_type"}}
-          @placeholder="Select route type"
-          class="{{if @errors.route_type 'error'}}"
-          as |type|
-        >
-          {{type}}
-        </PowerSelect>
-        {{#if @errors.route_type}}
-          <span class="error-message">{{@errors.route_type}}</span>
-        {{/if}}
-      </div>
+            {{!-- Route Number --}}
+            <div class="form-group">
+                <label class="form-label required">Route Number</label>
+                <Input @type="text" @value={{@route.route_number}} placeholder="e.g., R-001"
+                    class="form-input {{if @errors.route_number 'error'}}" />
+                {{#if @errors.route_number}}
+                <span class="error-message">{{@errors.route_number}}</span>
+                {{/if}}
+            </div>
 
-      {{!-- Status --}}
-      <div class="form-group">
-        <label class="form-label required">Status</label>
-        <PowerSelect
-          @options={{this.statusOptions}}
-          @selected={{@route.status}}
-          @onChange={{fn @onChange "status"}}
-          @placeholder="Select status"
-          class="{{if @errors.status 'error'}}"
-          as |status|
-        >
-          {{status}}
-        </PowerSelect>
-        {{#if @errors.status}}
-          <span class="error-message">{{@errors.status}}</span>
-        {{/if}}
-      </div>
+            {{!-- Route Type --}}
+            <div class="form-group">
+                <label class="form-label required">Route Type</label>
+                <PowerSelect @options={{this.routeTypes}} @selected={{@route.route_type}} @onChange={{fn
+                    @onChange "route_type" }} @placeholder="Select route type" class="{{if @errors.route_type 'error'}}"
+                    as |type|>
+                    {{type}}
+                </PowerSelect>
+                {{#if @errors.route_type}}
+                <span class="error-message">{{@errors.route_type}}</span>
+                {{/if}}
+            </div>
 
-      {{!-- School --}}
-      <div class="form-group">
-        <label class="form-label required">School</label>
-        <PowerSelect
-          @options={{@schools}}
-          @selected={{@route.school_id}}
-          @onChange={{fn @onChange "school_id"}}
-          @searchField="name"
-          @placeholder="Select school"
-          class="{{if @errors.school_id 'error'}}"
-          as |school|
-        >
-          {{school.name}}
-        </PowerSelect>
-        {{#if @errors.school_id}}
-          <span class="error-message">{{@errors.school_id}}</span>
-        {{/if}}
-      </div>
+            {{!-- Status --}}
+            <div class="form-group">
+                <label class="form-label required">Status</label>
+                <PowerSelect @options={{this.statusOptions}} @selected={{@route.status}} @onChange={{fn
+                    @onChange "status" }} @placeholder="Select status" class="{{if @errors.status 'error'}}" as
+                    |status|>
+                    {{status}}
+                </PowerSelect>
+                {{#if @errors.status}}
+                <span class="error-message">{{@errors.status}}</span>
+                {{/if}}
+            </div>
 
-      {{!-- Capacity --}}
-      <div class="form-group">
-        <label class="form-label required">Capacity</label>
-        <Input
-          @type="number"
-          @value={{@route.capacity}}
-          min="1"
-          max="100"
-          placeholder="Max students"
-          class="form-input {{if @errors.capacity 'error'}}"
-        />
-        {{#if @errors.capacity}}
-          <span class="error-message">{{@errors.capacity}}</span>
-        {{/if}}
-      </div>
+            {{!-- School --}}
+            <div class="form-group">
+                <label class="form-label required">School</label>
+                <PowerSelect @options={{@schools}} @selected={{@route.school_id}} @onChange={{fn @onChange "school_id"
+                    }} @searchField="name" @placeholder="Select school" class="{{if @errors.school_id 'error'}}" as
+                    |school|>
+                    {{school.name}}
+                </PowerSelect>
+                {{#if @errors.school_id}}
+                <span class="error-message">{{@errors.school_id}}</span>
+                {{/if}}
+            </div>
+
+            {{!-- Capacity --}}
+            <div class="form-group">
+                <label class="form-label required">Capacity</label>
+                <Input @type="number" @value={{@route.capacity}} min="1" max="100" placeholder="Max students"
+                    class="form-input {{if @errors.capacity 'error'}}" />
+                {{#if @errors.capacity}}
+                <span class="error-message">{{@errors.capacity}}</span>
+                {{/if}}
+            </div>
+        </div>
+
+        {{!-- Description --}}
+        <div class="form-group mt-4">
+            <label class="form-label">Description</label>
+            <Textarea @value={{@route.description}} rows="3" placeholder="Optional route description or notes"
+                class="form-input" />
+        </div>
     </div>
 
-    {{!-- Description --}}
-    <div class="form-group mt-4">
-      <label class="form-label">Description</label>
-      <Textarea
-        @value={{@route.description}}
-        rows="3"
-        placeholder="Optional route description or notes"
-        class="form-input"
-      />
-    </div>
-  </div>
+    {{!-- Schedule Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="clock" @size="sm" class="mr-2" />
+                Schedule
+            </h4>
+        </div>
 
-  {{!-- Schedule Section --}}
-  <div class="form-section mb-6">
-    <div class="section-header mb-3">
-      <h4 class="text-md font-semibold flex items-center">
-        <FaIcon @icon="clock" @size="sm" class="mr-2" />
-        Schedule
-      </h4>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{!-- Start Time --}}
+            <div class="form-group">
+                <label class="form-label required">Start Time</label>
+                <Input @type="time" @value={{@route.start_time}} class="form-input {{if @errors.start_time 'error'}}" />
+                {{#if @errors.start_time}}
+                <span class="error-message">{{@errors.start_time}}</span>
+                {{/if}}
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {{!-- Start Time --}}
-      <div class="form-group">
-        <label class="form-label required">Start Time</label>
-        <Input
-          @type="time"
-          @value={{@route.start_time}}
-          class="form-input {{if @errors.start_time 'error'}}"
-        />
-        {{#if @errors.start_time}}
-          <span class="error-message">{{@errors.start_time}}</span>
-        {{/if}}
-      </div>
+            {{!-- End Time --}}
+            <div class="form-group">
+                <label class="form-label required">End Time</label>
+                <Input @type="time" @value={{@route.end_time}} class="form-input {{if @errors.end_time 'error'}}" />
+                {{#if @errors.end_time}}
+                <span class="error-message">{{@errors.end_time}}</span>
+                {{/if}}
+            </div>
 
-      {{!-- End Time --}}
-      <div class="form-group">
-        <label class="form-label required">End Time</label>
-        <Input
-          @type="time"
-          @value={{@route.end_time}}
-          class="form-input {{if @errors.end_time 'error'}}"
-        />
-        {{#if @errors.end_time}}
-          <span class="error-message">{{@errors.end_time}}</span>
-        {{/if}}
-      </div>
+            {{!-- Estimated Duration --}}
+            <div class="form-group">
+                <label class="form-label">Estimated Duration (min)</label>
+                <Input @type="number" @value={{@route.estimated_duration}} min="1" placeholder="Minutes"
+                    class="form-input" disabled />
+                <span class="text-xs text-gray-500 mt-1">Auto-calculated from stops</span>
+            </div>
+        </div>
 
-      {{!-- Estimated Duration --}}
-      <div class="form-group">
-        <label class="form-label">Estimated Duration (min)</label>
-        <Input
-          @type="number"
-          @value={{@route.estimated_duration}}
-          min="1"
-          placeholder="Minutes"
-          class="form-input"
-          disabled
-        />
-        <span class="text-xs text-gray-500 mt-1">Auto-calculated from stops</span>
-      </div>
+        {{!-- Days of Week --}}
+        <div class="form-group mt-4">
+            <label class="form-label required">Active Days</label>
+            <div class="flex flex-wrap gap-2">
+                {{#each this.daysOfWeek as |day|}}
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <Input @type="checkbox" @checked={{includes @route.days_of_week day.value}} {{on "change" (fn
+                        this.toggleDay day.value)}} class="form-checkbox" />
+                    <span class="text-sm">{{day.label}}</span>
+                </label>
+                {{/each}}
+            </div>
+            {{#if @errors.days_of_week}}
+            <span class="error-message">{{@errors.days_of_week}}</span>
+            {{/if}}
+        </div>
     </div>
 
-    {{!-- Days of Week --}}
-    <div class="form-group mt-4">
-      <label class="form-label required">Active Days</label>
-      <div class="flex flex-wrap gap-2">
-        {{#each this.daysOfWeek as |day|}}
-          <label class="flex items-center space-x-2 cursor-pointer">
-            <Input
-              @type="checkbox"
-              @checked={{includes @route.days_of_week day.value}}
-              {{on "change" (fn this.toggleDay day.value)}}
-              class="form-checkbox"
-            />
-            <span class="text-sm">{{day.label}}</span>
-          </label>
-        {{/each}}
-      </div>
-      {{#if @errors.days_of_week}}
-        <span class="error-message">{{@errors.days_of_week}}</span>
-      {{/if}}
-    </div>
-  </div>
+    {{!-- Vehicle & Driver Assignment --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="bus" @size="sm" class="mr-2" />
+                Vehicle & Driver Assignment
+            </h4>
+        </div>
 
-  {{!-- Vehicle & Driver Assignment --}}
-  <div class="form-section mb-6">
-    <div class="section-header mb-3">
-      <h4 class="text-md font-semibold flex items-center">
-        <FaIcon @icon="bus" @size="sm" class="mr-2" />
-        Vehicle & Driver Assignment
-      </h4>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{!-- Vehicle --}}
+            <div class="form-group">
+                <label class="form-label required">Vehicle</label>
+                <PowerSelect @options={{@vehicles}} @selected={{@route.vehicle_id}} @onChange={{fn
+                    @onChange "vehicle_id" }} @searchField="name" @placeholder="Select vehicle"
+                    class="{{if @errors.vehicle_id 'error'}}" as |vehicle|>
+                    <div class="flex items-center justify-between">
+                        <span>{{vehicle.name}} - {{vehicle.plate_number}}</span>
+                        <span class="text-xs text-gray-500">Capacity: {{vehicle.capacity}}</span>
+                    </div>
+                </PowerSelect>
+                {{#if @errors.vehicle_id}}
+                <span class="error-message">{{@errors.vehicle_id}}</span>
+                {{/if}}
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {{!-- Vehicle --}}
-      <div class="form-group">
-        <label class="form-label required">Vehicle</label>
-        <PowerSelect
-          @options={{@vehicles}}
-          @selected={{@route.vehicle_id}}
-          @onChange={{fn @onChange "vehicle_id"}}
-          @searchField="name"
-          @placeholder="Select vehicle"
-          class="{{if @errors.vehicle_id 'error'}}"
-          as |vehicle|
-        >
-          <div class="flex items-center justify-between">
-            <span>{{vehicle.name}} - {{vehicle.plate_number}}</span>
-            <span class="text-xs text-gray-500">Capacity: {{vehicle.capacity}}</span>
-          </div>
-        </PowerSelect>
-        {{#if @errors.vehicle_id}}
-          <span class="error-message">{{@errors.vehicle_id}}</span>
-        {{/if}}
-      </div>
+            {{!-- Driver --}}
+            <div class="form-group">
+                <label class="form-label required">Driver</label>
+                <PowerSelect @options={{@drivers}} @selected={{@route.driver_id}} @onChange={{fn @onChange "driver_id"
+                    }} @searchField="name" @placeholder="Select driver" class="{{if @errors.driver_id 'error'}}" as
+                    |driver|>
+                    <div class="flex items-center justify-between">
+                        <span>{{driver.name}}</span>
+                        <span class="text-xs text-gray-500">License: {{driver.license_number}}</span>
+                    </div>
+                </PowerSelect>
+                {{#if @errors.driver_id}}
+                <span class="error-message">{{@errors.driver_id}}</span>
+                {{/if}}
+            </div>
 
-      {{!-- Driver --}}
-      <div class="form-group">
-        <label class="form-label required">Driver</label>
-        <PowerSelect
-          @options={{@drivers}}
-          @selected={{@route.driver_id}}
-          @onChange={{fn @onChange "driver_id"}}
-          @searchField="name"
-          @placeholder="Select driver"
-          class="{{if @errors.driver_id 'error'}}"
-          as |driver|
-        >
-          <div class="flex items-center justify-between">
-            <span>{{driver.name}}</span>
-            <span class="text-xs text-gray-500">License: {{driver.license_number}}</span>
-          </div>
-        </PowerSelect>
-        {{#if @errors.driver_id}}
-          <span class="error-message">{{@errors.driver_id}}</span>
-        {{/if}}
-      </div>
+            {{!-- Backup Driver --}}
+            <div class="form-group">
+                <label class="form-label">Backup Driver</label>
+                <PowerSelect @options={{@drivers}} @selected={{@route.backup_driver_id}} @onChange={{fn
+                    @onChange "backup_driver_id" }} @searchField="name" @placeholder="Select backup driver (optional)"
+                    @allowClear={{true}} as |driver|>
+                    {{driver.name}}
+                </PowerSelect>
+            </div>
 
-      {{!-- Backup Driver --}}
-      <div class="form-group">
-        <label class="form-label">Backup Driver</label>
-        <PowerSelect
-          @options={{@drivers}}
-          @selected={{@route.backup_driver_id}}
-          @onChange={{fn @onChange "backup_driver_id"}}
-          @searchField="name"
-          @placeholder="Select backup driver (optional)"
-          @allowClear={{true}}
-          as |driver|
-        >
-          {{driver.name}}
-        </PowerSelect>
-      </div>
-
-      {{!-- Monitor/Aide --}}
-      <div class="form-group">
-        <label class="form-label">Monitor/Aide</label>
-        <PowerSelect
-          @options={{@monitors}}
-          @selected={{@route.monitor_id}}
-          @onChange={{fn @onChange "monitor_id"}}
-          @searchField="name"
-          @placeholder="Select monitor (optional)"
-          @allowClear={{true}}
-          as |monitor|
-        >
-          {{monitor.name}}
-        </PowerSelect>
-      </div>
-    </div>
-  </div>
-
-  {{!-- Route Stops Section --}}
-  <div class="form-section mb-6">
-    <div class="section-header mb-3 flex items-center justify-between">
-      <h4 class="text-md font-semibold flex items-center">
-        <FaIcon @icon="map-marker" @size="sm" class="mr-2" />
-        Route Stops
-      </h4>
-      <Button
-        @type="default"
-        @size="sm"
-        @icon="plus"
-        @text="Add Stop"
-        {{on "click" this.addStop}}
-      />
+            {{!-- Monitor/Aide --}}
+            <div class="form-group">
+                <label class="form-label">Monitor/Aide</label>
+                <PowerSelect @options={{@monitors}} @selected={{@route.monitor_id}} @onChange={{fn
+                    @onChange "monitor_id" }} @searchField="name" @placeholder="Select monitor (optional)"
+                    @allowClear={{true}} as |monitor|>
+                    {{monitor.name}}
+                </PowerSelect>
+            </div>
+        </div>
     </div>
 
-    {{#if @route.stops.length}}
-      <div class="stops-list space-y-3">
-        {{#each @route.stops as |stop index|}}
-          <div class="stop-item border rounded-lg p-4 {{if stop._destroy 'opacity-50'}}">
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center space-x-3">
-                <div class="stop-order bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-semibold">
-                  {{add index 1}}
+    {{!-- Route Stops Section --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3 flex items-center justify-between">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="map-marker" @size="sm" class="mr-2" />
+                Route Stops
+            </h4>
+            <Button @type="default" @size="sm" @icon="plus" @text="Add Stop" {{on "click" this.addStop}} />
+        </div>
+
+        {{#if @route.stops.length}}
+        <div class="stops-list space-y-3">
+            {{#each @route.stops as |stop index|}}
+            <div class="stop-item border rounded-lg p-4 {{if stop._destroy 'opacity-50'}}">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div
+                            class="stop-order bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-semibold">
+                            {{add index 1}}
+                        </div>
+                        <div>
+                            <h5 class="font-medium">{{stop.name}}</h5>
+                            <p class="text-sm text-gray-600">{{stop.address}}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {{#if (gt index 0)}}
+                        <Button @type="ghost" @size="xs" @icon="arrow-up" {{on "click" (fn this.moveStopUp index)}}
+                            title="Move up" />
+                        {{/if}}
+                        {{#if (lt index (sub @route.stops.length 1))}}
+                        <Button @type="ghost" @size="xs" @icon="arrow-down" {{on "click" (fn this.moveStopDown index)}}
+                            title="Move down" />
+                        {{/if}}
+                        <Button @type="danger" @size="xs" @icon="trash" {{on "click" (fn this.removeStop index)}}
+                            title="Remove stop" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    {{!-- Stop Name --}}
+                    <div class="form-group">
+                        <label class="form-label text-xs">Stop Name</label>
+                        <Input @type="text" @value={{stop.name}} placeholder="Stop name"
+                            class="form-input form-input-sm" />
+                    </div>
+
+                    {{!-- Scheduled Time --}}
+                    <div class="form-group">
+                        <label class="form-label text-xs">Scheduled Time</label>
+                        <Input @type="time" @value={{stop.scheduled_time}} class="form-input form-input-sm" />
+                    </div>
+
+                    {{!-- Estimated Duration --}}
+                    <div class="form-group">
+                        <label class="form-label text-xs">Duration (min)</label>
+                        <Input @type="number" @value={{stop.duration}} min="1" placeholder="5"
+                            class="form-input form-input-sm" />
+                    </div>
+
+                    {{!-- Stop Type --}}
+                    <div class="form-group">
+                        <label class="form-label text-xs">Type</label>
+                        <PowerSelect @options={{this.stopTypes}} @selected={{stop.stop_type}} @onChange={{fn
+                            this.updateStopType index}} @triggerClass="power-select-sm" as |type|>
+                            {{type}}
+                        </PowerSelect>
+                    </div>
+                </div>
+
+                {{!-- Address --}}
+                <div class="form-group mt-2">
+                    <label class="form-label text-xs">Address</label>
+                    <Input @type="text" @value={{stop.address}} placeholder="Full address"
+                        class="form-input form-input-sm" />
+                </div>
+
+                {{!-- Coordinates --}}
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div class="form-group">
+                        <label class="form-label text-xs">Latitude</label>
+                        <Input @type="number" @value={{stop.latitude}} step="0.000001" placeholder="0.000000"
+                            class="form-input form-input-sm" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-xs">Longitude</label>
+                        <Input @type="number" @value={{stop.longitude}} step="0.000001" placeholder="0.000000"
+                            class="form-input form-input-sm" />
+                    </div>
+                </div>
+
+                {{!-- Notes --}}
+                <div class="form-group mt-2">
+                    <label class="form-label text-xs">Notes</label>
+                    <Textarea @value={{stop.notes}} rows="2" placeholder="Stop-specific notes or instructions"
+                        class="form-input form-input-sm" />
+                </div>
+            </div>
+            {{/each}}
+        </div>
+
+        {{!-- Route Summary --}}
+        <div class="route-summary mt-4 p-3 bg-gray-50 rounded-lg">
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <div class="text-2xl font-bold text-blue-600">{{@route.stops.length}}</div>
+                    <div class="text-xs text-gray-600">Total Stops</div>
                 </div>
                 <div>
-                  <h5 class="font-medium">{{stop.name}}</h5>
-                  <p class="text-sm text-gray-600">{{stop.address}}</p>
+                    <div class="text-2xl font-bold text-green-600">{{this.totalDuration}}</div>
+                    <div class="text-xs text-gray-600">Est. Duration (min)</div>
                 </div>
-              </div>
-              <div class="flex items-center space-x-2">
-                {{#if (gt index 0)}}
-                  <Button
-                    @type="ghost"
-                    @size="xs"
-                    @icon="arrow-up"
-                    {{on "click" (fn this.moveStopUp index)}}
-                    title="Move up"
-                  />
-                {{/if}}
-                {{#if (lt index (sub @route.stops.length 1))}}
-                  <Button
-                    @type="ghost"
-                    @size="xs"
-                    @icon="arrow-down"
-                    {{on "click" (fn this.moveStopDown index)}}
-                    title="Move down"
-                  />
-                {{/if}}
-                <Button
-                  @type="danger"
-                  @size="xs"
-                  @icon="trash"
-                  {{on "click" (fn this.removeStop index)}}
-                  title="Remove stop"
-                />
-              </div>
+                <div>
+                    <div class="text-2xl font-bold text-purple-600">{{this.totalDistance}}</div>
+                    <div class="text-xs text-gray-600">Est. Distance (km)</div>
+                </div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-              {{!-- Stop Name --}}
-              <div class="form-group">
-                <label class="form-label text-xs">Stop Name</label>
-                <Input
-                  @type="text"
-                  @value={{stop.name}}
-                  placeholder="Stop name"
-                  class="form-input form-input-sm"
-                />
-              </div>
-
-              {{!-- Scheduled Time --}}
-              <div class="form-group">
-                <label class="form-label text-xs">Scheduled Time</label>
-                <Input
-                  @type="time"
-                  @value={{stop.scheduled_time}}
-                  class="form-input form-input-sm"
-                />
-              </div>
-
-              {{!-- Estimated Duration --}}
-              <div class="form-group">
-                <label class="form-label text-xs">Duration (min)</label>
-                <Input
-                  @type="number"
-                  @value={{stop.duration}}
-                  min="1"
-                  placeholder="5"
-                  class="form-input form-input-sm"
-                />
-              </div>
-
-              {{!-- Stop Type --}}
-              <div class="form-group">
-                <label class="form-label text-xs">Type</label>
-                <PowerSelect
-                  @options={{this.stopTypes}}
-                  @selected={{stop.stop_type}}
-                  @onChange={{fn this.updateStopType index}}
-                  @triggerClass="power-select-sm"
-                  as |type|
-                >
-                  {{type}}
-                </PowerSelect>
-              </div>
-            </div>
-
-            {{!-- Address --}}
-            <div class="form-group mt-2">
-              <label class="form-label text-xs">Address</label>
-              <Input
-                @type="text"
-                @value={{stop.address}}
-                placeholder="Full address"
-                class="form-input form-input-sm"
-              />
-            </div>
-
-            {{!-- Coordinates --}}
-            <div class="grid grid-cols-2 gap-2 mt-2">
-              <div class="form-group">
-                <label class="form-label text-xs">Latitude</label>
-                <Input
-                  @type="number"
-                  @value={{stop.latitude}}
-                  step="0.000001"
-                  placeholder="0.000000"
-                  class="form-input form-input-sm"
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label text-xs">Longitude</label>
-                <Input
-                  @type="number"
-                  @value={{stop.longitude}}
-                  step="0.000001"
-                  placeholder="0.000000"
-                  class="form-input form-input-sm"
-                />
-              </div>
-            </div>
-
-            {{!-- Notes --}}
-            <div class="form-group mt-2">
-              <label class="form-label text-xs">Notes</label>
-              <Textarea
-                @value={{stop.notes}}
-                rows="2"
-                placeholder="Stop-specific notes or instructions"
-                class="form-input form-input-sm"
-              />
-            </div>
-          </div>
-        {{/each}}
-      </div>
-
-      {{!-- Route Summary --}}
-      <div class="route-summary mt-4 p-3 bg-gray-50 rounded-lg">
-        <div class="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div class="text-2xl font-bold text-blue-600">{{@route.stops.length}}</div>
-            <div class="text-xs text-gray-600">Total Stops</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-green-600">{{this.totalDuration}}</div>
-            <div class="text-xs text-gray-600">Est. Duration (min)</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-purple-600">{{this.totalDistance}}</div>
-            <div class="text-xs text-gray-600">Est. Distance (km)</div>
-          </div>
         </div>
-      </div>
-    {{else}}
-      <div class="empty-state text-center py-8">
-        <FaIcon @icon="map-marker" @size="3x" class="text-gray-300 mb-3" />
-        <p class="text-gray-600">No stops added yet</p>
-        <p class="text-sm text-gray-500 mb-3">Click "Add Stop" to create route stops</p>
-      </div>
-    {{/if}}
-  </div>
-
-  {{!-- Optimization Options --}}
-  <div class="form-section mb-6">
-    <div class="section-header mb-3">
-      <h4 class="text-md font-semibold flex items-center">
-        <FaIcon @icon="sliders-h" @size="sm" class="mr-2" />
-        Route Optimization
-      </h4>
+        {{else}}
+        <div class="empty-state text-center py-8">
+            <FaIcon @icon="map-marker" @size="3x" class="text-gray-300 mb-3" />
+            <p class="text-gray-600">No stops added yet</p>
+            <p class="text-sm text-gray-500 mb-3">Click "Add Stop" to create route stops</p>
+        </div>
+        {{/if}}
     </div>
 
-    <div class="flex items-center space-x-6">
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <Input
-          @type="checkbox"
-          @checked={{@route.optimize_for_time}}
-          class="form-checkbox"
-        />
-        <span class="text-sm">Optimize for Time</span>
-      </label>
+    {{!-- Optimization Options --}}
+    <div class="form-section mb-6">
+        <div class="section-header mb-3">
+            <h4 class="text-md font-semibold flex items-center">
+                <FaIcon @icon="sliders-h" @size="sm" class="mr-2" />
+                Route Optimization
+            </h4>
+        </div>
 
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <Input
-          @type="checkbox"
-          @checked={{@route.optimize_for_distance}}
-          class="form-checkbox"
-        />
-        <span class="text-sm">Optimize for Distance</span>
-      </label>
+        <div class="flex items-center space-x-6">
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <Input @type="checkbox" @checked={{@route.optimize_for_time}} class="form-checkbox" />
+                <span class="text-sm">Optimize for Time</span>
+            </label>
 
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <Input
-          @type="checkbox"
-          @checked={{@route.avoid_toll_roads}}
-          class="form-checkbox"
-        />
-        <span class="text-sm">Avoid Toll Roads</span>
-      </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <Input @type="checkbox" @checked={{@route.optimize_for_distance}} class="form-checkbox" />
+                <span class="text-sm">Optimize for Distance</span>
+            </label>
+
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <Input @type="checkbox" @checked={{@route.avoid_toll_roads}} class="form-checkbox" />
+                <span class="text-sm">Avoid Toll Roads</span>
+            </label>
+        </div>
+
+        {{#if @route.id}}
+        <div class="mt-3">
+            <Button @type="primary" @size="sm" @icon="magic" @text="Optimize Route" @isLoading={{this.isOptimizing}}
+                {{on "click" @onOptimize}} />
+        </div>
+        {{/if}}
     </div>
 
-    {{#if @route.id}}
-      <div class="mt-3">
-        <Button
-          @type="primary"
-          @size="sm"
-          @icon="magic"
-          @text="Optimize Route"
-          @isLoading={{this.isOptimizing}}
-          {{on "click" @onOptimize}}
-        />
-      </div>
-    {{/if}}
-  </div>
-
-  {{!-- Form Actions --}}
-  <div class="form-actions flex items-center justify-end space-x-3 pt-4 border-t">
-    <Button
-      @type="default"
-      @text="Cancel"
-      {{on "click" @onCancel}}
-    />
-    <Button
-      @type="primary"
-      @text={{if @route.id "Update Route" "Create Route"}}
-      @isLoading={{@isSubmitting}}
-      {{on "click" @onSubmit}}
-    />
-  </div>
+    {{!-- Form Actions --}}
+    <div class="form-actions flex items-center justify-end space-x-3 pt-4 border-t">
+        <Button @type="default" @text="Cancel" {{on "click" @onCancel}} />
+        <Button @type="primary" @text={{if @route.id "Update Route" "Create Route" }} @isLoading={{@isSubmitting}}
+            {{on "click" @onSubmit}} />
+    </div>
 </div>
 
 <style>
-  .route-form {
-    @apply max-w-6xl mx-auto;
-  }
+    .route-form {
+        @apply max-w-6xl mx-auto;
+    }
 
-  .form-section {
-    @apply bg-white rounded-lg border p-4;
-  }
+    .form-section {
+        @apply bg-white rounded-lg border p-4;
+    }
 
-  .section-header {
-    @apply pb-2 border-b;
-  }
+    .section-header {
+        @apply pb-2 border-b;
+    }
 
-  .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
-  }
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+    }
 
-  .form-label.required::after {
-    content: "*";
-    @apply text-red-500 ml-1;
-  }
+    .form-label.required::after {
+        content: "*";
+        @apply text-red-500 ml-1;
+    }
 
-  .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-  }
+    .form-input {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    }
 
-  .form-input.error {
-    @apply border-red-500;
-  }
+    .form-input.error {
+        @apply border-red-500;
+    }
 
-  .form-input-sm {
-    @apply py-1 px-2 text-sm;
-  }
+    .form-input-sm {
+        @apply py-1 px-2 text-sm;
+    }
 
-  .error-message {
-    @apply text-red-500 text-xs mt-1 block;
-  }
+    .error-message {
+        @apply text-red-500 text-xs mt-1 block;
+    }
 
-  .stop-item {
-    @apply transition-all hover:shadow-md;
-  }
+    .stop-item {
+        @apply transition-all hover:shadow-md;
+    }
 
-  .stop-item.opacity-50 {
-    @apply bg-gray-100;
-  }
+    .stop-item.opacity-50 {
+        @apply bg-gray-100;
+    }
 
-  .form-checkbox {
-    @apply w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500;
-  }
+    .form-checkbox {
+        @apply w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500;
+    }
 
-  .power-select-sm .ember-power-select-trigger {
-    @apply py-1 px-2 text-sm;
-  }
+    .power-select-sm .ember-power-select-trigger {
+        @apply py-1 px-2 text-sm;
+    }
 </style>
