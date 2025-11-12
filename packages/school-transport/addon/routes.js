@@ -75,5 +75,22 @@ export default buildRoutes(function() {
         this.route('view', { path: '/:certification_id' });
       });
     });
+    
+    // Settings extending FleetOps with school-specific configurations
+    this.route('settings', function() {
+      // Extend FleetOps routing settings with school-specific routing
+      this.route('routing');
+      // Extend FleetOps notifications with school-specific notifications  
+      this.route('notifications');
+      // School-specific settings not available in FleetOps
+      this.route('school-hours');
+      this.route('parent-portal');
+      this.route('attendance-tracking');
+      this.route('safety-compliance');
+      this.route('emergency-contacts');
+      this.route('pickup-dropoff-rules');
+      this.route('student-permissions');
+      this.route('reporting-preferences');
+    });
   });
 });

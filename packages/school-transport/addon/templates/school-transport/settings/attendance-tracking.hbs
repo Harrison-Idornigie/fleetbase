@@ -1,0 +1,72 @@
+<Layout::Section::Header @title="Attendance Tracking Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Tracking Requirements --}}
+            <ContentPanel @title="Tracking Requirements" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Boarding Tracking">
+                    <Toggle @isToggled={{this.requiredOnBoarding}} @onToggle={{fn (mut this.requiredOnBoarding)}}
+                        @label="Require tracking when boarding" @helpText="Track students when they board the bus" />
+                </InputGroup>
+
+                <InputGroup @name="Exit Tracking">
+                    <Toggle @isToggled={{this.requiredOnExit}} @onToggle={{fn (mut this.requiredOnExit)}}
+                        @label="Require tracking when exiting" @helpText="Track students when they exit the bus" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Tracking Methods --}}
+            <ContentPanel @title="Tracking Methods" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="RFID Scanning">
+                    <Toggle @isToggled={{this.rfidScanning}} @onToggle={{fn (mut this.rfidScanning)}}
+                        @label="Enable RFID scanning" @helpText="Use RFID cards for student identification" />
+                </InputGroup>
+
+                <InputGroup @name="Photo Verification">
+                    <Toggle @isToggled={{this.photoVerification}} @onToggle={{fn (mut this.photoVerification)}}
+                        @label="Enable photo verification" @helpText="Take photos for attendance verification" />
+                </InputGroup>
+
+                <InputGroup @name="Automatic Check-in">
+                    <Toggle @isToggled={{this.automaticCheckIn}} @onToggle={{fn (mut this.automaticCheckIn)}}
+                        @label="Enable automatic check-in"
+                        @helpText="Automatically check in students based on sensors" />
+                </InputGroup>
+
+                <InputGroup @name="Geofence Check-in">
+                    <Toggle @isToggled={{this.geofenceCheckIn}} @onToggle={{fn (mut this.geofenceCheckIn)}}
+                        @label="Enable geofence check-in" @helpText="Use geofencing for automated attendance" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Notifications --}}
+            <ContentPanel @title="Attendance Notifications" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Parent Notifications">
+                    <Toggle @isToggled={{this.parentNotifications}} @onToggle={{fn (mut this.parentNotifications)}}
+                        @label="Send notifications to parents" @helpText="Notify parents of attendance status" />
+                </InputGroup>
+
+                <InputGroup @name="School Notifications">
+                    <Toggle @isToggled={{this.schoolNotifications}} @onToggle={{fn (mut this.schoolNotifications)}}
+                        @label="Send notifications to school" @helpText="Notify school of attendance status" />
+                </InputGroup>
+
+                <InputGroup @name="Tardiness Alerts">
+                    <Toggle @isToggled={{this.tardinessAlerts}} @onToggle={{fn (mut this.tardinessAlerts)}}
+                        @label="Enable tardiness alerts" @helpText="Alert when students are late" />
+                </InputGroup>
+
+                <InputGroup @name="Absence Follow-up">
+                    <Toggle @isToggled={{this.absenceFollowup}} @onToggle={{fn (mut this.absenceFollowup)}}
+                        @label="Enable absence follow-up" @helpText="Follow up on unexpected absences" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

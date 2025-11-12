@@ -281,7 +281,8 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Distance:</span>
-                            <span class="font-medium">{{this.routeData.metrics.total_distance_miles}} mi ({{this.routeData.metrics.total_distance_km}} km)</span>
+                            <span class="font-medium">{{this.routeData.metrics.total_distance_miles}} mi
+                                ({{this.routeData.metrics.total_distance_km}} km)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Duration:</span>
@@ -289,11 +290,13 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Max Speed:</span>
-                            <span class="font-medium">{{this.routeData.metrics.max_speed_mph}} mph ({{this.routeData.metrics.max_speed_kmh}} km/h)</span>
+                            <span class="font-medium">{{this.routeData.metrics.max_speed_mph}} mph
+                                ({{this.routeData.metrics.max_speed_kmh}} km/h)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Avg Speed:</span>
-                            <span class="font-medium">{{this.routeData.metrics.avg_speed_mph}} mph ({{this.routeData.metrics.avg_speed_kmh}} km/h)</span>
+                            <span class="font-medium">{{this.routeData.metrics.avg_speed_mph}} mph
+                                ({{this.routeData.metrics.avg_speed_kmh}} km/h)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Moving Time:</span>
@@ -305,27 +308,28 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Speeding Events:</span>
-                            <span class="font-medium {{if (gt this.routeData.metrics.speeding_events 0) 'text-red-600' 'text-green-600'}}">{{this.routeData.metrics.speeding_events}}</span>
+                            <span
+                                class="font-medium {{if (gt this.routeData.metrics.speeding_events 0) 'text-red-600' 'text-green-600'}}">{{this.routeData.metrics.speeding_events}}</span>
                         </div>
                     </div>
-                    </div>
                 </div>
-                {{/if}}
             </div>
+            {{/if}}
         </div>
-
-        {{!-- Empty State --}}
-        {{#unless this.hasRouteData}}
-        {{#unless this.isLoading}}
-        <div class="text-center py-12">
-            <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <FaIcon @icon="route" class="text-4xl text-gray-400" />
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No Route Data Loaded</h3>
-            <p class="text-gray-600 mb-6">Select a date and click "Load Route" to view historical bus routes with
-                student
-                tracking.</p>
-        </div>
-        {{/unless}}
-        {{/unless}}
     </div>
+
+    {{!-- Empty State --}}
+    {{#unless this.hasRouteData}}
+    {{#unless this.isLoading}}
+    <div class="text-center py-12">
+        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FaIcon @icon="route" class="text-4xl text-gray-400" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Route Data Loaded</h3>
+        <p class="text-gray-600 mb-6">Select a date and click "Load Route" to view historical bus routes with
+            student
+            tracking.</p>
+    </div>
+    {{/unless}}
+    {{/unless}}
+</div>

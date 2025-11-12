@@ -1,0 +1,85 @@
+<Layout::Section::Header @title="School Transport Routing Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Base FleetOps Routing Settings --}}
+            <ContentPanel @title="Base Routing Configuration" @open={{true}} @wrapperClass="bordered-classic">
+                <div class="mb-4">
+                    <span class="text-sm text-gray-500">These settings extend FleetOps routing with school-specific
+                        features</span>
+                </div>
+                <InputGroup @name="Routing Service"
+                    @helpText="Select the routing service to use for route calculations">
+                    <Select @value={{this.routerService}} @options={{this.leafletRoutingControl.availableServices}}
+                        @optionLabel="name" @optionValue="key" @onSelect={{fn (mut this.routerService)}}
+                        @placeholder="Select routing service" class="w-full" />
+                </InputGroup>
+                <InputGroup @name="Distance Unit" @helpText="Select the unit for distance measurements">
+                    <Select @value={{this.routingUnit}} @options={{this.routingUnitOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.routingUnit)}} @placeholder="Select distance unit"
+                        class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- School-Specific Routing Settings --}}
+            <ContentPanel @title="School Zone Routing" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="School Zone Speed Limit" @helpText="Default speed limit in school zones (mph)">
+                    <Select @value={{this.schoolZoneSpeedLimit}} @options={{this.speedLimitOptions}}
+                        @optionLabel="label" @optionValue="value" @onSelect={{fn (mut this.schoolZoneSpeedLimit)}}
+                        @placeholder="Select speed limit" class="w-full" />
+                </InputGroup>
+
+                <InputGroup @name="Bus Stop Dwell Time" @helpText="Time to wait at each bus stop (minutes)">
+                    <Select @value={{this.busStopDwellTime}} @options={{this.dwellTimeOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.busStopDwellTime)}}
+                        @placeholder="Select dwell time" class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Route Optimization Settings --}}
+            <ContentPanel @title="Route Optimization" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Route Optimization">
+                    <Toggle @isToggled={{this.routeOptimizationEnabled}} @onToggle={{fn (mut
+                        this.routeOptimizationEnabled)}} @label="Enable automatic route optimization"
+                        @helpText="Automatically optimize routes for efficiency" />
+                </InputGroup>
+
+                <InputGroup @name="Traffic Avoidance">
+                    <Toggle @isToggled={{this.trafficAvoidance}} @onToggle={{fn (mut this.trafficAvoidance)}}
+                        @label="Enable traffic avoidance" @helpText="Route around traffic when possible" />
+                </InputGroup>
+
+                <InputGroup @name="Weather Routing">
+                    <Toggle @isToggled={{this.weatherRouting}} @onToggle={{fn (mut this.weatherRouting)}}
+                        @label="Enable weather-based routing" @helpText="Adjust routes based on weather conditions" />
+                </InputGroup>
+
+                <InputGroup @name="Accessibility Routing">
+                    <Toggle @isToggled={{this.accessibilityRouting}} @onToggle={{fn (mut this.accessibilityRouting)}}
+                        @label="Enable accessibility routing" @helpText="Prioritize wheelchair accessible routes" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Student-Specific Settings --}}
+            <ContentPanel @title="Student-Focused Routing" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Walk Distance Optimization">
+                    <Toggle @isToggled={{this.minimizeWalkDistance}} @onToggle={{fn (mut this.minimizeWalkDistance)}}
+                        @label="Minimize student walk distance"
+                        @helpText="Optimize pickup points to reduce walking for students" />
+                </InputGroup>
+
+                <InputGroup @name="Grade Level Considerations">
+                    <Toggle @isToggled={{this.considerGradeLevels}} @onToggle={{fn (mut this.considerGradeLevels)}}
+                        @label="Consider grade levels in routing"
+                        @helpText="Separate elementary and high school routes where possible" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

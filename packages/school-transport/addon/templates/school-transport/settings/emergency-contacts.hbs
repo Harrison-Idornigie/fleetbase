@@ -1,0 +1,70 @@
+<Layout::Section::Header @title="Emergency Contacts Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Contact Requirements --}}
+            <ContentPanel @title="Contact Requirements" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Minimum Contacts Required"
+                    @helpText="Minimum number of emergency contacts per student">
+                    <Input @type="number" @value={{this.minimumContactsRequired}} @min="1" @max="10" @onInput={{fn (mut
+                        this.minimumContactsRequired)}} @placeholder="2" class="w-full" />
+                </InputGroup>
+
+                <InputGroup @name="Maximum Contacts Allowed"
+                    @helpText="Maximum number of emergency contacts per student">
+                    <Input @type="number" @value={{this.maximumContactsAllowed}} @min="1" @max="20" @onInput={{fn (mut
+                        this.maximumContactsAllowed)}} @placeholder="5" class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Verification Requirements --}}
+            <ContentPanel @title="Verification Requirements" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Relationship Verification">
+                    <Toggle @isToggled={{this.relationshipVerification}} @onToggle={{fn (mut
+                        this.relationshipVerification)}} @label="Require relationship verification"
+                        @helpText="Verify relationship between contact and student" />
+                </InputGroup>
+
+                <InputGroup @name="Contact Validation">
+                    <Toggle @isToggled={{this.contactValidationRequired}} @onToggle={{fn (mut
+                        this.contactValidationRequired)}} @label="Require contact validation"
+                        @helpText="Validate phone numbers and email addresses" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Authorization Levels --}}
+            <ContentPanel @title="Authorization Levels" @open={{true}} @wrapperClass="bordered-classic">
+                <div class="space-y-4">
+                    {{#each this.authorizationOptions as |option|}}
+                    <InputGroup @name={{option.label}}>
+                        <Checkbox @checked={{option.selected}} @onCheck={{fn (mut option.selected)}}
+                            @label={{option.label}} @helpText={{concat "Allow emergency contacts to have "
+                            option.value " authorization" }} />
+                    </InputGroup>
+                    {{/each}}
+                </div>
+            </ContentPanel>
+
+            {{!-- Notification Settings --}}
+            <ContentPanel @title="Notification Settings" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Automatic Notifications">
+                    <Toggle @isToggled={{this.automaticNotifications}} @onToggle={{fn (mut
+                        this.automaticNotifications)}} @label="Enable automatic notifications"
+                        @helpText="Automatically notify emergency contacts when needed" />
+                </InputGroup>
+
+                <InputGroup @name="Escalation Procedures">
+                    <Toggle @isToggled={{this.escalationProcedures}} @onToggle={{fn (mut this.escalationProcedures)}}
+                        @label="Enable escalation procedures"
+                        @helpText="Escalate to additional contacts if primary doesn't respond" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

@@ -1,0 +1,108 @@
+<Layout::Section::Header @title="School Transport Notifications">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Base FleetOps Integration --}}
+            <ContentPanel @title="FleetOps Integration" @open={{false}} @wrapperClass="bordered-classic">
+                <div class="mb-4">
+                    <span class="text-sm text-gray-500">School Transport inherits FleetOps notification settings and
+                        adds school-specific notifications</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                    <p class="text-sm">Base FleetOps notifications are automatically included. Configure school-specific
+                        notifications below.</p>
+                </div>
+            </ContentPanel>
+
+            {{!-- Parent Notifications --}}
+            <ContentPanel @title="Parent Notifications" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="ETA Notifications">
+                    <Toggle @isToggled={{this.parentEtaNotifications}} @onToggle={{fn (mut
+                        this.parentEtaNotifications)}} @label="Send ETA notifications to parents"
+                        @helpText="Notify parents of estimated arrival times" />
+                </InputGroup>
+
+                <InputGroup @name="Delay Notifications">
+                    <Toggle @isToggled={{this.parentDelayNotifications}} @onToggle={{fn (mut
+                        this.parentDelayNotifications)}} @label="Send delay notifications to parents"
+                        @helpText="Notify parents when buses are delayed" />
+                </InputGroup>
+
+                <InputGroup @name="Route Change Notifications">
+                    <Toggle @isToggled={{this.parentRouteChangeNotifications}} @onToggle={{fn (mut
+                        this.parentRouteChangeNotifications)}} @label="Send route change notifications"
+                        @helpText="Notify parents of temporary route changes" />
+                </InputGroup>
+
+                <InputGroup @name="Absence Confirmations">
+                    <Toggle @isToggled={{this.parentAbsenceConfirmations}} @onToggle={{fn (mut
+                        this.parentAbsenceConfirmations)}} @label="Send absence confirmations"
+                        @helpText="Confirm when students don't board as expected" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- School Notifications --}}
+            <ContentPanel @title="School Notifications" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Attendance Notifications">
+                    <Toggle @isToggled={{this.schoolAttendanceNotifications}} @onToggle={{fn (mut
+                        this.schoolAttendanceNotifications)}} @label="Send attendance notifications to school"
+                        @helpText="Notify school of student attendance status" />
+                </InputGroup>
+
+                <InputGroup @name="Incident Notifications">
+                    <Toggle @isToggled={{this.schoolIncidentNotifications}} @onToggle={{fn (mut
+                        this.schoolIncidentNotifications)}} @label="Send incident notifications"
+                        @helpText="Notify school of incidents on buses" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Driver Notifications --}}
+            <ContentPanel @title="Driver Notifications" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Student Pickup Notifications">
+                    <Toggle @isToggled={{this.driverStudentPickupNotifications}} @onToggle={{fn (mut
+                        this.driverStudentPickupNotifications)}} @label="Send pickup confirmations to drivers"
+                        @helpText="Confirm successful student pickups" />
+                </InputGroup>
+
+                <InputGroup @name="Route Update Notifications">
+                    <Toggle @isToggled={{this.driverRouteUpdateNotifications}} @onToggle={{fn (mut
+                        this.driverRouteUpdateNotifications)}} @label="Send route update notifications"
+                        @helpText="Notify drivers of route changes" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Emergency & System Notifications --}}
+            <ContentPanel @title="Emergency & System Notifications" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Emergency Alert Escalation">
+                    <Toggle @isToggled={{this.emergencyAlertEscalation}} @onToggle={{fn (mut
+                        this.emergencyAlertEscalation)}} @label="Enable emergency alert escalation"
+                        @helpText="Escalate emergency alerts to supervisors" />
+                </InputGroup>
+
+                <InputGroup @name="Weather Delay Notifications">
+                    <Toggle @isToggled={{this.weatherDelayNotifications}} @onToggle={{fn (mut
+                        this.weatherDelayNotifications)}} @label="Send weather delay notifications"
+                        @helpText="Notify all stakeholders of weather-related delays" />
+                </InputGroup>
+
+                <InputGroup @name="Maintenance Reminders">
+                    <Toggle @isToggled={{this.maintenanceReminderNotifications}} @onToggle={{fn (mut
+                        this.maintenanceReminderNotifications)}} @label="Send maintenance reminder notifications"
+                        @helpText="Remind about upcoming vehicle maintenance" />
+                </InputGroup>
+
+                <InputGroup @name="Safety Compliance Alerts">
+                    <Toggle @isToggled={{this.safetyComplianceAlerts}} @onToggle={{fn (mut
+                        this.safetyComplianceAlerts)}} @label="Send safety compliance alerts"
+                        @helpText="Alert about safety compliance issues" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

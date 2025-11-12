@@ -1,0 +1,88 @@
+<Layout::Section::Header @title="Reporting Preferences Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Automated Reports --}}
+            <ContentPanel @title="Automated Reports" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Daily Attendance Reports">
+                    <Toggle @isToggled={{this.dailyAttendanceReports}} @onToggle={{fn (mut
+                        this.dailyAttendanceReports)}} @label="Generate daily attendance reports"
+                        @helpText="Automatically generate and distribute daily attendance reports" />
+                </InputGroup>
+
+                <InputGroup @name="Weekly Route Summaries">
+                    <Toggle @isToggled={{this.weeklyRouteSummaries}} @onToggle={{fn (mut this.weeklyRouteSummaries)}}
+                        @label="Generate weekly route summaries"
+                        @helpText="Weekly summaries of route performance and efficiency" />
+                </InputGroup>
+
+                <InputGroup @name="Monthly Safety Reports">
+                    <Toggle @isToggled={{this.monthlySafetyReports}} @onToggle={{fn (mut this.monthlySafetyReports)}}
+                        @label="Generate monthly safety reports"
+                        @helpText="Comprehensive monthly safety and incident reports" />
+                </InputGroup>
+
+                <InputGroup @name="Parent Weekly Summaries">
+                    <Toggle @isToggled={{this.parentWeeklySummaries}} @onToggle={{fn (mut this.parentWeeklySummaries)}}
+                        @label="Send weekly summaries to parents"
+                        @helpText="Send parents weekly summaries of their student's transportation" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Alert Settings --}}
+            <ContentPanel @title="Alert Settings" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Incident Alert Frequency" @helpText="How frequently to send incident alerts">
+                    <Select @value={{this.incidentAlerts}} @options={{this.alertFrequencyOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.incidentAlerts)}} @placeholder="Select frequency"
+                        class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Performance & Compliance --}}
+            <ContentPanel @title="Performance & Compliance" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Performance Metrics">
+                    <Toggle @isToggled={{this.performanceMetrics}} @onToggle={{fn (mut this.performanceMetrics)}}
+                        @label="Include performance metrics"
+                        @helpText="Include detailed performance metrics in reports" />
+                </InputGroup>
+
+                <InputGroup @name="Compliance Reporting">
+                    <Toggle @isToggled={{this.complianceReporting}} @onToggle={{fn (mut this.complianceReporting)}}
+                        @label="Enable compliance reporting" @helpText="Generate reports for regulatory compliance" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Report Customization --}}
+            <ContentPanel @title="Report Customization" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Automated Distribution">
+                    <Toggle @isToggled={{this.automatedReportDistribution}} @onToggle={{fn (mut
+                        this.automatedReportDistribution)}} @label="Enable automated report distribution"
+                        @helpText="Automatically distribute reports to stakeholders" />
+                </InputGroup>
+
+                <InputGroup @name="Custom Report Templates">
+                    <Toggle @isToggled={{this.customReportTemplates}} @onToggle={{fn (mut this.customReportTemplates)}}
+                        @label="Allow custom report templates" @helpText="Enable creation of custom report templates" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Export Settings --}}
+            <ContentPanel @title="Export Settings" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Data Export Formats" @helpText="Select available export formats">
+                    <div class="space-y-2">
+                        {{#each this.exportFormatOptions as |option|}}
+                        <Checkbox @checked={{option.selected}} @onCheck={{fn (mut option.selected)}}
+                            @label={{option.label}} @helpText={{concat "Export data in " option.label " format" }} />
+                        {{/each}}
+                    </div>
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

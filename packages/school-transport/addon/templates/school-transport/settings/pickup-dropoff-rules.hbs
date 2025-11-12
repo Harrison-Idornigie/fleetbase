@@ -1,0 +1,83 @@
+<Layout::Section::Header @title="Pickup/Dropoff Rules Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Location Requirements --}}
+            <ContentPanel @title="Location Requirements" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Geofence Required">
+                    <Toggle @isToggled={{this.geofenceRequired}} @onToggle={{fn (mut this.geofenceRequired)}}
+                        @label="Require geofence for pickup/dropoff"
+                        @helpText="Only allow pickup/dropoff within defined geofences" />
+                </InputGroup>
+
+                <InputGroup @name="Weather Contingencies">
+                    <Toggle @isToggled={{this.weatherContingencies}} @onToggle={{fn (mut this.weatherContingencies)}}
+                        @label="Enable weather contingencies" @helpText="Adjust rules for severe weather conditions" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Authorization Requirements --}}
+            <ContentPanel @title="Authorization Requirements" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Parent Presence">
+                    <Toggle @isToggled={{this.parentPresenceRequired}} @onToggle={{fn (mut
+                        this.parentPresenceRequired)}} @label="Require parent presence"
+                        @helpText="Parent or guardian must be present for pickup/dropoff" />
+                </InputGroup>
+
+                <InputGroup @name="Authorized Person Only">
+                    <Toggle @isToggled={{this.authorizedPersonOnly}} @onToggle={{fn (mut this.authorizedPersonOnly)}}
+                        @label="Authorized person only" @helpText="Only allow authorized persons to pick up students" />
+                </InputGroup>
+
+                <InputGroup @name="ID Verification">
+                    <Toggle @isToggled={{this.idVerificationRequired}} @onToggle={{fn (mut
+                        this.idVerificationRequired)}} @label="Require ID verification"
+                        @helpText="Verify ID of person picking up student" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Documentation --}}
+            <ContentPanel @title="Documentation" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Photo Documentation">
+                    <Toggle @isToggled={{this.photoDocumentation}} @onToggle={{fn (mut this.photoDocumentation)}}
+                        @label="Enable photo documentation" @helpText="Take photos during pickup/dropoff for records" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Time Window Settings --}}
+            <ContentPanel @title="Time Window Settings" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Time Window Enforcement">
+                    <Toggle @isToggled={{this.timeWindowEnforcement}} @onToggle={{fn (mut this.timeWindowEnforcement)}}
+                        @label="Enforce time windows" @helpText="Enforce pickup/dropoff time windows" />
+                </InputGroup>
+
+                {{#if this.timeWindowEnforcement}}
+                <InputGroup @name="Early Pickup Window (minutes)" @helpText="How early can pickup occur">
+                    <Input @type="number" @value={{this.earlyPickupWindowMinutes}} @min="0" @max="60" @onInput={{fn (mut
+                        this.earlyPickupWindowMinutes)}} @placeholder="15" class="w-full" />
+                </InputGroup>
+
+                <InputGroup @name="Late Pickup Grace (minutes)" @helpText="Grace period for late pickup">
+                    <Input @type="number" @value={{this.latePickupGraceMinutes}} @min="0" @max="60" @onInput={{fn (mut
+                        this.latePickupGraceMinutes)}} @placeholder="10" class="w-full" />
+                </InputGroup>
+                {{/if}}
+            </ContentPanel>
+
+            {{!-- Special Accommodations --}}
+            <ContentPanel @title="Special Accommodations" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Special Needs Accommodations">
+                    <Toggle @isToggled={{this.specialNeedsAccommodations}} @onToggle={{fn (mut
+                        this.specialNeedsAccommodations)}} @label="Enable special needs accommodations"
+                        @helpText="Provide special accommodations for students with special needs" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

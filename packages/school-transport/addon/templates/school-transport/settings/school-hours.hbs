@@ -1,0 +1,56 @@
+<Layout::Section::Header @title="School Hours Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- School Schedule --}}
+            <ContentPanel @title="School Schedule" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="School Start Time" @helpText="When school starts for pickup schedule planning">
+                    <Select @value={{this.schoolStartTime}} @options={{this.timeOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.schoolStartTime)}}
+                        @placeholder="Select start time" class="w-full" />
+                </InputGroup>
+
+                <InputGroup @name="School End Time" @helpText="When school ends for dropoff schedule planning">
+                    <Select @value={{this.schoolEndTime}} @options={{this.timeOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.schoolEndTime)}} @placeholder="Select end time"
+                        class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Pickup Flexibility --}}
+            <ContentPanel @title="Pickup/Dropoff Flexibility" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Early Pickup">
+                    <Toggle @isToggled={{this.earlyPickupAllowed}} @onToggle={{fn (mut this.earlyPickupAllowed)}}
+                        @label="Allow early pickup" @helpText="Allow students to be picked up before scheduled time" />
+                </InputGroup>
+
+                {{#if this.earlyPickupAllowed}}
+                <InputGroup @name="Maximum Early Pickup (minutes)"
+                    @helpText="Maximum minutes students can be picked up early">
+                    <Input @type="number" @value={{this.maxEarlyPickupMinutes}} @min="0" @max="120" @onInput={{fn (mut
+                        this.maxEarlyPickupMinutes)}} @placeholder="30" class="w-full" />
+                </InputGroup>
+                {{/if}}
+
+                <InputGroup @name="Late Pickup">
+                    <Toggle @isToggled={{this.latePickupAllowed}} @onToggle={{fn (mut this.latePickupAllowed)}}
+                        @label="Allow late pickup" @helpText="Allow students to be picked up after scheduled time" />
+                </InputGroup>
+
+                {{#if this.latePickupAllowed}}
+                <InputGroup @name="Maximum Late Pickup (minutes)"
+                    @helpText="Maximum minutes students can be picked up late">
+                    <Input @type="number" @value={{this.maxLatePickupMinutes}} @min="0" @max="180" @onInput={{fn (mut
+                        this.maxLatePickupMinutes)}} @placeholder="60" class="w-full" />
+                </InputGroup>
+                {{/if}}
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

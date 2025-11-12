@@ -1,0 +1,70 @@
+<Layout::Section::Header @title="Parent Portal Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Portal Access --}}
+            <ContentPanel @title="Portal Access" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Enable Parent Portal">
+                    <Toggle @isToggled={{this.enabled}} @onToggle={{fn (mut this.enabled)}}
+                        @label="Enable parent portal access"
+                        @helpText="Allow parents to access the transportation portal" />
+                </InputGroup>
+
+                <InputGroup @name="Mobile App">
+                    <Toggle @isToggled={{this.mobileAppEnabled}} @onToggle={{fn (mut this.mobileAppEnabled)}}
+                        @label="Enable mobile app access"
+                        @helpText="Allow parents to use mobile app for portal access" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Parent Capabilities --}}
+            <ContentPanel @title="Parent Capabilities" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Trip Management">
+                    <Toggle @isToggled={{this.allowTripCancellation}} @onToggle={{fn (mut this.allowTripCancellation)}}
+                        @label="Allow trip cancellation" @helpText="Parents can cancel student trips" />
+                </InputGroup>
+
+                <InputGroup @name="Schedule Changes">
+                    <Toggle @isToggled={{this.allowScheduleChanges}} @onToggle={{fn (mut this.allowScheduleChanges)}}
+                        @label="Allow schedule changes" @helpText="Parents can request schedule modifications" />
+                </InputGroup>
+
+                <InputGroup @name="Absence Reporting">
+                    <Toggle @isToggled={{this.absenceReporting}} @onToggle={{fn (mut this.absenceReporting)}}
+                        @label="Enable absence reporting" @helpText="Parents can report student absences" />
+                </InputGroup>
+
+                <InputGroup @name="Emergency Contact Updates">
+                    <Toggle @isToggled={{this.emergencyContactUpdates}} @onToggle={{fn (mut
+                        this.emergencyContactUpdates)}} @label="Allow emergency contact updates"
+                        @helpText="Parents can update emergency contact information" />
+                </InputGroup>
+
+                <InputGroup @name="Document Access">
+                    <Toggle @isToggled={{this.documentAccess}} @onToggle={{fn (mut this.documentAccess)}}
+                        @label="Provide document access" @helpText="Parents can access transportation documents" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Real-Time Features --}}
+            <ContentPanel @title="Real-Time Features" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Live Tracking">
+                    <Toggle @isToggled={{this.realTimeTracking}} @onToggle={{fn (mut this.realTimeTracking)}}
+                        @label="Enable real-time bus tracking"
+                        @helpText="Parents can track bus location in real-time" />
+                </InputGroup>
+
+                <InputGroup @name="ETA Notifications">
+                    <Toggle @isToggled={{this.etaNotifications}} @onToggle={{fn (mut this.etaNotifications)}}
+                        @label="Send ETA notifications" @helpText="Notify parents of estimated arrival times" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

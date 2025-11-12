@@ -119,3 +119,59 @@ Route::prefix('school-transport')->middleware(['api', 'fleetbase.api'])->group(f
         });
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| School Transport Internal API Routes
+|--------------------------------------------------------------------------
+|
+| Internal routes for console interface and settings that extend FleetOps
+|
+*/
+
+Route::prefix('int')->middleware(['fleetbase.protected'])->group(function () {
+    Route::prefix('v1')->namespace('Fleetbase\SchoolTransport\Http\Controllers')->group(function () {
+        Route::group(['prefix' => 'school-transport/settings'], function () {
+
+            // School-specific routing settings (extends FleetOps routing)
+            Route::get('routing-settings', 'SettingController@getSchoolRoutingSettings');
+            Route::post('routing-settings', 'SettingController@saveSchoolRoutingSettings');
+
+            // School-specific notification settings (extends FleetOps notifications)
+            Route::get('notification-settings', 'SettingController@getSchoolNotificationSettings');
+            Route::post('notification-settings', 'SettingController@saveSchoolNotificationSettings');
+
+            // School hours settings
+            Route::get('school-hours-settings', 'SettingController@getSchoolHoursSettings');
+            Route::post('school-hours-settings', 'SettingController@saveSchoolHoursSettings');
+
+            // Parent portal settings
+            Route::get('parent-portal-settings', 'SettingController@getParentPortalSettings');
+            Route::post('parent-portal-settings', 'SettingController@saveParentPortalSettings');
+
+            // Attendance tracking settings
+            Route::get('attendance-tracking-settings', 'SettingController@getAttendanceTrackingSettings');
+            Route::post('attendance-tracking-settings', 'SettingController@saveAttendanceTrackingSettings');
+
+            // Safety compliance settings
+            Route::get('safety-compliance-settings', 'SettingController@getSafetyComplianceSettings');
+            Route::post('safety-compliance-settings', 'SettingController@saveSafetyComplianceSettings');
+
+            // Emergency contacts settings
+            Route::get('emergency-contacts-settings', 'SettingController@getEmergencyContactsSettings');
+            Route::post('emergency-contacts-settings', 'SettingController@saveEmergencyContactsSettings');
+
+            // Pickup/dropoff rules settings
+            Route::get('pickup-dropoff-rules-settings', 'SettingController@getPickupDropoffRulesSettings');
+            Route::post('pickup-dropoff-rules-settings', 'SettingController@savePickupDropoffRulesSettings');
+
+            // Student permissions settings
+            Route::get('student-permissions-settings', 'SettingController@getStudentPermissionsSettings');
+            Route::post('student-permissions-settings', 'SettingController@saveStudentPermissionsSettings');
+
+            // Reporting preferences settings
+            Route::get('reporting-preferences-settings', 'SettingController@getReportingPreferencesSettings');
+            Route::post('reporting-preferences-settings', 'SettingController@saveReportingPreferencesSettings');
+        });
+    });
+});

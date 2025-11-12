@@ -1,0 +1,79 @@
+<Layout::Section::Header @title="Student Permissions Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Information Access --}}
+            <ContentPanel @title="Information Access" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Medical Information Access" @helpText="Who can access student medical information">
+                    <Select @value={{this.medicalInformationAccess}} @options={{this.accessLevelOptions}}
+                        @optionLabel="label" @optionValue="value" @onSelect={{fn (mut this.medicalInformationAccess)}}
+                        @placeholder="Select access level" class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Consent Settings --}}
+            <ContentPanel @title="Consent Settings" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Photo Sharing Consent">
+                    <Toggle @isToggled={{this.photoSharingConsent}} @onToggle={{fn (mut this.photoSharingConsent)}}
+                        @label="Require photo sharing consent"
+                        @helpText="Require consent before sharing student photos" />
+                </InputGroup>
+
+                <InputGroup @name="Location Sharing Consent">
+                    <Toggle @isToggled={{this.locationSharingConsent}} @onToggle={{fn (mut
+                        this.locationSharingConsent)}} @label="Require location sharing consent"
+                        @helpText="Require consent before sharing student location data" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Update Permissions --}}
+            <ContentPanel @title="Update Permissions" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Emergency Contact Updates" @helpText="Who can update emergency contact information">
+                    <Select @value={{this.emergencyContactUpdates}} @options={{this.accessLevelOptions}}
+                        @optionLabel="label" @optionValue="value" @onSelect={{fn (mut this.emergencyContactUpdates)}}
+                        @placeholder="Select access level" class="w-full" />
+                </InputGroup>
+
+                <InputGroup @name="Route Change Requests" @helpText="Approval required for route changes">
+                    <Select @value={{this.routeChangeRequests}} @options={{this.approvalOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.routeChangeRequests)}}
+                        @placeholder="Select approval type" class="w-full" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Notification Permissions --}}
+            <ContentPanel @title="Notification Permissions" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Absence Notifications">
+                    <Toggle @isToggled={{this.absenceNotifications}} @onToggle={{fn (mut this.absenceNotifications)}}
+                        @label="Send absence notifications" @helpText="Send notifications when students are absent" />
+                </InputGroup>
+
+                <InputGroup @name="Disciplinary Notifications">
+                    <Toggle @isToggled={{this.disciplinaryNotifications}} @onToggle={{fn (mut
+                        this.disciplinaryNotifications)}} @label="Send disciplinary notifications"
+                        @helpText="Send notifications for disciplinary actions" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Data Management --}}
+            <ContentPanel @title="Data Management" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Data Retention Period" @helpText="Number of days to retain student data">
+                    <Select @value={{this.dataRetentionPeriod}} @options={{this.retentionOptions}} @optionLabel="label"
+                        @optionValue="value" @onSelect={{fn (mut this.dataRetentionPeriod)}}
+                        @placeholder="Select retention period" class="w-full" />
+                </InputGroup>
+
+                <InputGroup @name="Third-Party Sharing">
+                    <Toggle @isToggled={{this.thirdPartySharing}} @onToggle={{fn (mut this.thirdPartySharing)}}
+                        @label="Allow third-party sharing" @helpText="Allow sharing student data with third parties" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>

@@ -1,0 +1,81 @@
+<Layout::Section::Header @title="Safety Compliance Settings">
+    <Button @type="primary" @size="sm" @icon="save" @text="Save Changes" @onClick={{perform this.saveSettings}}
+        @disabled={{this.saveSettings.isRunning}} @isLoading={{or this.saveSettings.isRunning
+        this.getSettings.isRunning}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container mx-auto h-screen">
+        <div class="max-w-3xl my-10 mx-auto space-y-6">
+            {{!-- Operational Safety --}}
+            <ContentPanel @title="Operational Safety" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Speed Limit Enforcement">
+                    <Toggle @isToggled={{this.speedLimitEnforcement}} @onToggle={{fn (mut this.speedLimitEnforcement)}}
+                        @label="Enable speed limit enforcement" @helpText="Monitor and enforce speed limits" />
+                </InputGroup>
+
+                <InputGroup @name="Route Deviation Alerts">
+                    <Toggle @isToggled={{this.routeDeviationAlerts}} @onToggle={{fn (mut this.routeDeviationAlerts)}}
+                        @label="Enable route deviation alerts"
+                        @helpText="Alert when buses deviate from assigned routes" />
+                </InputGroup>
+
+                <InputGroup @name="Stop Sign Arm Enforcement">
+                    <Toggle @isToggled={{this.stopSignArmEnforcement}} @onToggle={{fn (mut
+                        this.stopSignArmEnforcement)}} @label="Enable stop sign arm enforcement"
+                        @helpText="Monitor proper use of stop sign arms" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Personnel Requirements --}}
+            <ContentPanel @title="Personnel Requirements" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Driver Certification">
+                    <Toggle @isToggled={{this.driverCertificationRequired}} @onToggle={{fn (mut
+                        this.driverCertificationRequired)}} @label="Require driver certification"
+                        @helpText="Ensure all drivers have valid certifications" />
+                </InputGroup>
+
+                <InputGroup @name="Emergency Contact Required">
+                    <Toggle @isToggled={{this.emergencyContactRequired}} @onToggle={{fn (mut
+                        this.emergencyContactRequired)}} @label="Require emergency contact"
+                        @helpText="Emergency contact required for all students" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Vehicle Safety --}}
+            <ContentPanel @title="Vehicle Safety" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Vehicle Inspection">
+                    <Toggle @isToggled={{this.vehicleInspectionRequired}} @onToggle={{fn (mut
+                        this.vehicleInspectionRequired)}} @label="Require vehicle inspection"
+                        @helpText="Regular vehicle safety inspections required" />
+                </InputGroup>
+
+                <InputGroup @name="Child Safety Locks">
+                    <Toggle @isToggled={{this.childSafetyLocks}} @onToggle={{fn (mut this.childSafetyLocks)}}
+                        @label="Enable child safety locks" @helpText="Use child safety locks on all buses" />
+                </InputGroup>
+
+                <InputGroup @name="Seat Belt Monitoring">
+                    <Toggle @isToggled={{this.seatBeltMonitoring}} @onToggle={{fn (mut this.seatBeltMonitoring)}}
+                        @label="Enable seat belt monitoring" @helpText="Monitor seat belt usage on buses" />
+                </InputGroup>
+            </ContentPanel>
+
+            {{!-- Emergency Procedures --}}
+            <ContentPanel @title="Emergency Procedures" @open={{true}} @wrapperClass="bordered-classic">
+                <InputGroup @name="Incident Reporting">
+                    <Toggle @isToggled={{this.incidentReportingRequired}} @onToggle={{fn (mut
+                        this.incidentReportingRequired)}} @label="Require incident reporting"
+                        @helpText="Mandatory reporting of all incidents" />
+                </InputGroup>
+
+                <InputGroup @name="Emergency Evacuation Drills">
+                    <Toggle @isToggled={{this.emergencyEvacuationDrills}} @onToggle={{fn (mut
+                        this.emergencyEvacuationDrills)}} @label="Conduct emergency evacuation drills"
+                        @helpText="Regular emergency evacuation practice" />
+                </InputGroup>
+            </ContentPanel>
+        </div>
+    </div>
+    <Spacer @height="600px" />
+</Layout::Section::Body>
