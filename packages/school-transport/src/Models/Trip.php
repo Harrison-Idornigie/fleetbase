@@ -183,7 +183,7 @@ class Trip extends Model
      */
     public function getStatusDisplayAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'scheduled' => 'Scheduled',
             'in_progress' => 'In Progress',
             'completed' => 'Completed',
@@ -198,7 +198,7 @@ class Trip extends Model
      */
     public function getTripTypeDisplayAttribute(): string
     {
-        return match($this->trip_type) {
+        return match ($this->trip_type) {
             'morning_pickup' => 'Morning Pickup',
             'afternoon_dropoff' => 'Afternoon Dropoff',
             'special' => 'Special Trip',

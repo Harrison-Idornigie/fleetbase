@@ -244,6 +244,30 @@ class Bus extends Vehicle
             return $a['timestamp'] <=> $b['timestamp'];
         });
 
+        // Track students on board at each point
+        $onBoardStudents = [];
+        foreach ($playbackData as &$point) {
+            if ($point['type'] === 'student_event' && $point['present']) {
+                if ($point['event_type'] === 'pickup') {
+                    // Add student to on-board list
+                    $onBoardStudents[$point['student']['uuid']] = [
+                        'uuid' => $point['student']['uuid'],
+                        'name' => $point['student']['name'],
+                        'grade' => $point['student']['grade'],
+                        'boarded_at' => $point['timestamp'],
+                    ];
+                } elseif ($point['event_type'] === 'dropoff') {
+                    // Remove student from on-board list
+                    unset($onBoardStudents[$point['student']['uuid']]);
+                }
+            }
+
+            // Add snapshot of students currently on board
+            $point['on_board_students'] = array_values($onBoardStudents);
+            $point['on_board_count'] = count($onBoardStudents);
+        }
+        unset($point); // Break reference
+
         // Calculate comprehensive metrics
         $metrics = $this->calculateRouteMetrics($positions);
 
