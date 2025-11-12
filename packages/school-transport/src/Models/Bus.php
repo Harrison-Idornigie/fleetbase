@@ -171,7 +171,7 @@ class Bus extends Vehicle
      * Get route playback data for a specific date range.
      * Combines FleetOps positions with student attendance events.
      */
-    public function getRoutePlayback(\DateTime $startDate, \DateTime $endDate): array
+    public function getRoutePlayback(\DateTime $startDate, \DateTime $endDate, array $filters = []): array
     {
         // Get FleetOps position data
         $positions = $this->positions()
@@ -179,16 +179,28 @@ class Bus extends Vehicle
             ->orderBy('created_at')
             ->get();
 
-        // Get student attendance events for the same period
-        $attendanceEvents = \Fleetbase\SchoolTransportEngine\Models\Attendance::whereHas('assignment', function ($query) {
+        // Get student attendance events for the same period with optional filtering
+        $attendanceQuery = \Fleetbase\SchoolTransportEngine\Models\Attendance::whereHas('assignment', function ($query) {
             $query->whereHas('route', function ($subQuery) {
                 $subQuery->where('vehicle_uuid', $this->uuid);
             });
         })
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->with(['student', 'assignment.route'])
-            ->orderBy('actual_time')
-            ->get();
+            ->with(['student', 'assignment.route']);
+
+        // Apply student filter if specified
+        if (!empty($filters['student_uuid'])) {
+            $attendanceQuery->where('student_uuid', $filters['student_uuid']);
+        }
+
+        // Apply trip filter if specified
+        if (!empty($filters['trip_uuid'])) {
+            $attendanceQuery->whereHas('assignment', function ($query) use ($filters) {
+                $query->where('trip_uuid', $filters['trip_uuid']);
+            });
+        }
+
+        $attendanceEvents = $attendanceQuery->orderBy('actual_time')->get();
 
         // Combine positions with attendance events
         $playbackData = [];
@@ -232,9 +244,39 @@ class Bus extends Vehicle
             return $a['timestamp'] <=> $b['timestamp'];
         });
 
+        // Calculate comprehensive metrics
+        $metrics = $this->calculateRouteMetrics($positions);
+
         return [
             'bus_uuid' => $this->uuid,
             'bus_number' => $this->bus_number,
+            'positions' => $positions->map(function ($position) {
+                return [
+                    'latitude' => $position->coordinates->getLat(),
+                    'longitude' => $position->coordinates->getLng(),
+                    'speed' => $position->speed ?? 0,
+                    'heading' => $position->heading ?? 0,
+                    'created_at' => $position->created_at->toISOString(),
+                    'altitude' => $position->altitude ?? 0,
+                ];
+            })->toArray(),
+            'student_events' => $attendanceEvents->map(function ($event) {
+                return [
+                    'event_type' => $event->event_type,
+                    'student' => [
+                        'uuid' => $event->student->uuid,
+                        'first_name' => $event->student->first_name,
+                        'last_name' => $event->student->last_name,
+                        'grade' => $event->student->grade,
+                    ],
+                    'latitude' => $event->latitude ?? 0,
+                    'longitude' => $event->longitude ?? 0,
+                    'location_name' => $event->location_name,
+                    'created_at' => $event->created_at->toISOString(),
+                    'actual_time' => $event->actual_time?->toISOString(),
+                ];
+            })->toArray(),
+            'metrics' => $metrics,
             'date_range' => [
                 'start' => $startDate->format('Y-m-d H:i:s'),
                 'end' => $endDate->format('Y-m-d H:i:s')
@@ -243,6 +285,108 @@ class Bus extends Vehicle
             'total_student_events' => count($attendanceEvents),
             'playback_data' => $playbackData
         ];
+    }
+
+    /**
+     * Calculate comprehensive route metrics from positions.
+     */
+    private function calculateRouteMetrics($positions): array
+    {
+        if ($positions->isEmpty()) {
+            return [
+                'total_distance_miles' => 0,
+                'total_distance_km' => 0,
+                'duration_minutes' => 0,
+                'duration_seconds' => 0,
+                'max_speed_mph' => 0,
+                'max_speed_kmh' => 0,
+                'avg_speed_mph' => 0,
+                'avg_speed_kmh' => 0,
+                'speeding_events' => 0,
+                'idle_time_minutes' => 0,
+                'moving_time_minutes' => 0,
+            ];
+        }
+
+        $totalDistance = 0; // in miles
+        $totalTime = 0; // in seconds
+        $speeds = [];
+        $speedingEvents = 0;
+        $idleTime = 0;
+        $movingTime = 0;
+        $speedLimit = 35; // Default speed limit in mph
+
+        $previousPosition = null;
+
+        foreach ($positions as $position) {
+            if ($previousPosition) {
+                // Calculate distance using Haversine formula
+                $distance = $this->haversineDistance(
+                    $previousPosition->coordinates->getLat(),
+                    $previousPosition->coordinates->getLng(),
+                    $position->coordinates->getLat(),
+                    $position->coordinates->getLng()
+                );
+                $totalDistance += $distance;
+
+                // Calculate time difference
+                $timeDiff = $position->created_at->diffInSeconds($previousPosition->created_at);
+                $totalTime += $timeDiff;
+
+                // Track speeds
+                $speed = $position->speed ?? 0;
+                if ($speed > 0) {
+                    $speeds[] = $speed;
+                    $movingTime += $timeDiff;
+
+                    // Check for speeding
+                    if ($speed > $speedLimit) {
+                        $speedingEvents++;
+                    }
+                } else {
+                    $idleTime += $timeDiff;
+                }
+            }
+
+            $previousPosition = $position;
+        }
+
+        $avgSpeed = !empty($speeds) ? array_sum($speeds) / count($speeds) : 0;
+        $maxSpeed = !empty($speeds) ? max($speeds) : 0;
+
+        return [
+            'total_distance_miles' => round($totalDistance, 2),
+            'total_distance_km' => round($totalDistance * 1.60934, 2),
+            'duration_minutes' => round($totalTime / 60, 1),
+            'duration_seconds' => $totalTime,
+            'max_speed_mph' => round($maxSpeed, 1),
+            'max_speed_kmh' => round($maxSpeed * 1.60934, 1),
+            'avg_speed_mph' => round($avgSpeed, 1),
+            'avg_speed_kmh' => round($avgSpeed * 1.60934, 1),
+            'speeding_events' => $speedingEvents,
+            'idle_time_minutes' => round($idleTime / 60, 1),
+            'moving_time_minutes' => round($movingTime / 60, 1),
+        ];
+    }
+
+    /**
+     * Calculate distance between two points using Haversine formula.
+     * Returns distance in miles.
+     */
+    private function haversineDistance($lat1, $lon1, $lat2, $lon2): float
+    {
+        $earthRadius = 3959; // Earth's radius in miles
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     /**

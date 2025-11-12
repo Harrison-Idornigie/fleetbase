@@ -563,6 +563,8 @@ class BusController extends FleetbaseController
             'date' => 'required_without:start_date|date',
             'start_date' => 'required_without:date|date',
             'end_date' => 'required_with:start_date|date|after_or_equal:start_date',
+            'student_uuid' => 'nullable|string|exists:students,uuid',
+            'trip_uuid' => 'nullable|string|exists:trips,uuid',
         ]);
 
         try {
@@ -587,7 +589,10 @@ class BusController extends FleetbaseController
                 ], 422);
             }
 
-            $playbackData = $bus->getRoutePlayback($startDate, $endDate);
+            $playbackData = $bus->getRoutePlayback($startDate, $endDate, [
+                'student_uuid' => $request->input('student_uuid'),
+                'trip_uuid' => $request->input('trip_uuid'),
+            ]);
 
             return response()->json($playbackData);
         } catch (\Exception $e) {

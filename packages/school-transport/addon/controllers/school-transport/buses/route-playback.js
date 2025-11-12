@@ -9,6 +9,11 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
 
   @tracked isLoading = false;
   @tracked selectedDate = '';
+  @tracked startDate = '';
+  @tracked endDate = '';
+  @tracked useDateRange = false;
+  @tracked selectedStudent = null;
+  @tracked selectedTrip = null;
   @tracked routeData = null;
   @tracked playbackSpeed = 1;
   @tracked isPlaying = false;
@@ -28,8 +33,13 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
       { value: 0.5, label: '0.5x' },
       { value: 1, label: '1x' },
       { value: 2, label: '2x' },
-      { value: 4, label: '4x' },
-      { value: 8, label: '8x' }
+      { value: 5, label: '5x' },
+      { value: 10, label: '10x' },
+      { value: 20, label: '20x' },
+      { value: 30, label: '30x' },
+      { value: 50, label: '50x' },
+      { value: 100, label: '100x' },
+      { value: 200, label: '200x' }
     ];
   }
 
@@ -39,9 +49,49 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
   }
 
   @action
+  updateStartDate(event) {
+    this.startDate = event.target.value;
+  }
+
+  @action
+  updateEndDate(event) {
+    this.endDate = event.target.value;
+  }
+
+  @action
+  toggleDateRange() {
+    this.useDateRange = !this.useDateRange;
+    if (!this.useDateRange) {
+      this.startDate = '';
+      this.endDate = '';
+    }
+  }
+
+  @action
+  selectStudent(student) {
+    this.selectedStudent = student;
+  }
+
+  @action
+  selectTrip(trip) {
+    this.selectedTrip = trip;
+  }
+
+  @action
+  clearFilters() {
+    this.selectedStudent = null;
+    this.selectedTrip = null;
+  }
+
+  @action
   async loadRouteData() {
-    if (!this.selectedDate) {
+    if (!this.useDateRange && !this.selectedDate) {
       this.notifications.error('Please select a date');
+      return;
+    }
+
+    if (this.useDateRange && (!this.startDate || !this.endDate)) {
+      this.notifications.error('Please select both start and end dates');
       return;
     }
 
@@ -51,8 +101,24 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
       this.currentPosition = 0;
       this.isPlaying = false;
 
-      // Call the route playback API endpoint
-      const response = await fetch(`/api/school-transport/buses/${this.bus.id}/route-playback?date=${this.selectedDate}`);
+      // Call the route playback API endpoint with filters
+      let url = `/api/school-transport/buses/${this.bus.id}/route-playback`;
+      
+      if (this.useDateRange) {
+        url += `?start_date=${this.startDate}&end_date=${this.endDate}`;
+      } else {
+        url += `?date=${this.selectedDate}`;
+      }
+      
+      if (this.selectedStudent) {
+        url += `&student_uuid=${this.selectedStudent.id}`;
+      }
+      
+      if (this.selectedTrip) {
+        url += `&trip_uuid=${this.selectedTrip.id}`;
+      }
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch route data');
@@ -91,14 +157,12 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
     if (this.isPlaying) {
       this.startPlayback();
     } else {
-      this.stopPlayback();
+      this.pausePlaybackInterval();
     }
   }
 
   @action
   resetPlayback() {
-    this.isPlaying = false;
-    this.currentPosition = 0;
     this.stopPlayback();
   }
 
@@ -110,6 +174,54 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
   @action
   toggleStudentDetails() {
     this.showStudentDetails = !this.showStudentDetails;
+  }
+
+  @action
+  stepForward() {
+    if (!this.hasRouteData) {
+      this.notifications.error('No route data available');
+      return;
+    }
+
+    if (this.isPlaying) {
+      this.stopPlayback();
+      this.isPlaying = false;
+    }
+
+    if (this.currentPosition < this.routeData.positions.length - 1) {
+      this.currentPosition++;
+    } else {
+      this.notifications.info('Already at the end of route');
+    }
+  }
+
+  @action
+  stepBackward() {
+    if (!this.hasRouteData) {
+      this.notifications.error('No route data available');
+      return;
+    }
+
+    if (this.isPlaying) {
+      this.stopPlayback();
+      this.isPlaying = false;
+    }
+
+    if (this.currentPosition > 0) {
+      this.currentPosition--;
+    } else {
+      this.notifications.info('Already at the beginning of route');
+    }
+  }
+
+  @action
+  stopPlayback() {
+    this.isPlaying = false;
+    this.currentPosition = 0;
+    if (this.playbackInterval) {
+      clearInterval(this.playbackInterval);
+      this.playbackInterval = null;
+    }
   }
 
   startPlayback() {
@@ -131,7 +243,7 @@ export default class SchoolTransportBusesRoutePlaybackController extends Control
     }, interval);
   }
 
-  stopPlayback() {
+  pausePlaybackInterval() {
     if (this.playbackInterval) {
       clearInterval(this.playbackInterval);
       this.playbackInterval = null;
