@@ -18,29 +18,31 @@ class AdminUserSeeder extends Seeder
     {
         $email = 'admin@example.com';
         $password = 'MySecur3P@ssw0rd!'; // dev seed only — change for production/CI
+        $organizationName = 'Admin Company';
 
         $user = User::firstOrNew(['email' => $email]);
         $isNew = !$user->exists;
-
+        
         $user->name = 'Local Admin';
         $user->email = $email;
-
+        $user->phone = '+12345678901';
+        
         // Only hash password if user is new or password field is empty
         if ($isNew || empty($user->password)) {
             $user->password = Hash::make($password);
         }
-
+        
         $user->type = 'admin';
         $user->email_verified_at = now();
-
+        
         if (empty($user->uuid)) {
             $user->uuid = (string) \Illuminate\Support\Str::uuid();
         }
-
+        
         // Ensure company exists
         if (empty($user->company_uuid)) {
             $company = Company::firstOrCreate(
-                ['name' => 'Admin Company'],
+                ['name' => $organizationName],
                 [
                     'uuid' => (string) \Illuminate\Support\Str::uuid(),
                     'owner_uuid' => $user->uuid,
@@ -49,7 +51,7 @@ class AdminUserSeeder extends Seeder
             );
             $user->company_uuid = $company->uuid;
         }
-
+        
         $user->save();
 
         $this->command->info("Admin user created/updated: {$email} (password: {$password})");
