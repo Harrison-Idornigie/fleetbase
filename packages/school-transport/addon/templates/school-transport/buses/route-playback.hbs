@@ -1,0 +1,243 @@
+{{!-- Route Playback Template --}}
+<div class="school-transport-route-playback">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Route Playback</h1>
+                <p class="text-gray-600 mt-1">
+                    Replay historical routes for Bus {{this.bus.bus_number}} with student tracking
+                </p>
+            </div>
+            <LinkTo @route="school-transport.buses.view" @model={{this.bus.id}} class="btn btn-outline">
+                <FaIcon @icon="arrow-left" class="mr-2" />
+                Back to Bus Details
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Controls Panel --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            {{!-- Date Selection --}}
+            <div class="form-group">
+                <label class="form-label">Select Date</label>
+                <Input @type="date" @value={{this.selectedDate}} class="form-input" {{on "change"
+                    this.updateSelectedDate}} />
+            </div>
+
+            {{!-- Load Button --}}
+            <div>
+                <button class="btn btn-primary w-full" {{on "click" this.loadRouteData}} disabled={{this.isLoading}}>
+                    {{#if this.isLoading}}
+                    <FaIcon @icon="spinner" @spin={{true}} class="mr-2" />
+                    Loading...
+                    {{else}}
+                    <FaIcon @icon="download" class="mr-2" />
+                    Load Route
+                    {{/if}}
+                </button>
+            </div>
+
+            {{!-- Playback Speed --}}
+            <div class="form-group">
+                <label class="form-label">Playback Speed</label>
+                <select class="form-select" {{on "change" this.updatePlaybackSpeed}} disabled={{not this.hasRouteData}}>
+                    {{#each this.playbackSpeeds as |speed|}}
+                    <option value={{speed.value}} selected={{eq this.playbackSpeed speed.value}}>
+                        {{speed.label}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            {{!-- Playback Controls --}}
+            <div class="flex space-x-2">
+                <button class="btn btn-outline flex-1" {{on "click" this.togglePlayback}} disabled={{not
+                    this.hasRouteData}}>
+                    {{#if this.isPlaying}}
+                    <FaIcon @icon="pause" class="mr-1" />
+                    Pause
+                    {{else}}
+                    <FaIcon @icon="play" class="mr-1" />
+                    Play
+                    {{/if}}
+                </button>
+                <button class="btn btn-outline" {{on "click" this.resetPlayback}} disabled={{not this.hasRouteData}}>
+                    <FaIcon @icon="stop" />
+                </button>
+            </div>
+
+            {{!-- Student Details Toggle --}}
+            <div class="flex items-center">
+                <label class="flex items-center cursor-pointer">
+                    <Input @type="checkbox" @checked={{this.showStudentDetails}} {{on "change"
+                        this.toggleStudentDetails}} class="form-checkbox" />
+                    <span class="ml-2 text-sm">Show Student Events</span>
+                </label>
+            </div>
+        </div>
+
+        {{!-- Progress Bar --}}
+        {{#if this.hasRouteData}}
+        <div class="mt-4">
+            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <span>Route Progress</span>
+                <span>{{this.currentPosition}} / {{this.routeData.positions.length}} positions</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style="width: {{this.progressPercentage}}%"></div>
+            </div>
+            {{#if this.currentPositionData}}
+            <div class="mt-2 text-xs text-gray-500">
+                Current Time: {{format-date this.currentPositionData.created_at "HH:mm:ss"}} |
+                Location: {{this.currentPositionData.latitude}}, {{this.currentPositionData.longitude}}
+            </div>
+            {{/if}}
+        </div>
+        {{/if}}
+    </div>
+
+    {{!-- Main Content Area --}}
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {{!-- Map Container --}}
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <FaIcon @icon="map" class="mr-2 text-blue-600" />
+                        Route Map
+                    </h2>
+                </div>
+                <div class="p-0">
+                    {{#if this.hasRouteData}}
+                    <RoutePlaybackMap @routeData={{this.routeData}} @currentPosition={{this.currentPosition}}
+                        @showStudentEvents={{this.showStudentDetails}} @onPositionClick={{this.seekToPosition}} />
+                    {{else}}
+                    <div class="h-96 flex items-center justify-center text-gray-500">
+                        <div class="text-center">
+                            <FaIcon @icon="map-marked-alt" class="text-4xl mb-3" />
+                            <p>Select a date and load route data to see the map</p>
+                        </div>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+
+        {{!-- Sidebar --}}
+        <div class="space-y-6">
+            {{!-- Current Position Info --}}
+            {{#if this.currentPositionData}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-4 py-3 border-b border-gray-200 bg-blue-50">
+                    <h3 class="text-sm font-semibold text-blue-900 flex items-center">
+                        <FaIcon @icon="map-pin" class="mr-2" />
+                        Current Position
+                    </h3>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Time:</span>
+                        <span class="font-medium">{{format-date this.currentPositionData.created_at "HH:mm:ss"}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Speed:</span>
+                        <span class="font-medium">{{this.currentPositionData.speed}} mph</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Heading:</span>
+                        <span class="font-medium">{{this.currentPositionData.heading}}°</span>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+
+            {{!-- Student Events --}}
+            {{#if (and this.showStudentDetails this.currentStudentEvents.length)}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-4 py-3 border-b border-gray-200 bg-green-50">
+                    <h3 class="text-sm font-semibold text-green-900 flex items-center">
+                        <FaIcon @icon="users" class="mr-2" />
+                        Student Events ({{this.currentStudentEvents.length}})
+                    </h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    {{#each this.currentStudentEvents as |event|}}
+                    <div
+                        class="flex items-start space-x-3 p-3 rounded-lg {{if (eq event.event_type 'pickup') 'bg-blue-50 border border-blue-200' 'bg-orange-50 border border-orange-200'}}">
+                        <div
+                            class="w-8 h-8 rounded-full flex items-center justify-center {{if (eq event.event_type 'pickup') 'bg-blue-100' 'bg-orange-100'}}">
+                            {{#if (eq event.event_type "pickup")}}
+                            <FaIcon @icon="arrow-up" class="text-blue-600 text-sm" />
+                            {{else}}
+                            <FaIcon @icon="arrow-down" class="text-orange-600 text-sm" />
+                            {{/if}}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{event.student.first_name}} {{event.student.last_name}}
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                {{if (eq event.event_type "pickup") "Picked up" "Dropped off"}} at {{format-date
+                                event.created_at "HH:mm:ss"}}
+                            </div>
+                            {{#if event.location_name}}
+                            <div class="text-xs text-gray-500">
+                                📍 {{event.location_name}}
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
+
+            {{!-- Route Summary --}}
+            {{#if this.hasRouteData}}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-900 flex items-center">
+                        <FaIcon @icon="chart-line" class="mr-2" />
+                        Route Summary
+                    </h3>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Positions:</span>
+                        <span class="font-medium">{{this.routeData.positions.length}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Student Events:</span>
+                        <span class="font-medium">{{this.routeData.student_events.length}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Duration:</span>
+                        <span class="font-medium">{{this.routeData.duration_minutes}} min</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Distance:</span>
+                        <span class="font-medium">{{this.routeData.distance_miles}} mi</span>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+
+    {{!-- Empty State --}}
+    {{#unless this.hasRouteData}}
+    {{#unless this.isLoading}}
+    <div class="text-center py-12">
+        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FaIcon @icon="route" class="text-4xl text-gray-400" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Route Data Loaded</h3>
+        <p class="text-gray-600 mb-6">Select a date and click "Load Route" to view historical bus routes with student
+            tracking.</p>
+    </div>
+    {{/unless}}
+    {{/unless}}
+</div>

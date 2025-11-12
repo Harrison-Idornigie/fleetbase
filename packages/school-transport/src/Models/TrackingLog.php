@@ -7,10 +7,46 @@ use Fleetbase\Traits\HasUuid;
 use Fleetbase\Traits\HasPublicId;
 use Fleetbase\Traits\TracksApiCredential;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Fleetbase\LaravelMysqlSpatial\Types\Point;
 
 class TrackingLog extends Model
 {
     use HasUuid, HasPublicId, TracksApiCredential;
+
+    /**
+     * The database table used by the model.
+     *
+     * @var string
+     */
+    protected $table = 'school_transport_tracking_logs';
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When a tracking log is created, also create a FleetOps Position record
+        static::created(function ($trackingLog) {
+            if ($trackingLog->isValid() && $trackingLog->bus) {
+                try {
+                    \Fleetbase\FleetOps\Models\Position::create([
+                        'company_uuid' => $trackingLog->company_uuid,
+                        'subject_uuid' => $trackingLog->bus_uuid,
+                        'subject_type' => \Fleetbase\SchoolTransportEngine\Models\Bus::class,
+                        'coordinates' => new Point($trackingLog->latitude, $trackingLog->longitude),
+                        'heading' => $trackingLog->heading,
+                        'speed' => $trackingLog->speed_kmh,
+                        'altitude' => $trackingLog->altitude,
+                        'order_uuid' => $trackingLog->trip_uuid, // Link to trip
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to create FleetOps Position from TrackingLog: ' . $e->getMessage());
+                }
+            }
+        });
+    }
 
     /**
      * The database table used by the model.
@@ -174,9 +210,9 @@ class TrackingLog extends Model
     public function isValid(): bool
     {
         return !is_null($this->latitude) &&
-               !is_null($this->longitude) &&
-               $this->latitude >= -90 && $this->latitude <= 90 &&
-               $this->longitude >= -180 && $this->longitude <= 180;
+            !is_null($this->longitude) &&
+            $this->latitude >= -90 && $this->latitude <= 90 &&
+            $this->longitude >= -180 && $this->longitude <= 180;
     }
 
     /**
@@ -192,7 +228,7 @@ class TrackingLog extends Model
      */
     public function getEngineStatusDisplayAttribute(): string
     {
-        return match($this->engine_status) {
+        return match ($this->engine_status) {
             'on' => 'Running',
             'off' => 'Off',
             'idle' => 'Idle',

@@ -20,7 +20,8 @@
     "require": {
         "php": "^8.1",
         "illuminate/support": "^10.0",
-        "fleetbase/core-api": "*"
+        "fleetbase/core-api": "*",
+        "fleetbase/fleetops-api": "*"
     },
     "autoload": {
         "psr-4": {

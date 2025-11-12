@@ -61,6 +61,11 @@ class SchoolTransportServiceProvider extends ServiceProvider
                                 'permission' => 'school-transport.routes.view'
                             ],
                             [
+                                'text' => 'Buses',
+                                'route' => 'console.school-transport.buses',
+                                'permission' => 'school-transport.buses.view'
+                            ],
+                            [
                                 'text' => 'Bus Assignments',
                                 'route' => 'console.school-transport.assignments',
                                 'permission' => 'school-transport.assignments.view'

@@ -1,0 +1,181 @@
+{{!-- Buses Index Template --}}
+<div class="school-transport-buses-index">
+    {{!-- Page Header --}}
+    <div class="page-header">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">School Buses</h1>
+                <p class="text-gray-600 mt-1">Manage school bus fleet with maintenance and fuel tracking</p>
+            </div>
+            <LinkTo @route="school-transport.buses.new" class="btn btn-primary">
+                <FaIcon @icon="plus" class="mr-2" />
+                Add New Bus
+            </LinkTo>
+        </div>
+    </div>
+
+    {{!-- Filters and Search --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="form-group">
+                <label class="form-label">Search Buses</label>
+                <Input @type="text" @value={{this.searchQuery}} @placeholder="Search by bus number, make, model..."
+                    class="form-input" {{on "input" this.updateSearch}} />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-select" {{on "change" this.updateStatusFilter}}>
+                    {{#each this.model.statusOptions as |option|}}
+                    <option value={{option.value}} selected={{eq this.selectedStatus option.value}}>
+                        {{option.label}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Sort By</label>
+                <select class="form-select" {{on "change" (fn this.updateSort)}}>
+                    {{#each this.model.sortOptions as |option|}}
+                    <option value={{option.value}} selected={{eq this.sortBy option.value}}>
+                        {{option.label}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="form-group flex items-end">
+                <button class="btn btn-outline w-full" {{on "click" this.refreshData}}>
+                    <FaIcon @icon="sync-alt" class="mr-2" />
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Bus Cards Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{#each this.paginatedBuses as |bus|}}
+        <div
+            class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            {{!-- Bus Header --}}
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <FaIcon @icon="bus" class="text-blue-600 text-xl" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Bus {{bus.bus_number}}</h3>
+                            <p class="text-sm text-gray-600">{{bus.make}} {{bus.model}} {{bus.year}}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {{#if (eq bus.status "active")}}
+                        <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
+                            Active
+                        </span>
+                        {{else if (eq bus.status "maintenance")}}
+                        <span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">
+                            Maintenance
+                        </span>
+                        {{else if (eq bus.status "out_of_service")}}
+                        <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
+                            Out of Service
+                        </span>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Bus Details --}}
+            <div class="px-6 py-4">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">License Plate:</span>
+                        <span class="font-medium">{{bus.license_plate}}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Capacity:</span>
+                        <span class="font-medium">{{bus.capacity}} seats</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Mileage:</span>
+                        <span class="font-medium">{{format-number bus.mileage}} miles</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Last Maintenance:</span>
+                        <span class="font-medium">
+                            {{#if bus.last_maintenance_date}}
+                            {{format-date bus.last_maintenance_date "MMM DD, YYYY"}}
+                            {{else}}
+                            <span class="text-red-600">Never</span>
+                            {{/if}}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Quick Actions --}}
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="btn btn-outline btn-sm" {{on "click" (fn this.viewBus bus.id)}}>
+                        <FaIcon @icon="eye" class="mr-1" />
+                        View
+                    </button>
+                    <button class="btn btn-outline btn-sm" {{on "click" (fn this.editBus bus.id)}}>
+                        <FaIcon @icon="edit" class="mr-1" />
+                        Edit
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                    <LinkTo @route="console.fleetops.maintenance.work-orders.new" @query={{hash vehicle_uuid=bus.id}}
+                        class="btn btn-outline btn-xs">
+                        <FaIcon @icon="tools" class="mr-1" />
+                        Maintenance
+                    </LinkTo>
+                    <LinkTo @route="console.fleetops.analytics" @query={{hash vehicle_uuid=bus.id filter="fuel" }}
+                        class="btn btn-outline btn-xs">
+                        <FaIcon @icon="gas-pump" class="mr-1" />
+                        Fuel
+                    </LinkTo>
+                    <button class="btn btn-outline btn-xs" {{on "click" (fn this.viewRoutePlayback bus.id)}}>
+                        <FaIcon @icon="route" class="mr-1" />
+                        Routes
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    {{!-- Pagination --}}
+    {{#if (gt this.totalPages 1)}}
+    <div class="mt-8 flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+            Showing {{this.paginatedBuses.length}} of {{this.sortedBuses.length}} buses
+        </div>
+        <Pagination @currentPage={{this.currentPage}} @totalPages={{this.totalPages}}
+            @onPageChange={{this.changePage}} />
+    </div>
+    {{/if}}
+
+    {{!-- Empty State --}}
+    {{#if (eq this.buses.length 0)}}
+    <div class="text-center py-12">
+        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FaIcon @icon="bus" class="text-4xl text-gray-400" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No buses found</h3>
+        <p class="text-gray-600 mb-6">Get started by adding your first school bus to the fleet.</p>
+        <LinkTo @route="school-transport.buses.new" class="btn btn-primary">
+            <FaIcon @icon="plus" class="mr-2" />
+            Add First Bus
+        </LinkTo>
+    </div>
+    {{/if}}
+</div>

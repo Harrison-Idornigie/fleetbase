@@ -65,6 +65,13 @@ Route::prefix('school-transport')->middleware(['api', 'auth:sanctum'])->group(fu
         Route::get('/{bus}/trips', [BusController::class, 'trips']);
         Route::patch('/{bus}/status', [BusController::class, 'updateStatus']);
         Route::get('/{bus}/current-location', [BusController::class, 'currentLocation']);
+
+        // FleetOps integration routes
+        Route::post('/{bus}/maintenance', [BusController::class, 'scheduleMaintenance']);
+        Route::get('/{bus}/maintenance', [BusController::class, 'maintenanceHistory']);
+        Route::post('/{bus}/fuel', [BusController::class, 'recordFuel']);
+        Route::get('/{bus}/fuel', [BusController::class, 'fuelReports']);
+        Route::get('/{bus}/route-playback', [BusController::class, 'routePlayback']);
     });
 
     // Driver management routes

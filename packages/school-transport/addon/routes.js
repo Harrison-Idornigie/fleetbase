@@ -26,6 +26,17 @@ export default buildRoutes(function() {
       this.route('bulk-assign');
     });
     
+    this.route('buses', function() {
+      this.route('index', { path: '/' });
+      this.route('new');
+      this.route('view', { path: '/:bus_id' });
+      this.route('edit', { path: '/:bus_id/edit' });
+      this.route('maintenance', { path: '/:bus_id/maintenance' });
+      this.route('fuel', { path: '/:bus_id/fuel' });
+      this.route('route-playback', { path: '/:bus_id/route-playback' });
+    });
+    });
+    
     this.route('communications', function() {
       this.route('index', { path: '/' });
       this.route('new');

@@ -1,0 +1,133 @@
+{{!-- Route Playback Map Component --}}
+<div class="route-playback-map-container">
+    <div class="map-wrapper" style="height: 500px; width: 100%;" {{did-insert this.initializeMap}} {{did-update
+        this.didUpdateCurrentPosition @currentPosition}} {{did-update this.didUpdateShowStudentEvents
+        @showStudentEvents}}>
+        <!-- Map will be initialized here -->
+    </div>
+</div>
+
+<style>
+    .route-playback-map-container .leaflet-container {
+        height: 100%;
+        width: 100%;
+        border-radius: 0.5rem;
+    }
+
+    .custom-bus-marker {
+        background: transparent;
+        border: none;
+        outline: none;
+    }
+
+    .bus-marker {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bus-icon {
+        font-size: 24px;
+        background: #ffffff;
+        border: 2px solid #3b82f6;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        position: relative;
+    }
+
+    .bus-pulse {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        border: 3px solid #3b82f6;
+        border-radius: 50%;
+        opacity: 0;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(0.5);
+        }
+
+        70% {
+            opacity: 0.3;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+    }
+
+    .custom-student-marker {
+        background: transparent;
+        border: none;
+        outline: none;
+    }
+
+    .student-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid;
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .student-marker.pickup {
+        border-color: #059669;
+        background: #ecfdf5;
+    }
+
+    .student-marker.dropoff {
+        border-color: #dc2626;
+        background: #fef2f2;
+    }
+
+    .student-icon {
+        font-size: 12px;
+    }
+
+    .bus-popup,
+    .student-popup {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        min-width: 200px;
+    }
+
+    .bus-popup h4,
+    .student-popup h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .bus-popup p,
+    .student-popup p {
+        margin: 4px 0;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .bus-popup strong,
+    .student-popup strong {
+        color: #374151;
+        font-weight: 500;
+    }
+</style>

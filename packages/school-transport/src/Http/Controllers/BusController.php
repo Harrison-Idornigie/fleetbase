@@ -34,7 +34,8 @@ class BusController extends FleetbaseController
         return $this->fleetbaseRequest(
             // Query setup
             function (&$query, Request $request) {
-                $query->where('company_uuid', session('company'));
+                $query->where('company_uuid', session('company'))
+                    ->schoolBuses(); // Filter for school bus type
 
                 // Filter by status
                 if ($request->filled('status')) {
@@ -61,7 +62,8 @@ class BusController extends FleetbaseController
                     $search = $request->input('search');
                     $query->where(function ($q) use ($search) {
                         $q->where('bus_number', 'like', "%{$search}%")
-                            ->orWhere('license_plate', 'like', "%{$search}%");
+                            ->orWhere('plate_number', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
                     });
                 }
 
@@ -75,7 +77,9 @@ class BusController extends FleetbaseController
                         'id' => $bus->uuid,
                         'public_id' => $bus->public_id,
                         'bus_number' => $bus->bus_number,
-                        'license_plate' => $bus->license_plate,
+                        'plate_number' => $bus->plate_number,
+                        'vin' => $bus->vin,
+                        'name' => $bus->name,
                         'make' => $bus->make,
                         'model' => $bus->model,
                         'year' => $bus->year,
@@ -86,12 +90,14 @@ class BusController extends FleetbaseController
                         'status_display' => $bus->status_display,
                         'driver' => $bus->driver,
                         'route' => $bus->route,
-                        'last_maintenance_date' => $bus->last_maintenance_date,
-                        'next_maintenance_date' => $bus->next_maintenance_date,
+                        'fuel_type' => $bus->fuel_type,
+                        'odometer' => $bus->odometer,
                         'needs_maintenance' => $bus->needsMaintenance(),
                         'insurance_expired' => $bus->insuranceExpired(),
                         'registration_expired' => $bus->registrationExpired(),
                         'is_active' => $bus->is_active,
+                        'warranty' => $bus->warranty,
+                        'maintenances_count' => $bus->maintenances()->count(),
                         'created_at' => $bus->created_at,
                         'updated_at' => $bus->updated_at
                     ];
@@ -106,38 +112,38 @@ class BusController extends FleetbaseController
     public function store(Request $request): JsonResponse
     {
         $this->validate($request, [
-            'bus_number' => 'required|string|max:50|unique:school_transport_buses,bus_number',
-            'license_plate' => 'required|string|max:20|unique:school_transport_buses,license_plate',
+            'bus_number' => 'required|string|max:50|unique:vehicles,bus_number',
+            'plate_number' => 'required|string|max:20|unique:vehicles,plate_number',
+            'vin' => 'nullable|string|max:17|unique:vehicles,vin',
             'make' => 'required|string|max:100',
             'model' => 'required|string|max:100',
             'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             'capacity' => 'required|integer|min:1|max:100',
-            'fuel_type' => 'nullable|in:gasoline,diesel,electric,hybrid',
+            'fuel_type' => 'nullable|string|max:50',
             'color' => 'nullable|string|max:50',
-            'features' => 'nullable|array',
-            'gps_device_id' => 'nullable|string|max:100',
-            'last_maintenance_date' => 'nullable|date',
-            'next_maintenance_date' => 'nullable|date|after:last_maintenance_date',
-            'insurance_expiry' => 'nullable|date|after:today',
-            'registration_expiry' => 'nullable|date|after:today'
+            'odometer' => 'nullable|integer|min:0',
+            'insurance_expiry' => 'nullable|date',
+            'registration_expiry' => 'nullable|date',
+            'warranty_uuid' => 'nullable|uuid|exists:warranties,uuid'
         ]);
 
         $bus = Bus::create([
+            'company_uuid' => session('company'),
             'bus_number' => $request->input('bus_number'),
-            'license_plate' => $request->input('license_plate'),
+            'plate_number' => $request->input('plate_number'),
+            'vin' => $request->input('vin'),
             'make' => $request->input('make'),
             'model' => $request->input('model'),
             'year' => $request->input('year'),
             'capacity' => $request->input('capacity'),
             'fuel_type' => $request->input('fuel_type', 'diesel'),
             'color' => $request->input('color'),
-            'features' => $request->input('features', []),
-            'gps_device_id' => $request->input('gps_device_id'),
-            'last_maintenance_date' => $request->input('last_maintenance_date'),
-            'next_maintenance_date' => $request->input('next_maintenance_date'),
+            'odometer' => $request->input('odometer', 0),
             'insurance_expiry' => $request->input('insurance_expiry'),
             'registration_expiry' => $request->input('registration_expiry'),
-            'company_uuid' => session('company')
+            'warranty_uuid' => $request->input('warranty_uuid'),
+            'status' => 'available',
+            'is_active' => true,
         ]);
 
         return response()->json([
@@ -409,5 +415,185 @@ class BusController extends FleetbaseController
         ];
 
         return response()->json($stats);
+    }
+
+    /**
+     * Schedule maintenance for a bus.
+     * Leverages FleetOps maintenance system.
+     */
+    public function scheduleMaintenance(Request $request, string $id): JsonResponse
+    {
+        $this->authorize('school-transport.manage');
+
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'type' => 'required|in:scheduled,unscheduled,inspection,corrective',
+            'scheduled_at' => 'required|date',
+            'summary' => 'required|string|max:500',
+            'priority' => 'nullable|in:low,normal,high,critical',
+            'notes' => 'nullable|string',
+            'estimated_downtime_hours' => 'nullable|integer|min:0',
+        ]);
+
+        $maintenance = $bus->scheduleMaintenance([
+            'type' => $request->input('type'),
+            'scheduled_at' => $request->input('scheduled_at'),
+            'summary' => $request->input('summary'),
+            'priority' => $request->input('priority', 'normal'),
+            'notes' => $request->input('notes'),
+            'estimated_downtime_hours' => $request->input('estimated_downtime_hours'),
+            'odometer' => $bus->odometer,
+        ]);
+
+        return response()->json([
+            'message' => 'Maintenance scheduled successfully',
+            'maintenance' => $maintenance
+        ], 201);
+    }
+
+    /**
+     * Record a fuel report for a bus.
+     * Leverages FleetOps fuel reporting system.
+     */
+    public function recordFuel(Request $request, string $id): JsonResponse
+    {
+        $this->authorize('school-transport.manage');
+
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'amount' => 'required|numeric|min:0',
+            'volume' => 'required|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
+            'metric_unit' => 'nullable|in:liters,gallons',
+            'odometer' => 'nullable|integer|min:0',
+            'driver_uuid' => 'nullable|uuid|exists:school_transport_drivers,uuid',
+            'report' => 'nullable|string|max:500',
+        ]);
+
+        $fuelReport = $bus->recordFuelReport([
+            'amount' => $request->input('amount'),
+            'volume' => $request->input('volume'),
+            'currency' => $request->input('currency', 'USD'),
+            'metric_unit' => $request->input('metric_unit', 'liters'),
+            'odometer' => $request->input('odometer', $bus->odometer),
+            'driver_uuid' => $request->input('driver_uuid'),
+            'reported_by_uuid' => auth()->id(),
+            'report' => $request->input('report'),
+            'location' => $bus->location,
+        ]);
+
+        // Update bus odometer if provided
+        if ($request->filled('odometer')) {
+            $bus->update(['odometer' => $request->input('odometer')]);
+        }
+
+        return response()->json([
+            'message' => 'Fuel report recorded successfully',
+            'fuel_report' => $fuelReport
+        ], 201);
+    }
+
+    /**
+     * Get maintenance history for a bus.
+     */
+    public function maintenanceHistory(string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $maintenances = $bus->maintenances()
+            ->orderBy('scheduled_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'bus_id' => $bus->uuid,
+            'bus_number' => $bus->bus_number,
+            'maintenances' => $maintenances
+        ]);
+    }
+
+    /**
+     * Get fuel reports for a bus.
+     */
+    public function fuelReports(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $query = \Fleetbase\FleetOps\Models\FuelReport::where('vehicle_uuid', $bus->uuid);
+
+        // Filter by date range if provided
+        if ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->input('start_date'));
+        }
+        if ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->input('end_date'));
+        }
+
+        $fuelReports = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'bus_id' => $bus->uuid,
+            'bus_number' => $bus->bus_number,
+            'fuel_reports' => $fuelReports,
+            'total_fuel_cost' => $fuelReports->sum('amount'),
+            'total_fuel_volume' => $fuelReports->sum('volume'),
+        ]);
+    }
+
+    /**
+     * Get route playback data for a bus on a specific date or date range.
+     * Shows the complete journey with student pickup/dropoff events.
+     */
+    public function routePlayback(Request $request, string $id): JsonResponse
+    {
+        $bus = Bus::where('uuid', $id)
+            ->where('company_uuid', session('company'))
+            ->firstOrFail();
+
+        $this->validate($request, [
+            'date' => 'required_without:start_date|date',
+            'start_date' => 'required_without:date|date',
+            'end_date' => 'required_with:start_date|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            if ($request->filled('date')) {
+                // Single day playback
+                $date = new \DateTime($request->input('date'));
+                $startDate = clone $date;
+                $startDate->setTime(0, 0, 0);
+                $endDate = clone $date;
+                $endDate->setTime(23, 59, 59);
+            } else {
+                // Date range playback
+                $startDate = new \DateTime($request->input('start_date') . ' 00:00:00');
+                $endDate = new \DateTime($request->input('end_date') . ' 23:59:59');
+            }
+
+            // Check if date range is not too large (max 7 days for performance)
+            $daysDiff = $startDate->diff($endDate)->days;
+            if ($daysDiff > 7) {
+                return response()->json([
+                    'error' => 'Date range too large. Maximum 7 days allowed for route playback.'
+                ], 422);
+            }
+
+            $playbackData = $bus->getRoutePlayback($startDate, $endDate);
+
+            return response()->json($playbackData);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to generate route playback: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
