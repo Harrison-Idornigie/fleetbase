@@ -3,11 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Trip;
-use Fleetbase\SchoolTransportEngine\Models\Bus;
-use Fleetbase\SchoolTransportEngine\Models\Driver;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\Attendance;
+use Fleetbase\SchoolTransportEngine\Services\TripService;
 use Fleetbase\SchoolTransportEngine\Events\TripStatusChanged;
 use Fleetbase\SchoolTransportEngine\Events\StudentCheckInOut;
 use Fleetbase\Models\Setting;
@@ -29,6 +25,21 @@ class TripController extends FleetbaseController
      * @var string
      */
     public $resource = 'trip';
+
+    /**
+     * The trip service instance
+     *
+     * @var TripService
+     */
+    protected $tripService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(TripService $tripService)
+    {
+        $this->tripService = $tripService;
+    }
 
     /**
      * Display a listing of trips.

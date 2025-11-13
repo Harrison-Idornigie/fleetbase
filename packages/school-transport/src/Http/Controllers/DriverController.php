@@ -3,9 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Driver;
-use Fleetbase\SchoolTransportEngine\Models\Bus;
-use Fleetbase\SchoolTransportEngine\Models\Trip;
+use Fleetbase\SchoolTransportEngine\Services\DriverService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -24,6 +22,21 @@ class DriverController extends FleetbaseController
      * @var string
      */
     public $resource = 'driver';
+
+    /**
+     * The driver service instance
+     *
+     * @var DriverService
+     */
+    protected $driverService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(DriverService $driverService)
+    {
+        $this->driverService = $driverService;
+    }
 
     /**
      * Display a listing of drivers.

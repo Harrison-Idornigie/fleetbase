@@ -3,12 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Alert;
-use Fleetbase\SchoolTransportEngine\Models\Bus;
-use Fleetbase\SchoolTransportEngine\Models\Driver;
-use Fleetbase\SchoolTransportEngine\Models\Student;
-use Fleetbase\SchoolTransportEngine\Models\Trip;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
+use Fleetbase\SchoolTransportEngine\Services\AlertService;
 use Fleetbase\SchoolTransportEngine\Events\AlertCreated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +23,21 @@ class AlertController extends FleetbaseController
      * @var string
      */
     public $resource = 'alert';
+
+    /**
+     * The alert service instance
+     *
+     * @var AlertService
+     */
+    protected $alertService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(AlertService $alertService)
+    {
+        $this->alertService = $alertService;
+    }
 
     /**
      * Display a listing of alerts.

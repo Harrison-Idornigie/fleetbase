@@ -5,10 +5,6 @@ namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 use Fleetbase\Http\Controllers\FleetbaseController;
 use Fleetbase\SchoolTransportEngine\Services\ReportingService;
 use Fleetbase\SchoolTransportEngine\Services\RouteOptimizationService;
-use Fleetbase\SchoolTransportEngine\Models\Student;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\BusAssignment;
-use Fleetbase\SchoolTransportEngine\Models\Attendance;
 use Illuminate\Http\Request;
 
 class DashboardController extends FleetbaseController
@@ -61,7 +57,7 @@ class DashboardController extends FleetbaseController
     public function routeEfficiency(Request $request)
     {
         $companyUuid = session('company');
-        
+
         $report = $this->reportingService->getRouteEfficiencyReport(
             $companyUuid,
             $request->input('start_date'),
@@ -80,7 +76,7 @@ class DashboardController extends FleetbaseController
     public function studentAttendance(Request $request)
     {
         $companyUuid = session('company');
-        
+
         $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
 
@@ -112,7 +108,7 @@ class DashboardController extends FleetbaseController
 
         foreach ($routes as $route) {
             $assignmentCount = $route->busAssignments->where('status', 'active')->count();
-            $utilization = $route->capacity > 0 
+            $utilization = $route->capacity > 0
                 ? round(($assignmentCount / $route->capacity) * 100, 1)
                 : 0;
 
@@ -200,4 +196,3 @@ class DashboardController extends FleetbaseController
         ]);
     }
 }
-

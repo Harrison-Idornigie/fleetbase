@@ -4,10 +4,6 @@ namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
 use Fleetbase\SchoolTransportEngine\Services\ReportingService;
-use Fleetbase\SchoolTransportEngine\Models\Student;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\Attendance;
-use Fleetbase\SchoolTransportEngine\Models\Communication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -196,4 +192,3 @@ class ReportController extends FleetbaseController
         ]);
     }
 }
-

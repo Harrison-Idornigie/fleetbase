@@ -3,7 +3,6 @@
 namespace Fleetbase\SchoolTransport\Http\Controllers\Api\V1;
 
 use Fleetbase\Http\Controllers\Controller;
-use Fleetbase\SchoolTransport\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 

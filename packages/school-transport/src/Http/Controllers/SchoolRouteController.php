@@ -3,9 +3,6 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\School;
-use Fleetbase\SchoolTransportEngine\Models\Stop;
 use Fleetbase\SchoolTransportEngine\Services\RouteOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

@@ -3,10 +3,6 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\BusAssignment;
-use Fleetbase\SchoolTransportEngine\Models\Student;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;

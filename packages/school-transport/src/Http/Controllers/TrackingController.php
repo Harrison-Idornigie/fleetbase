@@ -3,10 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\TrackingLog;
-use Fleetbase\SchoolTransportEngine\Models\Bus;
-use Fleetbase\SchoolTransportEngine\Models\Trip;
-use Fleetbase\SchoolTransportEngine\Models\Driver;
+use Fleetbase\SchoolTransportEngine\Services\TrackingService;
 use Fleetbase\SchoolTransportEngine\Events\BusLocationUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +23,21 @@ class TrackingController extends FleetbaseController
      * @var string
      */
     public $resource = 'tracking_log';
+
+    /**
+     * The tracking service instance
+     *
+     * @var TrackingService
+     */
+    protected $trackingService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(TrackingService $trackingService)
+    {
+        $this->trackingService = $trackingService;
+    }
 
     /**
      * Display a listing of tracking logs.

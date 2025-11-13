@@ -101,5 +101,19 @@ class SchoolTransportServiceProvider extends ServiceProvider
         $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\RoutePlaybackService::class);
         $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\FuelManagementService::class);
         $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\MaintenanceService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\ReportingService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\AttendanceService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\NotificationService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\ETACalculationService::class);
+
+        // Register new services
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\StudentService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\BusService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\DriverService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\TripService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\TrackingService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\SchoolService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\CommunicationService::class);
+        $this->app->singleton(\Fleetbase\SchoolTransportEngine\Services\AlertService::class);
     }
 }

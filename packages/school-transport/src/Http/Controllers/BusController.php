@@ -3,10 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Bus;
-use Fleetbase\SchoolTransportEngine\Models\Driver;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\Trip;
+use Fleetbase\SchoolTransportEngine\Services\BusService;
 use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +23,21 @@ class BusController extends FleetbaseController
      * @var string
      */
     public $resource = 'bus';
+
+    /**
+     * The bus service instance
+     *
+     * @var BusService
+     */
+    protected $busService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(BusService $busService)
+    {
+        $this->busService = $busService;
+    }
 
     /**
      * Display a listing of buses.

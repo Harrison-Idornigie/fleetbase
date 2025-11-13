@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Fleetbase\SchoolTransportEngine\Models\Bus;
 use Fleetbase\SchoolTransportEngine\Services\RoutePlaybackService;
 use Fleetbase\SchoolTransportEngine\Services\FuelManagementService;
 use Fleetbase\SchoolTransportEngine\Services\MaintenanceService;

@@ -3,7 +3,6 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Attendance;
 use Fleetbase\SchoolTransportEngine\Services\AttendanceService;
 use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;

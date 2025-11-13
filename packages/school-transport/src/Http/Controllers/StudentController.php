@@ -3,8 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Student;
-use Fleetbase\SchoolTransportEngine\Models\BusAssignment;
+use Fleetbase\SchoolTransportEngine\Services\StudentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +23,21 @@ class StudentController extends FleetbaseController
      * @var string
      */
     public $resource = 'student';
+
+    /**
+     * The student service instance
+     *
+     * @var StudentService
+     */
+    protected $studentService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(StudentService $studentService)
+    {
+        $this->studentService = $studentService;
+    }
 
     /**
      * Display a listing of students.

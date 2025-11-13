@@ -3,9 +3,7 @@
 namespace Fleetbase\SchoolTransportEngine\Http\Controllers;
 
 use Fleetbase\Http\Controllers\FleetbaseController;
-use Fleetbase\SchoolTransportEngine\Models\Communication;
-use Fleetbase\SchoolTransportEngine\Models\SchoolRoute;
-use Fleetbase\SchoolTransportEngine\Models\Student;
+use Fleetbase\SchoolTransportEngine\Services\CommunicationService;
 use Fleetbase\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +23,21 @@ class CommunicationController extends FleetbaseController
      * @var string
      */
     public $resource = 'communication';
+
+    /**
+     * The communication service instance
+     *
+     * @var CommunicationService
+     */
+    protected $communicationService;
+
+    /**
+     * Create a new controller instance
+     */
+    public function __construct(CommunicationService $communicationService)
+    {
+        $this->communicationService = $communicationService;
+    }
 
     /**
      * Display a listing of communications.

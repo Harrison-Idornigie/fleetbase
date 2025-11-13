@@ -43,7 +43,7 @@ class ReportingService
             ->where('present', true)
             ->count();
 
-        $attendanceRate = $todayAttendance > 0 
+        $attendanceRate = $todayAttendance > 0
             ? round(($todayPresent / $todayAttendance) * 100, 1)
             : 0;
 
@@ -83,7 +83,7 @@ class ReportingService
 
         foreach ($routes as $route) {
             $assignmentCount = $route->busAssignments->where('status', 'active')->count();
-            $utilization = $route->capacity > 0 
+            $utilization = $route->capacity > 0
                 ? round(($assignmentCount / $route->capacity) * 100, 1)
                 : 0;
 
@@ -105,7 +105,7 @@ class ReportingService
         }
 
         // Sort by efficiency score descending
-        usort($report, function($a, $b) {
+        usort($report, function ($a, $b) {
             return $b['efficiency_score'] <=> $a['efficiency_score'];
         });
 
@@ -134,11 +134,11 @@ class ReportingService
 
         // Factors: utilization (40%), distance efficiency (30%), time efficiency (30%)
         $utilizationScore = ($assignmentCount / $route->capacity) * 40;
-        
-        $distanceEfficiency = $route->estimated_distance > 0 
+
+        $distanceEfficiency = $route->estimated_distance > 0
             ? min(($assignmentCount / $route->estimated_distance) * 30, 30)
             : 0;
-        
+
         $timeEfficiency = $route->estimated_duration > 0
             ? min((60 / $route->estimated_duration) * 30, 30)
             : 0;
@@ -184,7 +184,7 @@ class ReportingService
         }
 
         // Sort by attendance rate ascending (show problem students first)
-        usort($report, function($a, $b) {
+        usort($report, function ($a, $b) {
             return $a['attendance_rate'] <=> $b['attendance_rate'];
         });
 
@@ -235,7 +235,7 @@ class ReportingService
                 ->first();
 
             // Get maintenance data for buses on this route
-            $maintenanceQuery = Maintenance::whereHas('maintainable', function($query) use ($busUuids) {
+            $maintenanceQuery = Maintenance::whereHas('maintainable', function ($query) use ($busUuids) {
                 $query->whereIn('uuid', $busUuids);
             });
 
@@ -296,7 +296,7 @@ class ReportingService
                 ->first();
 
             // Get maintenance stats for this month
-            $monthlyMaintenance = Maintenance::whereHas('maintainable', function($query) use ($companyUuid) {
+            $monthlyMaintenance = Maintenance::whereHas('maintainable', function ($query) use ($companyUuid) {
                 $query->where('company_uuid', $companyUuid);
             })
                 ->whereBetween('created_at', [
@@ -307,7 +307,7 @@ class ReportingService
                 ->first();
 
             // Get overdue maintenance count
-            $overdueMaintenance = Maintenance::whereHas('maintainable', function($query) use ($companyUuid) {
+            $overdueMaintenance = Maintenance::whereHas('maintainable', function ($query) use ($companyUuid) {
                 $query->where('company_uuid', $companyUuid);
             })
                 ->where('status', '!=', 'done')
@@ -341,4 +341,3 @@ class ReportingService
         }
     }
 }
-
